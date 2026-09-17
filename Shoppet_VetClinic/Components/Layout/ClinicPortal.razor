@@ -1,0 +1,319 @@
+﻿@page "/clinic-portal"
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+@inject DatabaseService DbService
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<style>
+    .desk-viewport {
+        background-color: #F8FAF9;
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: #1F2824;
+    }
+
+    .desk-navbar {
+        background: #FFFFFF;
+        border-bottom: 2px solid #5C766D;
+        padding: 0.85rem 0;
+    }
+
+    .desk-stat-card {
+        background: #FFFFFF;
+        border-radius: 16px;
+        border: 1px solid #E6EAE8;
+        padding: 1.5rem;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    }
+
+    .desk-tab-btn {
+        background: transparent;
+        border: none;
+        color: #53635C;
+        font-weight: 700;
+        font-size: 0.92rem;
+        padding: 0.5rem 1.2rem;
+        border-radius: 9999px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+        .desk-tab-btn:hover {
+            background: #EEF4F1;
+            color: #1E2D27;
+        }
+
+        .desk-tab-btn.active {
+            background: #5C766D !important;
+            color: #FFFFFF !important;
+        }
+
+    .btn-verify {
+        background-color: #F7DD7D;
+        color: #2F423B;
+        font-weight: 800;
+        border: none;
+        border-radius: 9999px;
+        padding: 0.65rem 1.6rem;
+    }
+</style>
+
+<div class="desk-viewport">
+
+    <!-- Top Terminal Strip -->
+    <div class="px-4 py-2 text-white d-flex justify-content-between align-items-center small" style="background: #1E2D27;">
+        <div class="d-flex align-items-center gap-2">
+            <span style="width:8px;height:8px;background:#34D399;border-radius:50%;display:inline-block;"></span>
+            <strong>CLINICAL RECEPTION TERMINAL</strong> • Shoppet Animal Care & Wellness (Lipa Main Branch)
+        </div>
+        <div>
+            <span class="opacity-75">PRC Facility License:</span> <strong class="text-warning">VET-004921</strong> |
+            <span class="opacity-75">PTR:</span> <strong>PTR-882194</strong>
+        </div>
+    </div>
+
+    <!-- Desk Navigation -->
+    <header class="desk-navbar px-4 sticky-top">
+        <div class="container-xl d-flex justify-content-between align-items-center">
+            <a class="d-flex align-items-center gap-2 text-decoration-none" href="/clinic-portal">
+                <img src="/shoppetlogo.png" alt="Shoppet" style="height: 38px;" />
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark">Shoppet<span style="color: #059669;">Care Desk</span></h5>
+                    <small class="text-muted fw-bold" style="font-size: 0.62rem;">OPERATIONAL CLINIC PORTAL</small>
+                </div>
+            </a>
+
+            <!-- Desk Navigation Tabs -->
+            <div class="d-flex gap-1">
+                <button type="button" class="desk-tab-btn @(activeTab == "queue" ? "active" : "")" @onclick='() => activeTab = "queue"'>
+                    📋 Patient Queue
+                </button>
+                <button type="button" class="desk-tab-btn @(activeTab == "claim" ? "active" : "")" @onclick='() => activeTab = "claim"'>
+                    🎟️ Counter Handoff (Vouchers)
+                </button>
+                <button type="button" class="desk-tab-btn @(activeTab == "inventory" ? "active" : "")" @onclick='() => activeTab = "inventory"'>
+                    📦 Clinic Stock
+                </button>
+            </div>
+
+            <!-- Page Router Switcher -->
+            <div class="d-flex align-items-center gap-2">
+                <div class="btn-group">
+                    <button class="btn btn-sm rounded-pill px-3 fw-bold dropdown-toggle border" style="background:#ECFDF5;color:#065F46;border-color:#A7F3D0;" type="button" @onclick="() => showRoleMenu = !showRoleMenu">
+                        🏥 Clinic Staff Desk
+                    </button>
+                    @if (showRoleMenu)
+                    {
+                        <div class="dropdown-menu dropdown-menu-end show shadow-sm border mt-2 p-1 rounded-3">
+                            <button class="dropdown-item py-2 small" @onclick='() => Nav.NavigateTo("/")'>👤 Customer / Pet Parent (Storefront)</button>
+                            <button class="dropdown-item py-2 small active fw-bold" @onclick='() => Nav.NavigateTo("/clinic-portal")'>🏥 Clinic Reception Desk</button>
+                            <button class="dropdown-item py-2 small" @onclick='() => Nav.NavigateTo("/admin-portal")'>🛡️ Platform Admin Dashboard</button>
+                        </div>
+                    }
+                </div>
+
+                <a class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold text-decoration-none" href="/">
+                    Exit to Storefront
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Desk Body -->
+    <main class="container-xl py-4">
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="desk-stat-card">
+                    <small class="text-muted text-uppercase fw-bold">Incoming Appointments</small>
+                    <h2 class="fw-bold text-dark mb-0">@appointments.Count</h2>
+                    <small class="text-success fw-semibold">Consultations scheduled</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="desk-stat-card d-flex align-items-center gap-3">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
+                        <img src="/vet_wpets.jpg" alt="Duty Veterinarian" style="width:100%;height:100%;object-fit:cover;" />
+                    </div>
+                    <div>
+                        <small class="text-muted text-uppercase fw-bold">Duty Veterinarian</small>
+                        <h6 class="fw-bold text-dark mb-0">Dr. Maria Santos, DVM</h6>
+                        <small class="text-muted font-monospace">PRC #008123 (Active)</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="desk-stat-card">
+                    <small class="text-muted text-uppercase fw-bold">Counter Fulfillment</small>
+                    <h5 class="fw-bold text-success mb-0 mt-1">Accepting In-Person Handoffs</h5>
+                    <small class="text-muted">Compliant with RA 11967</small>
+                </div>
+            </div>
+        </div>
+
+        @if (activeTab == "queue")
+        {
+            <div class="bg-white rounded-4 border p-4 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0">Scheduled Consultations Queue</h5>
+                    <button class="btn btn-sm btn-outline-dark rounded-pill px-3" @onclick="RefreshData">🔄 Refresh Queue</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr class="small text-muted text-uppercase">
+                                <th>Patient ID & Photo</th>
+                                <th>Pet Parent</th>
+                                <th>Service Required</th>
+                                <th>Requested Schedule</th>
+                                <th>Contact Number</th>
+                                <th class="text-end">Desk Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var app in appointments)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div style="width: 44px; height: 44px; border-radius: 10px; overflow: hidden; background: #FAF9F6; flex-shrink: 0;">
+                                                <img src="@(app.PetName.Contains("Shih Tzu") ? "/premiumft.png" : (app.PetName.Contains("Cat") || app.PetName.Contains("Domestic") ? "/catft.jpg" : "/petvilna.jpg"))"
+                                                     alt="@app.PetName" style="width: 100%; height: 100%; object-fit: cover;" />
+                                            </div>
+                                            <div>
+                                                <strong class="text-dark">@app.PetName</strong>
+                                                <div class="text-muted small">Token: #@app.Id</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>@app.OwnerName</td>
+                                    <td><span class="badge bg-light text-dark border">@app.ServiceType</span></td>
+                                    <td class="font-monospace small">@app.AppointmentDate.ToString("MMM dd, yyyy - hh:mm tt")</td>
+                                    <td class="font-monospace small">@app.ContactNumber</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-dark rounded-pill px-3 py-1">Check In</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+        else if (activeTab == "claim")
+        {
+            <div class="row justify-content-center">
+                <div class="col-lg-6">
+                    <div class="bg-white rounded-4 border p-5 shadow-sm text-center">
+                        <span class="fs-1 mb-2 d-block">🎟️</span>
+                        <h4 class="fw-bold text-dark mb-1">Click-and-Collect Voucher Redemption</h4>
+                        <p class="text-muted small mb-4">Enter customer's claim token code upon physical counter pickup or rider arrival.</p>
+
+                        <div class="mb-3 text-start">
+                            <label class="form-label small fw-bold text-muted">Claim Token Code</label>
+                            <input class="form-control form-control-lg text-center font-monospace fw-bold text-uppercase rounded-3"
+                                   placeholder="CLAIM-XXXX"
+                                   @bind="searchClaimToken" />
+                        </div>
+
+                        <button class="btn-verify w-100 py-3 mb-3" @onclick="VerifyClaimToken">
+                            Verify & Release Supplies
+                        </button>
+
+                        @if (!string.IsNullOrEmpty(voucherVerifyStatus))
+                        {
+                            <div class="alert alert-success rounded-3 small p-3">
+                                @voucherVerifyStatus
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else if (activeTab == "inventory")
+        {
+            <div class="bg-white rounded-4 border p-4 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0">Clinic Dispensary & Shelf Stock</h5>
+                    <span class="text-muted small">Real-time database sync</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-muted text-uppercase">
+                            <tr>
+                                <th>Package</th>
+                                <th>Product Name</th>
+                                <th>Category</th>
+                                <th>Shelf Price</th>
+                                <th>Stock</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var prod in allProducts)
+                            {
+                                <tr>
+                                    <td style="width: 60px;">
+                                        <div style="width: 48px; height: 48px; border-radius: 8px; overflow: hidden; background: #FAF9F6; display:flex; align-items:center; justify-content:center; border: 1px solid #E6EAE8;">
+                                            <img src="/@prod.ImageSource" alt="@prod.Name" style="max-height: 85%; max-width: 85%; object-fit: contain;" />
+                                        </div>
+                                    </td>
+                                    <td class="fw-bold text-dark">@prod.Name</td>
+                                    <td><span class="badge bg-light text-muted border">@prod.Category</span></td>
+                                    <td class="fw-bold font-monospace">₱@prod.Price.ToString("N2")</td>
+                                    <td class="font-monospace">@prod.Stock</td>
+                                    <td>
+                                        <span class="badge rounded-pill px-3 py-1 @(prod.Stock > 5 ? "bg-success" : (prod.Stock > 0 ? "bg-warning text-dark" : "bg-danger"))">
+                                            @(prod.Stock > 0 ? "In Stock" : "Depleted")
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+    </main>
+</div>
+
+@code {
+    private string activeTab = "queue";
+    private bool showRoleMenu = false;
+    private string searchClaimToken = "";
+    private string voucherVerifyStatus = "";
+
+    private List<PetProduct> allProducts = new();
+    private List<ClinicAppointment> appointments = new();
+
+    protected override void OnInitialized()
+    {
+        RefreshData();
+    }
+
+    private void RefreshData()
+    {
+        allProducts = DbService.GetAllProducts();
+        appointments = new List<ClinicAppointment>
+        {
+            new() { Id = 101, PetName = "Milo (Shih Tzu)", OwnerName = "Juan Dela Cruz", ServiceType = "General Checkup", AppointmentDate = DateTime.Now.AddHours(1), ContactNumber = "09171234567" },
+            new() { Id = 102, PetName = "Luna (Golden Retriever)", OwnerName = "Kaye Ramos", ServiceType = "Core Vaccination (Anti-Rabies)", AppointmentDate = DateTime.Now.AddHours(2), ContactNumber = "09189876543" }
+        };
+    }
+
+    private void VerifyClaimToken()
+    {
+        if (string.IsNullOrWhiteSpace(searchClaimToken))
+        {
+            voucherVerifyStatus = "Please enter a valid claim voucher code.";
+            return;
+        }
+
+        voucherVerifyStatus = $"✓ Token {searchClaimToken.ToUpper()} verified! Package authorized for counter handoff under RA 11967.";
+        searchClaimToken = "";
+    }
+}

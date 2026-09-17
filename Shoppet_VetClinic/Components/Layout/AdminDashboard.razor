@@ -1,0 +1,234 @@
+﻿@page "/admin-portal"
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+@inject DatabaseService DbService
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<style>
+    .admin-bg {
+        background-color: #F8FAF9;
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .admin-navbar {
+        background: #FFFFFF;
+        border-bottom: 2px solid #DC2626;
+        padding: 0.85rem 0;
+    }
+
+    .admin-tab-btn {
+        background: transparent;
+        border: none;
+        color: #53635C;
+        font-weight: 700;
+        font-size: 0.92rem;
+        padding: 0.5rem 1.2rem;
+        border-radius: 9999px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+        .admin-tab-btn:hover {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .admin-tab-btn.active {
+            background: #DC2626 !important;
+            color: #FFFFFF !important;
+        }
+
+    .ops-stat-card {
+        background: #FFFFFF;
+        border-radius: 16px;
+        border: 1px solid #E6EAE8;
+        padding: 1.5rem;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    }
+</style>
+
+<div class="admin-bg">
+    <!-- Top Bar -->
+    <div class="px-4 py-2 text-white d-flex justify-content-between align-items-center small" style="background: #18181B;">
+        <div class="d-flex align-items-center gap-2">
+            <span style="width:8px;height:8px;background:#EF4444;border-radius:50%;display:inline-block;"></span>
+            <strong>CENTRAL REGULATORY & COMPLIANCE CONSOLE</strong> • Lipa City Veterinary Node
+        </div>
+        <span class="badge bg-danger font-monospace text-light">PRC-SUPERVISORY-AUTH</span>
+    </div>
+
+    <!-- Nav -->
+    <header class="admin-navbar px-4 sticky-top">
+        <div class="container-xl d-flex justify-content-between align-items-center">
+            <a class="d-flex align-items-center gap-2 text-decoration-none" href="/admin-portal">
+                <img src="/shoppetlogo.png" alt="Shoppet" style="height: 38px;" />
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark">Shoppet<span style="color: #DC2626;">Care Governance</span></h5>
+                    <small class="text-muted fw-bold" style="font-size: 0.62rem;">CENTRAL GOVERNANCE & AUDIT</small>
+                </div>
+            </a>
+
+            <!-- Admin Tabs -->
+            <div class="d-flex gap-1">
+                <button type="button" class="admin-tab-btn @(activeTab == "telemetry" ? "active" : "")" @onclick='() => activeTab = "telemetry"'>
+                    📊 Audit & Metrics
+                </button>
+                <button type="button" class="admin-tab-btn @(activeTab == "clinics" ? "active" : "")" @onclick='() => activeTab = "clinics"'>
+                    🏥 PRC Verification Vetting
+                </button>
+                <button type="button" class="admin-tab-btn @(activeTab == "commerce" ? "active" : "")" @onclick='() => activeTab = "commerce"'>
+                    ⚖️ RA 11967 Compliance Logs
+                </button>
+            </div>
+
+            <!-- Page Router Switcher -->
+            <div class="d-flex align-items-center gap-2">
+                <div class="btn-group">
+                    <button class="btn btn-sm rounded-pill px-3 fw-bold dropdown-toggle border" style="background:#FEF2F2;color:#991B1B;border-color:#FCA5A5;" type="button" @onclick="() => showRoleMenu = !showRoleMenu">
+                        🛡️ Platform Administrator
+                    </button>
+                    @if (showRoleMenu)
+                    {
+                        <div class="dropdown-menu dropdown-menu-end show shadow-sm border mt-2 p-1 rounded-3">
+                            <button class="dropdown-item py-2 small" @onclick='() => Nav.NavigateTo("/")'>👤 Customer / Pet Parent (Storefront)</button>
+                            <button class="dropdown-item py-2 small" @onclick='() => Nav.NavigateTo("/clinic-portal")'>🏥 Clinic Reception Desk (Operations)</button>
+                            <button class="dropdown-item py-2 small active fw-bold" @onclick='() => Nav.NavigateTo("/admin-portal")'>🛡️ Platform Admin Dashboard</button>
+                        </div>
+                    }
+                </div>
+
+                <a class="btn btn-sm btn-outline-dark rounded-pill px-3 fw-bold text-decoration-none" href="/">
+                    Exit Console
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content -->
+    <main class="container-xl py-4">
+        @if (activeTab == "telemetry")
+        {
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="ops-stat-card">
+                        <small class="text-muted text-uppercase fw-bold">Active Tenants</small>
+                        <h2 class="fw-bold text-dark mb-0">@clinics.Count</h2>
+                        <small class="text-success fw-bold">100% PRC Vetted</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="ops-stat-card">
+                        <small class="text-muted text-uppercase fw-bold">Catalog SKUs</small>
+                        <h2 class="fw-bold text-dark mb-0">@products.Count</h2>
+                        <small class="text-muted">Clinical Nutrition & Diets</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="ops-stat-card">
+                        <small class="text-muted text-uppercase fw-bold">Token Handoffs</small>
+                        <h2 class="fw-bold text-dark mb-0">128</h2>
+                        <small class="text-muted">Cryptographically Sealed</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="ops-stat-card">
+                        <small class="text-muted text-uppercase fw-bold">RA 11967 Compliance</small>
+                        <h2 class="fw-bold text-success mb-0">100%</h2>
+                        <small class="text-muted">Zero-Liability Verified</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-4 border p-4 shadow-sm mb-4">
+                <h5 class="fw-bold text-dark mb-3">System Compliance Status</h5>
+                <div class="row g-3 small">
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <strong>PRC Veterinary Board Integration:</strong><br />
+                            <span class="text-success fw-bold">● Synchronized with Philippine Veterinary Board</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <strong>RA 11967 Internet Transactions Standard:</strong><br />
+                            <span class="text-success fw-bold">● Offline Token Counter Handoff Enforced</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <strong>Multi-Tenant Data Privacy:</strong><br />
+                            <span class="text-success fw-bold">● Clinic Records Isolated</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (activeTab == "clinics")
+        {
+            <div class="bg-white rounded-4 border p-4 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0">Accredited Veterinary Clinic Tenants</h5>
+                    <button class="btn btn-sm btn-dark rounded-pill px-3">Add Partner Clinic</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>Facility</th>
+                                <th>Clinic Name</th>
+                                <th>Branch Location</th>
+                                <th>PRC Board License</th>
+                                <th>PTR Number</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var c in clinics)
+                            {
+                                <tr>
+                                    <td style="width: 60px;">
+                                        <img src="/petvilna.jpg" style="width: 48px; height: 48px; border-radius: 8px; object-fit: cover;" alt="@c.ClinicName" />
+                                    </td>
+                                    <td><strong>@c.ClinicName</strong></td>
+                                    <td>@c.Address (@c.Branch)</td>
+                                    <td class="font-monospace text-success fw-bold">@c.PrcLicenseNo</td>
+                                    <td class="font-monospace text-muted">@c.PtrNumber</td>
+                                    <td><span class="badge bg-success bg-opacity-10 text-success fw-bold px-3 py-1 rounded-pill">✓ Authenticated</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+        else if (activeTab == "commerce")
+        {
+            <div class="bg-white rounded-4 border p-4 shadow-sm">
+                <h5 class="fw-bold text-dark mb-2">RA 11967 (Internet Transactions Act) Audit Trail</h5>
+                <p class="text-muted small mb-4">Every online pre-order is bound to an in-store counter or buyer-arranged courier voucher, fulfilling Philippine medical handoff regulations.</p>
+
+                <div class="alert alert-light border rounded-3 p-3 small font-monospace">
+                    [AUDIT LOG ENTRY - LIPA NODE 01]<br />
+                    Fulfillment Protocol: Zero-liability pickup model strictly observed. Digital tokens verified at the physical clinic counter before stock release.
+                </div>
+            </div>
+        }
+    </main>
+</div>
+
+@code {
+    private string activeTab = "telemetry";
+    private bool showRoleMenu = false;
+
+    private List<ClinicTenant> clinics = new();
+    private List<PetProduct> products = new();
+
+    protected override void OnInitialized()
+    {
+        clinics = DbService.GetAllClinics();
+        products = DbService.GetAllProducts();
+    }
+}

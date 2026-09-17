@@ -1,0 +1,1565 @@
+﻿@page "/"
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+@inject DatabaseService DbService
+@inject AuthService Auth
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<style>
+    :root {
+        --pb-sage: #5C766D;
+        --pb-sage-dark: #1E2D27;
+        --pb-sage-soft: #EEF4F1;
+        --pb-butter: #F7DD7D;
+        --pb-butter-hover: #F2D257;
+        --pb-cream: #FAF9F6;
+        --pb-cream-alt: #F3EFEA;
+        --pb-text-title: #1E2824;
+        --pb-text-body: #4A5650;
+        --pb-text-muted: #7E8C85;
+        --pb-border: #E6EAE8;
+        --pb-radius-pill: 9999px;
+        --pb-radius-card: 20px;
+        --pb-shadow-soft: 0 12px 32px -6px rgba(47, 66, 59, 0.08);
+    }
+
+    .shoppet-viewport {
+        background: linear-gradient(180deg, #F5F8F6 0%, #FAF9F6 40%, #F5F3ED 100%);
+        color: var(--pb-text-body);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .pb-topstrip {
+        background-color: var(--pb-sage-dark);
+        border-bottom: 2px solid var(--pb-butter);
+        font-size: 0.8rem;
+        padding: 7px 0;
+        color: #E2ECE7;
+    }
+
+    .pb-navbar {
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--pb-border);
+        padding: 0.85rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+
+    .pb-nav-btn {
+        background: transparent;
+        border: none;
+        color: var(--pb-text-body);
+        font-weight: 600;
+        font-size: 0.92rem;
+        padding: 0.5rem 1.1rem;
+        border-radius: var(--pb-radius-pill);
+        transition: all 0.15s ease;
+        cursor: pointer;
+    }
+
+        .pb-nav-btn:hover {
+            background-color: var(--pb-sage-soft);
+            color: var(--pb-sage-dark);
+        }
+
+        .pb-nav-btn.active {
+            background-color: var(--pb-sage);
+            color: #FFFFFF !important;
+        }
+
+    .pb-hero-chamber {
+        position: relative;
+        background-color: #1a2923;
+        background-image: linear-gradient(90deg, rgba(20, 32, 27, 0.94) 0%, rgba(24, 38, 32, 0.88) 42%, rgba(24, 38, 32, 0.20) 65%, rgba(0, 0, 0, 0.0) 80% ), url('/hero_vet_hd.jpg');
+        background-size: cover;
+        background-position: center right;
+        background-repeat: no-repeat;
+        padding: 5rem 0 5.5rem 0;
+        min-height: 560px;
+        color: #FFFFFF;
+        box-shadow: inset 0 -20px 30px -10px rgba(0, 0, 0, 0.25);
+    }
+
+    .pb-hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(247, 221, 125, 0.18);
+        border: 1.5px solid var(--pb-butter);
+        color: var(--pb-butter);
+        font-weight: 700;
+        font-size: 0.8rem;
+        padding: 0.4rem 1.1rem;
+        border-radius: var(--pb-radius-pill);
+        margin-bottom: 1.25rem;
+    }
+
+    .pb-hero-h1 {
+        font-size: 2.85rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        line-height: 1.15;
+        color: #FFFFFF;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    }
+
+    .pb-hero-p {
+        font-size: 1.08rem;
+        color: #E0EAE5;
+        line-height: 1.55;
+        margin-bottom: 2rem;
+    }
+
+    .pb-concierge-card-glass {
+        background: rgba(255, 255, 255, 0.90) !important;
+        backdrop-filter: blur(16px);
+        border: 1.5px solid rgba(255, 255, 255, 0.8);
+        border-radius: 24px;
+        box-shadow: 0 24px 48px -10px rgba(0, 0, 0, 0.4);
+        padding: 1.5rem;
+        text-align: left;
+        color: var(--pb-text-title);
+    }
+
+    .pb-tab-bar {
+        display: flex;
+        gap: 0.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        padding-bottom: 1rem;
+        margin-bottom: 1.25rem;
+        overflow-x: auto;
+    }
+
+    .pb-tab-item {
+        background: rgba(255, 255, 255, 0.65);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--pb-text-body);
+        font-size: 0.86rem;
+        font-weight: 700;
+        padding: 0.5rem 0.95rem;
+        border-radius: var(--pb-radius-pill);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+    }
+
+        .pb-tab-item:hover {
+            background: var(--pb-sage-soft);
+            color: var(--pb-sage-dark);
+        }
+
+        .pb-tab-item.active {
+            background: var(--pb-sage) !important;
+            color: #FFFFFF !important;
+        }
+
+    .color-grid-unit {
+        border-radius: var(--pb-radius-card);
+        border: 1px solid transparent;
+        transition: transform 0.22s ease, box-shadow 0.22s ease;
+        cursor: pointer;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+        background: #FFFFFF;
+    }
+
+        .color-grid-unit:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 16px 32px -6px rgba(47, 66, 59, 0.14);
+        }
+
+    .cg-photo-header {
+        height: 130px;
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+        background-color: var(--pb-cream);
+    }
+
+        .cg-photo-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+    .color-grid-unit:hover .cg-photo-header img {
+        transform: scale(1.08);
+    }
+
+    .cg-sage {
+        background: #F4F8F6;
+        border-color: #DCE7E2;
+    }
+
+    .cg-butter {
+        background: #FEFBEE;
+        border-color: #F8EFC8;
+    }
+
+    .cg-blue {
+        background: #F3F7FA;
+        border-color: #DCE7F2;
+    }
+
+    .cg-rose {
+        background: #FBF4F4;
+        border-color: #F2DEDE;
+    }
+
+    .cg-lavender {
+        background: #F7F4FB;
+        border-color: #E6DCF5;
+    }
+
+    .cg-amber {
+        background: #FAF5F0;
+        border-color: #F2E4D5;
+    }
+
+    .btn-pb-yellow {
+        background-color: var(--pb-butter);
+        color: #2F423B;
+        font-weight: 800;
+        border: none;
+        border-radius: var(--pb-radius-pill);
+        padding: 0.65rem 1.6rem;
+        transition: all 0.15s ease;
+        box-shadow: 0 4px 14px rgba(247, 221, 125, 0.45);
+        cursor: pointer;
+    }
+
+        .btn-pb-yellow:hover {
+            background-color: var(--pb-butter-hover);
+            transform: translateY(-1px);
+        }
+
+    .btn-pb-sage {
+        background-color: var(--pb-sage);
+        color: #FFFFFF;
+        font-weight: 700;
+        border: none;
+        border-radius: var(--pb-radius-pill);
+        padding: 0.55rem 1.3rem;
+        transition: all 0.15s ease;
+        cursor: pointer;
+    }
+
+        .btn-pb-sage:hover {
+            background-color: var(--pb-sage-dark);
+            color: #FFFFFF;
+        }
+
+    .pb-clean-card {
+        background: #FFFFFF;
+        border: 1px solid var(--pb-border);
+        border-radius: var(--pb-radius-card);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        overflow: hidden;
+    }
+
+        .pb-clean-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--pb-shadow-soft);
+            border-color: var(--pb-sage);
+        }
+
+    .pb-img-box {
+        height: 190px;
+        background: var(--pb-cream);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 1px solid var(--pb-border);
+        padding: 1.25rem;
+    }
+
+        .pb-img-box img {
+            max-height: 85%;
+            max-width: 85%;
+            object-fit: contain;
+        }
+
+    .pb-band-tinted {
+        background: linear-gradient(180deg, #F3EFEA 0%, #FAF9F6 100%);
+        border-top: 1px solid var(--pb-border);
+        border-bottom: 1px solid var(--pb-border);
+        padding: 4.5rem 0;
+    }
+
+    .trust-photo-card {
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px -10px rgba(47, 66, 59, 0.16);
+        border: 4px solid #FFFFFF;
+        height: 380px;
+    }
+
+        .trust-photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .pb-pillar-card {
+        background: #FFFFFF;
+        border: 1px solid var(--pb-border);
+        border-radius: 18px;
+        padding: 1.75rem 1.5rem;
+        height: 100%;
+        box-shadow: 0 4px 16px rgba(47, 66, 59, 0.04);
+        border-left: 4px solid var(--pb-sage);
+    }
+
+    .pb-partner-banner {
+        background: linear-gradient(135deg, var(--pb-sage-dark) 0%, var(--pb-sage) 100%);
+        border-radius: 28px;
+        color: #FFFFFF;
+        padding: 3.5rem 3rem;
+        box-shadow: 0 24px 48px -12px rgba(47, 66, 59, 0.35);
+        overflow: hidden;
+    }
+
+    .team-photo-container {
+        border-radius: 20px;
+        overflow: hidden;
+        border: 4px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 16px 36px rgba(0,0,0,0.3);
+        height: 280px;
+    }
+
+        .team-photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+        }
+
+    .pb-filter-pill {
+        border: 1px solid var(--pb-border);
+        background: #FFFFFF;
+        color: var(--pb-text-muted);
+        font-size: 0.84rem;
+        font-weight: 600;
+        padding: 0.4rem 1.15rem;
+        border-radius: var(--pb-radius-pill);
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+        .pb-filter-pill:hover {
+            background: var(--pb-sage-soft);
+            color: var(--pb-sage-dark);
+        }
+
+        .pb-filter-pill.active {
+            background: var(--pb-sage);
+            color: #FFFFFF;
+            border-color: var(--pb-sage);
+        }
+
+    .community-photo-card {
+        border-radius: 16px;
+        overflow: hidden;
+        height: 200px;
+        position: relative;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+        border: 2px solid #FFFFFF;
+    }
+
+        .community-photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .community-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(0deg, rgba(30, 45, 39, 0.9) 0%, transparent 100%);
+        padding: 0.75rem;
+        color: #FFFFFF;
+        font-size: 0.75rem;
+    }
+
+    .pb-footer {
+        background-color: var(--pb-cream-alt);
+        border-top: 1px solid var(--pb-border);
+        padding: 4rem 0 2rem 0;
+        color: var(--pb-text-muted);
+        font-size: 0.88rem;
+        margin-top: auto;
+    }
+
+        .pb-footer a {
+            color: var(--pb-text-body);
+            text-decoration: none;
+        }
+
+            .pb-footer a:hover {
+                color: var(--pb-sage);
+            }
+</style>
+
+<div class="shoppet-viewport">
+
+    <!-- TOP COMPLIANCE STRIP -->
+    <div class="pb-topstrip">
+        <div class="container-xl d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <span>🐾 <strong>ShoppetCare Lipa</strong> • Verified Partner of Licensed Veterinary Practitioners</span>
+            </div>
+            <div class="d-none d-md-flex align-items-center gap-3 small">
+                <span>In-Store & Courier Pickup (RA 11967)</span>
+                <span class="badge" style="background: var(--pb-butter); color: #1E2D27; font-weight: 700;">LIPA HUB</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN NAVBAR -->
+    <nav class="pb-navbar">
+        <div class="container-xl d-flex justify-content-between align-items-center">
+            <a class="d-flex align-items-center gap-2 text-decoration-none" href="/" @onclick='() => currentTab = "home"'>
+                <img src="/shoppetlogo.png" alt="Shoppet" style="height: 38px; width: auto; object-fit: contain;" />
+                <div class="d-flex flex-column">
+                    <span class="fw-bold fs-5 tracking-tight" style="color: var(--pb-sage-dark); line-height: 1;">Shoppet<span style="color: #427AB5;">Care</span></span>
+                    <span class="fw-bold" style="color: var(--pb-sage); font-size: 0.62rem; letter-spacing: 0.5px;">HAPPY PETS, NO REGRETS</span>
+                </div>
+            </a>
+
+            <!-- Navigation Center -->
+            <div class="d-flex align-items-center gap-1">
+                <button type="button" class="pb-nav-btn @(currentTab == "home" ? "active" : "")" @onclick='() => currentTab = "home"'>Services</button>
+                <button type="button" class="pb-nav-btn @(currentTab == "clinics" ? "active" : "")" @onclick='() => currentTab = "clinics"'>Verified Clinics</button>
+                <button type="button" class="pb-nav-btn @(currentTab == "shop" ? "active" : "")" @onclick='() => currentTab = "shop"'>Pharmacy & Food</button>
+                <button type="button" class="pb-nav-btn @(currentTab == "appointments" ? "active" : "")" @onclick='() => currentTab = "appointments"'>Book Consult</button>
+                <button type="button" class="pb-nav-btn @(currentTab == "forclinics" ? "active" : "")" @onclick='() => currentTab = "forclinics"'>For Clinics</button>
+            </div>
+
+            <!-- Professional Authentication & Cart Controls -->
+            <div class="d-flex align-items-center gap-3">
+                @if (Auth.IsLoggedIn)
+                {
+                    <div class="dropdown">
+                        <button class="btn btn-sm rounded-pill px-3 fw-bold dropdown-toggle d-flex align-items-center gap-2 shadow-sm" style="background: var(--pb-sage-soft); color: var(--pb-sage-dark); border: 1px solid #DCE7E2;" type="button" @onclick="() => showUserMenu = !showUserMenu">
+                            <span style="width: 26px; height: 26px; background: var(--pb-sage); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">👤</span>
+                            <span>@Auth.CurrentUser?.FullName</span>
+                            <span class="badge bg-white text-dark border ms-1" style="font-size: 0.65rem;">@Auth.CurrentUser?.Role</span>
+                        </button>
+                        @if (showUserMenu)
+                        {
+                            <div class="dropdown-menu dropdown-menu-end show shadow-lg border-0 mt-2 p-2 rounded-4" style="min-width: 220px;">
+                                <div class="px-3 py-2 border-bottom mb-1">
+                                    <span class="d-block small text-muted">Signed in as</span>
+                                    <strong class="text-dark text-truncate d-block" style="font-size: 0.85rem;">@Auth.CurrentUser?.Email</strong>
+                                </div>
+                                @if (Auth.CurrentUser?.Role == "Clinic Staff" || Auth.CurrentUser?.Role == "Admin")
+                                {
+                                    <button class="dropdown-item py-2 small fw-semibold rounded-3 d-flex align-items-center gap-2" @onclick='() => Nav.NavigateTo("/clinic-portal")'>
+                                        <span>🏥</span> Clinic Reception Desk
+                                    </button>
+                                }
+                                @if (Auth.CurrentUser?.Role == "Admin")
+                                {
+                                    <button class="dropdown-item py-2 small fw-semibold rounded-3 d-flex align-items-center gap-2" @onclick='() => Nav.NavigateTo("/admin-portal")'>
+                                        <span>🛡️</span> Platform Admin Console
+                                    </button>
+                                }
+                                <div class="dropdown-divider my-1"></div>
+                                <button class="dropdown-item py-2 small fw-bold text-danger rounded-3 d-flex align-items-center gap-2" @onclick="PerformLogout">
+                                    <span>🚪</span> Sign Out
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <button class="btn btn-sm rounded-pill px-4 fw-bold shadow-sm py-2" style="background: var(--pb-sage-dark); color: #FFFFFF; transition: all 0.2s;" @onclick="() => { showAuthModal = true; isRegisterMode = false; authErrorMessage = string.Empty; }">
+                        🔒 Sign In / Register
+                    </button>
+                }
+
+                <button class="btn-pb-yellow btn-sm" @onclick="() => showCartModal = true">
+                    🛒 Cart @(CartCount > 0 ? $"({CartCount})" : "")
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow-1">
+
+        @if (currentTab == "home")
+        {
+            <!-- HERO -->
+            <section class="pb-hero-chamber">
+                <div class="container-xl">
+                    <div class="row align-items-center">
+                        <div class="col-xl-6 col-lg-7 col-md-9 text-start">
+                            <div class="pb-hero-tag">
+                                <span>🛡️</span>
+                                <span>PRC-Verified Veterinary & Clinical Pharmacy Network</span>
+                            </div>
+                            <h1 class="pb-hero-h1">
+                                Find Trusted Veterinary Clinics & Supplies in Lipa City
+                            </h1>
+                            <p class="pb-hero-p">
+                                Connect with accredited veterinarians, schedule checkups, and reserve prescription pet diets for seamless counter pickup.
+                            </p>
+
+                            <div class="pb-concierge-card-glass">
+                                <div class="pb-tab-bar">
+                                    <button type="button" class="pb-tab-item @(selectedServiceTab == "Vet" ? "active" : "")" @onclick='() => selectedServiceTab = "Vet"'>
+                                        <span>🩺</span>
+                                        <span>Vet Consult</span>
+                                    </button>
+                                    <button type="button" class="pb-tab-item @(selectedServiceTab == "Vaccine" ? "active" : "")" @onclick='() => selectedServiceTab = "Vaccine"'>
+                                        <span>💉</span>
+                                        <span>Vaccinations</span>
+                                    </button>
+                                    <button type="button" class="pb-tab-item @(selectedServiceTab == "Food" ? "active" : "")" @onclick='() => selectedServiceTab = "Food"'>
+                                        <span>🍲</span>
+                                        <span>Prescription Diets</span>
+                                    </button>
+                                    <button type="button" class="pb-tab-item @(selectedServiceTab == "Grooming" ? "active" : "")" @onclick='() => selectedServiceTab = "Grooming"'>
+                                        <span>✂️</span>
+                                        <span>Medicated Grooming</span>
+                                    </button>
+                                    <button type="button" class="pb-tab-item @(selectedServiceTab == "Pharmacy" ? "active" : "")" @onclick='() => selectedServiceTab = "Pharmacy"'>
+                                        <span>💊</span>
+                                        <span>Pharmacy</span>
+                                    </button>
+                                </div>
+
+                                <div class="row g-3 align-items-center">
+                                    <div class="col-md-5">
+                                        <label class="form-label small fw-bold text-muted mb-1">Clinic District</label>
+                                        <select class="form-select form-select-sm rounded-3 bg-white">
+                                            <option>Ayala Highway (Main District)</option>
+                                            <option>Marawoy Crossroads</option>
+                                            <option>Tambo / Banay-banay</option>
+                                            <option>Sabang Area</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-muted mb-1">Pet Type / Size</label>
+                                        <select class="form-select form-select-sm rounded-3 bg-white" @bind="selectedTier">
+                                            <option value="">All Pet Sizes</option>
+                                            <option value="Small Pets">Small Pets (1-10kg)</option>
+                                            <option value="Medium Pets">Medium Pets (11-25kg)</option>
+                                            <option value="Large Pets">Large Pets (26kg+)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 text-end pt-3">
+                                        <button class="btn-pb-yellow w-100 py-2" @onclick="HandleWidgetSearch">
+                                            Find Care →
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-6 col-lg-5 d-none d-lg-block"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6-SERVICE COLOR & PHOTO GRID -->
+            <section class="container-xl py-5">
+                <div class="text-center mb-4">
+                    <h4 class="fw-bold mb-1" style="color: var(--pb-text-title);">Care & Supplies for Every Need</h4>
+                    <p class="text-muted small">Select a service to instantly route your appointment or reserve counter supplies</p>
+                </div>
+
+                <div class="row row-cols-1 row-cols-md-3 g-4">
+                    <div class="col">
+                        <div class="color-grid-unit cg-sage shadow-sm" @onclick='() => DirectBookService("General Checkup / Consultation")'>
+                            <div class="cg-photo-header"><img src="/vet_consult.png" alt="Vet Examination" /></div>
+                            <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
+                                <div>
+                                    <span class="badge mb-2 px-2 py-1 small" style="background:#E2ECE7;color:var(--pb-sage-dark);">🩺 In-Clinic</span>
+                                    <h6 class="fw-bold mb-1" style="color: var(--pb-sage-dark);">Veterinary Consultation</h6>
+                                    <p class="text-muted small mb-0">Routine physical exams, diagnostic consultations, and comprehensive clinical checkups.</p>
+                                </div>
+                                <div class="pt-3 mt-3 d-flex justify-content-between align-items-center border-top">
+                                    <span class="small fw-bold" style="color: var(--pb-sage);">Book slot →</span>
+                                    <span class="small text-muted">From ₱350</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="color-grid-unit cg-butter shadow-sm" @onclick='() => DirectBookService("Core Vaccination (Anti-Rabies / DHPP)")'>
+                            <div class="cg-photo-header"><img src="/premiumft.png" alt="Pet Vaccinations" /></div>
+                            <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
+                                <div>
+                                    <span class="badge mb-2 px-2 py-1 small" style="background:#FBF3D5;color:#8C6D00;">💉 Preventative</span>
+                                    <h6 class="fw-bold mb-1" style="color: #8C6D00;">Core Vaccinations</h6>
+                                    <p class="text-muted small mb-0">Anti-Rabies, 5-in-1 DHPP, kennel cough, and verified PRC pet health cards.</p>
+                                </div>
+                                <div class="pt-3 mt-3 d-flex justify-content-between align-items-center border-top">
+                                    <span class="small fw-bold" style="color: #8C6D00;">Schedule visit →</span>
+                                    <span class="small text-muted">From ₱450</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="color-grid-unit cg-blue shadow-sm" @onclick='() => FilterShopByCategory("Food")'>
+                            <div class="cg-photo-header"><img src="/foodprod.png" alt="Prescription Diets" /></div>
+                            <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
+                                <div>
+                                    <span class="badge mb-2 px-2 py-1 small" style="background:#E2EDF8;color:#2A5885;">🍲 Nutrition</span>
+                                    <h6 class="fw-bold mb-1" style="color: #2A5885;">Prescription Diets</h6>
+                                    <p class="text-muted small mb-0">Clinically formulated renal, gastrointestinal, weight management, and specialized kibble.</p>
+                                </div>
+                                <div class="pt-3 mt-3 d-flex justify-content-between align-items-center border-top">
+                                    <span class="small fw-bold" style="color: #2A5885;">Browse food →</span>
+                                    <span class="small text-muted">Pickup ready</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="color-grid-unit cg-rose shadow-sm" @onclick='() => DirectBookService("Medicated Grooming & Skin Care")'>
+                            <div class="cg-photo-header"><img src="/groomingft.png" alt="Medicated Grooming" /></div>
+                            <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
+                                <div>
+                                    <span class="badge mb-2 px-2 py-1 small" style="background:#F7E3E3;color:#8A3B3B;">✂️ Therapeutic</span>
+                                    <h6 class="fw-bold mb-1" style="color: #8A3B3B;">Medicated Grooming</h6>
+                                    <p class="text-muted small mb-0">Therapeutic antibacterial baths, tick & flea treatment, and hygiene coat trimming.</p>
+                                </div>
+                                <div class="pt-3 mt-3 d-flex justify-content-between align-items-center border-top">
+                                    <span class="small fw-bold" style="color: #8A3B3B;">Book grooming →</span>
+                                    <span class="small text-muted">From ₱400</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="color-grid-unit cg-lavender shadow-sm" @onclick='() => FilterShopByCategory("Health")'>
+                            <div class="cg-photo-header"><img src="/healthprod.png" alt="Pet Pharmacy" /></div>
+                            <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
+                                <div>
+                                    <span class="badge mb-2 px-2 py-1 small" style="background:#EDE3F8;color:#583F85;">💊 Dispensary</span>
+                                    <h6 class="fw-bold mb-1" style="color: #583F85;">Pharmacy Dispensation</h6>
+                                    <p class="text-muted small mb-0">Prescribed dewormers, daily joint supplements, vitamins, and post-consult medicines.</p>
+                                </div>
+                                <div class="pt-3 mt-3 d-flex justify-content-between align-items-center border-top">
+                                    <span class="small fw-bold" style="color: #583F85;">View pharmacy →</span>
+                                    <span class="small text-muted">Counter verified</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="color-grid-unit cg-amber shadow-sm" @onclick='() => FilterShopByCategory("Accessories")'>
+                            <div class="cg-photo-header"><img src="/petbedna.jpg" alt="Recovery Supplies" /></div>
+                            <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
+                                <div>
+                                    <span class="badge mb-2 px-2 py-1 small" style="background:#F8EADF;color:#8C5523;">🛏️ Recovery</span>
+                                    <h6 class="fw-bold mb-1" style="color: #8C5523;">Recovery & Care Supplies</h6>
+                                    <p class="text-muted small mb-0">Orthopedic post-surgery bedding, recovery collars, and therapeutic accessories.</p>
+                                </div>
+                                <div class="pt-3 mt-3 d-flex justify-content-between align-items-center border-top">
+                                    <span class="small fw-bold" style="color: #8C5523;">Shop comfort →</span>
+                                    <span class="small text-muted">All sizes</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 1: VERIFIED CLINICS DIRECTORY -->
+            <section class="container-xl py-5 border-top">
+                <div class="d-flex justify-content-between align-items-end mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1" style="color: var(--pb-text-title);">Accredited Partner Facilities</h4>
+                        <p class="text-muted small mb-0">Vetted veterinary clinics in Lipa City with active PRC licenses</p>
+                    </div>
+                    <button class="btn btn-sm btn-link text-decoration-none fw-bold p-0" style="color: var(--pb-sage);" @onclick='() => currentTab = "clinics"'>
+                        See all clinics →
+                    </button>
+                </div>
+
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    @foreach (var clinic in clinics.Take(3))
+                    {
+                        <div class="col">
+                            <div class="pb-clean-card h-100 d-flex flex-column justify-content-between">
+                                <div style="height: 140px; overflow:hidden;">
+                                    <img src="/petvilna.jpg" alt="@clinic.ClinicName" style="width:100%;height:100%;object-fit:cover;" />
+                                </div>
+                                <div class="p-4 flex-grow-1 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="badge rounded-pill px-3 py-1" style="background: var(--pb-sage-soft); color: var(--pb-sage-dark); font-weight: 700;">
+                                                ✓ PRC-Accredited
+                                            </span>
+                                            <small class="text-muted">⭐ 4.9 (120+ reviews)</small>
+                                        </div>
+                                        <h5 class="fw-bold mb-1" style="color: var(--pb-text-title);">@clinic.ClinicName</h5>
+                                        <p class="text-muted small mb-3">📍 @clinic.Branch — @clinic.Address</p>
+
+                                        <div class="p-3 rounded-3 small font-monospace mb-3" style="background: var(--pb-cream); color: var(--pb-text-title);">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>PRC License:</span>
+                                                <strong>@clinic.PrcLicenseNo</strong>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span>PTR Number:</span>
+                                                <strong>@clinic.PtrNumber</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">Mon - Sat: 8am - 6pm</small>
+                                        <button class="btn-pb-sage btn-sm px-3" @onclick='() => currentTab = "appointments"'>
+                                            Book Consult
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <!-- SECTION 2: TINTED BAND - PET SUPPLIES -->
+            <section class="pb-band-tinted">
+                <div class="container-xl">
+                    <div class="d-flex justify-content-between align-items-end mb-4">
+                        <div>
+                            <h4 class="fw-bold mb-1" style="color: var(--pb-text-title);">Clinical Diets & Pharmacy</h4>
+                            <p class="text-muted small mb-0">Pre-order online for express counter pickup or buyer-arranged courier</p>
+                        </div>
+                        <button class="btn btn-sm btn-link text-decoration-none fw-bold p-0" style="color: var(--pb-sage);" @onclick='() => currentTab = "shop"'>
+                            Full catalog (@allProducts.Count) →
+                        </button>
+                    </div>
+
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+                        @foreach (var p in allProducts.Take(4))
+                        {
+                            <div class="col">
+                                <div class="pb-clean-card h-100 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <div class="pb-img-box">
+                                            <img src="/@p.ImageSource" alt="@p.Name" />
+                                        </div>
+                                        <div class="p-3">
+                                            <span class="badge rounded-pill mb-2 px-2 py-1" style="@AppTheme.GetCategoryBadgeStyle(p.Category); font-size: 0.72rem;">
+                                                @p.Category
+                                            </span>
+                                            <h6 class="fw-bold text-dark mb-1 text-truncate" title="@p.Name">@p.Name</h6>
+                                            <p class="text-muted small mb-0 text-truncate" style="font-size: 0.8rem;">@p.Description</p>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 pt-0 d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold fs-6" style="color: var(--pb-sage);">₱@p.Price.ToString("N2")</span>
+                                        <button class="btn-pb-yellow btn-sm px-3" disabled="@(p.Stock <= 0)" @onclick="() => AddToCart(p.Id)">
+                                            Reserve
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: COMMUNITY PHOTO WALL -->
+            <section class="container-xl py-5">
+                <div class="text-center mb-4">
+                    <span class="badge rounded-pill px-3 py-1 mb-2 small fw-bold" style="background: var(--pb-sage-soft); color: var(--pb-sage-dark);">
+                        Lipa Pet Community
+                    </span>
+                    <h4 class="fw-bold mb-1" style="color: var(--pb-text-title);">Happy Patients Across Lipa City</h4>
+                    <p class="text-muted small">Real visits, recovery journeys, and checkups verified by accredited partner clinics</p>
+                </div>
+
+                <div class="row row-cols-2 row-cols-md-4 g-3">
+                    <div class="col">
+                        <div class="community-photo-card">
+                            <img src="/catft.jpg" alt="Feline Patient Recovery" />
+                            <div class="community-overlay"><strong>Oreo</strong> • Post-Vaccine Checkup</div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="community-photo-card">
+                            <img src="/premiumft.png" alt="Canine Health Checkup" />
+                            <div class="community-overlay"><strong>Milo</strong> • General Consultation</div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="community-photo-card">
+                            <img src="/petbedna.jpg" alt="Orthopedic Comfort" />
+                            <div class="community-overlay"><strong>Bella</strong> • Therapeutic Bedding</div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="community-photo-card">
+                            <img src="/petvilna.jpg" alt="Clinic Examination Room" />
+                            <div class="community-overlay"><strong>Dr. Santos</strong> • Wellness Exam</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: TRUST & SAFETY WITH vet_wpets.jpg -->
+            <section class="container-xl py-5 border-top">
+                <div class="row align-items-center g-5">
+                    <div class="col-lg-5">
+                        <div class="trust-photo-card">
+                            <img src="/vet_wpets.jpg" alt="Compassionate Veterinary Care in Lipa City" />
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <span class="badge rounded-pill px-3 py-1 mb-2 small fw-bold" style="background: var(--pb-sage-soft); color: var(--pb-sage-dark);">
+                            Trust & Professional Standards
+                        </span>
+                        <h3 class="fw-bold mb-3" style="color: var(--pb-text-title);">Compassionate Veterinary Care You Can Rely On</h3>
+                        <p class="text-muted mb-4">
+                            ShoppetCare bridges certified veterinary practices with loving pet parents. Whether you are scheduling a critical core vaccination or pre-ordering a clinical diet, our platform ensures every appointment is held by licensed practitioners.
+                        </p>
+
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="pb-pillar-card">
+                                    <h6 class="fw-bold mb-1" style="color: var(--pb-sage-dark);">100% PRC-Licensed</h6>
+                                    <p class="text-muted small mb-0">Every veterinarian's credentials are authenticated with the PRC Board.</p>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="pb-pillar-card">
+                                    <h6 class="fw-bold mb-1" style="color: var(--pb-sage-dark);">RA 11967 Safe Handoff</h6>
+                                    <p class="text-muted small mb-0">Pick up prescriptions at clinic counters or dispatch riders with digital tokens.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 5: B2B PARTNER BANNER WITH vet_group.png -->
+            <section class="container-xl pb-5">
+                <div class="pb-partner-banner">
+                    <div class="row align-items-center g-4">
+                        <div class="col-lg-7">
+                            <span class="badge rounded-pill px-3 py-1 mb-3 small fw-bold" style="background: var(--pb-butter); color: #2F423B;">
+                                For Veterinary Practices
+                            </span>
+                            <h2 class="fw-bold mb-2">Are You an Animal Clinic in Lipa City?</h2>
+                            <p class="lead small mb-4 opacity-90" style="max-width: 580px;">
+                                Expand your clinic's digital reach. Receive verified appointment bookings, showcase your PRC credentials, and offer compliant click-and-collect sales.
+                            </p>
+                            <button class="btn-pb-yellow" @onclick='() => currentTab = "forclinics"'>
+                                Register as a Partner Clinic →
+                            </button>
+                        </div>
+                        <div class="col-lg-5 text-center d-none d-lg-block">
+                            <div class="team-photo-container">
+                                <img src="/vet_group.png" alt="Lipa City Partner Veterinary Team" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        }
+        else if (currentTab == "clinics")
+        {
+            <div class="container-xl py-5">
+                <div class="mb-4">
+                    <h3 class="fw-bold mb-1" style="color: var(--pb-text-title);">Accredited Veterinary Clinics</h3>
+                    <p class="text-muted small">Validated partner practices operating with verified licenses in Lipa City</p>
+                </div>
+
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    @foreach (var clinic in clinics)
+                    {
+                        <div class="col">
+                            <div class="pb-clean-card h-100 d-flex flex-column justify-content-between">
+                                <div style="height: 150px; overflow:hidden;">
+                                    <img src="/petvilna.jpg" alt="@clinic.ClinicName" style="width:100%;height:100%;object-fit:cover;" />
+                                </div>
+                                <div class="p-4 flex-grow-1 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <span class="badge rounded-pill px-3 py-1" style="background: var(--pb-sage-soft); color: var(--pb-sage-dark); font-weight: 700;">
+                                                ✓ PRC-Accredited
+                                            </span>
+                                            <small class="text-muted">@clinic.SubscriptionPlan</small>
+                                        </div>
+                                        <h5 class="fw-bold mb-1" style="color: var(--pb-text-title);">@clinic.ClinicName</h5>
+                                        <p class="text-muted small mb-3">📍 @clinic.Branch — @clinic.Address</p>
+
+                                        <div class="p-3 rounded-3 small font-monospace mb-3" style="background: var(--pb-cream);">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>PRC License:</span>
+                                                <strong>@clinic.PrcLicenseNo</strong>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span>PTR Number:</span>
+                                                <strong>@clinic.PtrNumber</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">Mon-Sat: 8am - 6pm</small>
+                                        <button class="btn-pb-sage btn-sm" @onclick='() => currentTab = "appointments"'>
+                                            Book Consult
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else if (currentTab == "shop")
+        {
+            <div class="container-xl py-5">
+                <div class="mb-4 d-flex justify-content-between align-items-end flex-wrap gap-2">
+                    <div>
+                        <h3 class="fw-bold mb-1" style="color: var(--pb-text-title);">Clinical Supplies & Pharmacy</h3>
+                        <p class="text-muted small mb-0">Pre-order online for express counter pickup or buyer-arranged courier</p>
+                    </div>
+                    @if (!string.IsNullOrEmpty(selectedCategory) || !string.IsNullOrEmpty(selectedTier))
+                    {
+                        <button class="btn btn-sm btn-link text-danger text-decoration-none p-0" @onclick="ResetAllFilters">Reset filters</button>
+                    }
+                </div>
+
+                <div class="d-flex gap-2 mb-3 flex-wrap">
+                    @foreach (var tier in petTiers)
+                    {
+                        bool active = (string.IsNullOrEmpty(selectedTier) && tier == "All") || selectedTier == tier;
+                        <button type="button" class="pb-filter-pill @(active ? "active" : "")" @onclick="() => SetActiveTier(tier)">
+                            @tier
+                        </button>
+                    }
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap mb-4">
+                    <button type="button" class="pb-filter-pill @(string.IsNullOrEmpty(selectedCategory) ? "active" : "")" @onclick='() => selectedCategory = ""'>
+                        All Categories
+                    </button>
+                    @foreach (var cat in new[] { "Food", "Health", "Grooming", "Accessories", "Toys" })
+                    {
+                        bool active = selectedCategory.Equals(cat, StringComparison.OrdinalIgnoreCase);
+                        <button type="button" class="pb-filter-pill @(active ? "active" : "")" @onclick="() => ToggleCategoryFilter(cat)">
+                            @cat
+                        </button>
+                    }
+                </div>
+
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                    @foreach (var p in FilteredProducts)
+                    {
+                        <div class="col">
+                            <div class="pb-clean-card h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="pb-img-box">
+                                        <img src="/@p.ImageSource" alt="@p.Name" />
+                                    </div>
+                                    <div class="p-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="badge rounded-pill px-2 py-1" style="@AppTheme.GetCategoryBadgeStyle(p.Category); font-size: 0.72rem;">
+                                                @p.Category
+                                            </span>
+                                            <small class="fw-bold" style="@AppTheme.GetStockBadgeStyle(p.Stock)">
+                                                @(p.Stock > 0 ? $"{p.Stock} in stock" : "Out of stock")
+                                            </small>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1 text-truncate" title="@p.Name">@p.Name</h6>
+                                        <p class="text-muted small mb-0 text-truncate" style="font-size: 0.8rem;">@p.Description</p>
+                                    </div>
+                                </div>
+                                <div class="p-3 pt-0 d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold fs-6" style="color: var(--pb-sage);">₱@p.Price.ToString("N2")</span>
+                                    <button class="btn-pb-yellow btn-sm px-3" disabled="@(p.Stock <= 0)" @onclick="() => AddToCart(p.Id)">
+                                        Reserve
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else if (currentTab == "appointments")
+        {
+            <div class="container-xl py-5">
+                <div class="row justify-content-center">
+                    <div class="col-lg-7">
+                        <div class="pb-clean-card p-4 p-md-5">
+                            <h4 class="fw-bold mb-1" style="color: var(--pb-text-title);">Book a Clinical Consultation</h4>
+                            <p class="text-muted small mb-4">Direct consultation booking with accredited Lipa City veterinary practices</p>
+
+                            @if (appointmentSubmitted)
+                            {
+                                <div class="p-4 rounded-3 text-center border" style="background: var(--pb-sage-soft); border-color: var(--pb-sage) !important;">
+                                    <h5 class="fw-bold mb-1" style="color: var(--pb-sage-dark);">Consultation Request Received!</h5>
+                                    <p class="small text-muted mb-0">The clinic desk has received your request. You will receive an SMS reminder prior to arrival.</p>
+                                    <button class="btn-pb-sage btn-sm mt-3" @onclick="() => appointmentSubmitted = false">Book Another</button>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted mb-1">Partner Clinic</label>
+                                        <select class="form-select form-select-sm" @bind="newAppointment.ClinicId">
+                                            @foreach (var c in clinics)
+                                            {
+                                                <option value="@c.Id">@c.ClinicName (@c.Branch)</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted mb-1">Service Type</label>
+                                        <select class="form-select form-select-sm" @bind="newAppointment.ServiceType">
+                                            <option>General Checkup / Consultation</option>
+                                            <option>Core Vaccination (Anti-Rabies / DHPP)</option>
+                                            <option>Deworming & Preventative Care</option>
+                                            <option>Medicated Grooming & Skin Care</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted mb-1">Pet Owner Name</label>
+                                        <input class="form-control form-control-sm" placeholder="Juan Dela Cruz" @bind="newAppointment.OwnerName" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted mb-1">Pet Name & Breed</label>
+                                        <input class="form-control form-control-sm" placeholder="Milo (Shih Tzu)" @bind="newAppointment.PetName" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted mb-1">Contact Number (SMS)</label>
+                                        <input class="form-control form-control-sm" placeholder="0917XXXXXXX" @bind="newAppointment.ContactNumber" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted mb-1">Appointment Schedule</label>
+                                        <input type="datetime-local" class="form-control form-control-sm" @bind="newAppointment.AppointmentDate" />
+                                    </div>
+                                    <div class="col-12 text-end mt-4">
+                                        <button class="btn-pb-yellow px-4 py-2"
+                                                disabled="@(string.IsNullOrWhiteSpace(newAppointment.OwnerName) || string.IsNullOrWhiteSpace(newAppointment.ContactNumber))"
+                                                @onclick="SubmitAppointment">
+                                            Confirm Consultation Schedule
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (currentTab == "forclinics")
+        {
+            <div class="container-xl py-5">
+                <div class="text-center max-w-xl mx-auto mb-5" style="max-width: 650px;">
+                    <h2 class="fw-bold mb-2" style="color: var(--pb-text-title);">Partner with Shoppet Care</h2>
+                    <p class="text-muted small">Empowering Lipa City veterinary practices with verified online discovery, queue flow, and counter retail pickup.</p>
+                </div>
+
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <div class="pb-clean-card p-4 h-100">
+                            <div class="fs-3 mb-3">🛡️</div>
+                            <h5 class="fw-bold mb-2">PRC Credential Transparency</h5>
+                            <p class="text-muted small mb-0">Highlight official PRC Board licenses and PTR records directly on your clinic's public profile.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="pb-clean-card p-4 h-100">
+                            <div class="fs-3 mb-3">📦</div>
+                            <h5 class="fw-bold mb-2">Click-and-Collect Dispensary</h5>
+                            <p class="text-muted small mb-0">Pre-sell specialized nutrition online with tamper-proof digital claim vouchers verified at your counter.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="pb-clean-card p-4 h-100">
+                            <div class="fs-3 mb-3">📅</div>
+                            <h5 class="fw-bold mb-2">Smart Queue Routing</h5>
+                            <p class="text-muted small mb-0">Direct incoming visits to pre-booked appointment windows with automated SMS reminders.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="pb-footer">
+        <div class="container-xl">
+            <div class="row g-4 mb-4 pb-3 border-bottom">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <img src="/shoppetlogo.png" alt="Shoppet" style="height: 32px;" />
+                        <span class="fw-bold fs-5" style="color: var(--pb-sage-dark);">ShoppetCare</span>
+                    </div>
+                    <p class="small text-muted mb-3" style="max-width: 320px;">
+                        Lipa City's partner for clinical veterinary consultations, verified practitioner listings, and counter supply pickup.
+                    </p>
+                </div>
+                <div class="col-6 col-md-2">
+                    <h6 class="fw-bold mb-3 small text-uppercase" style="color: var(--pb-text-title);">Navigation</h6>
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-2"><a href="javascript:void(0)" @onclick='() => currentTab = "clinics"'>Partner Clinics</a></li>
+                        <li class="mb-2"><a href="javascript:void(0)" @onclick='() => currentTab = "shop"'>Clinical Supplies</a></li>
+                        <li class="mb-2"><a href="javascript:void(0)" @onclick='() => currentTab = "appointments"'>Consultation Booking</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-md-3">
+                    <h6 class="fw-bold mb-3 small text-uppercase" style="color: var(--pb-text-title);">Standards</h6>
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-2">PRC Board of Veterinary Medicine</li>
+                        <li class="mb-2">RA 11967 Counter Pickup Standard</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="fw-bold mb-3 small text-uppercase" style="color: var(--pb-text-title);">Lipa Central Hub</h6>
+                    <p class="small text-muted mb-1">📍 Ayala Highway & Marawoy Crossroads</p>
+                    <p class="small text-muted mb-0">🕒 Mon - Sat: 8:00 AM - 6:00 PM</p>
+                </div>
+            </div>
+
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 small text-muted">
+                <span>© 2026 Shoppet Care Systems. All rights reserved.</span>
+                <span>Role Scope: <strong>Consumer / Pet Parent</strong></span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- PROFESSIONAL AUTHENTICATION MODAL (SIGN IN / REGISTER) -->
+    @if (showAuthModal)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background: rgba(30, 40, 36, 0.65); backdrop-filter: blur(6px); z-index: 1200;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4 bg-white text-dark overflow-hidden">
+                    <div class="p-4 text-white text-center position-relative" style="background: linear-gradient(135deg, var(--pb-sage-dark) 0%, var(--pb-sage) 100%);">
+                        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" @onclick="() => showAuthModal = false"></button>
+                        <div class="fs-1 mb-1">🐾</div>
+                        <h4 class="fw-bold mb-1">Shoppet<span style="color: var(--pb-butter);">Care</span> Security Node</h4>
+                        <p class="small opacity-75 mb-0">@(isRegisterMode ? "Create your verified portal account" : "Sign in to access your dashboard")</p>
+                    </div>
+
+                    <div class="p-4 p-md-5">
+                        @if (!string.IsNullOrEmpty(authErrorMessage))
+                        {
+                            <div class="alert alert-danger py-2 small rounded-3 mb-3 border-0 bg-danger bg-opacity-10 text-danger fw-semibold">
+                                ⚠️ @authErrorMessage
+                            </div>
+                        }
+
+                        @if (isRegisterMode)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted mb-1">Full Name *</label>
+                                <input class="form-control rounded-3 py-2" @bind="regName" placeholder="Juan Dela Cruz" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted mb-1">Email Address (Domain Restricted) *</label>
+                                <input class="form-control rounded-3 py-2" @bind="regEmail" placeholder="name@shoppet.com or name@gmail.com" />
+                                <small class="text-muted" style="font-size: 0.72rem;">Allowed domains: @string.Join(", ", allowedDomains)</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted mb-1">Password (Min. 6 chars) *</label>
+                                <input type="password" class="form-control rounded-3 py-2" @bind="regPassword" placeholder="••••••••" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted mb-1">Confirm Password *</label>
+                                <input type="password" class="form-control rounded-3 py-2" @bind="regConfirmPassword" placeholder="••••••••" />
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted mb-1">Assigned Portal Role</label>
+                                <select class="form-select rounded-3 py-2" @bind="regRole">
+                                    <option value="Pet Owner">Pet Owner / Customer</option>
+                                    <option value="Clinic Staff">Clinic Staff / Reception</option>
+                                    <option value="Admin">Platform Administrator</option>
+                                </select>
+                            </div>
+
+                            <button class="btn-pb-yellow w-100 py-3 fw-bold shadow-sm mb-3" @onclick="HandleRegister">
+                                Register Verified Account
+                            </button>
+                        }
+                        else
+                        {
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted mb-1">Email Address *</label>
+                                <input class="form-control rounded-3 py-2" @bind="regEmail" placeholder="name@example.com" />
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted mb-1">Password *</label>
+                                <input type="password" class="form-control rounded-3 py-2" @bind="regPassword" placeholder="••••••••" />
+                            </div>
+
+                            <button class="btn-pb-yellow w-100 py-3 fw-bold shadow-sm mb-3" @onclick="HandleLogin">
+                                Sign In to Portal
+                            </button>
+                        }
+
+                        <div class="text-center pt-2 border-top">
+                            <button class="btn btn-sm btn-link text-decoration-none text-muted fw-semibold" @onclick="() => { isRegisterMode = !isRegisterMode; authErrorMessage = string.Empty; }">
+                                @(isRegisterMode ? "Already registered? Sign in here" : "Don't have an account? Create one")
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- CART MODAL -->
+    @if (showCartModal)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background: rgba(30, 40, 36, 0.5); backdrop-filter: blur(4px); z-index: 1100;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg p-4 rounded-4 bg-white text-dark">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold" style="color: var(--pb-sage-dark);">Click-and-Collect Reservation</h5>
+                        <button type="button" class="btn-close" @onclick="CloseReceipt"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        @if (!string.IsNullOrEmpty(issuedClaimToken))
+                        {
+                            <div class="text-center py-3">
+                                <div class="badge p-3 rounded-circle mb-3 fs-4" style="background: var(--pb-sage-soft); color: var(--pb-sage);">✓</div>
+                                <h5 class="fw-bold mb-1">Reservation Authorized</h5>
+                                <p class="small text-muted mb-4">Present this digital code at the clinic counter or share with your rider.</p>
+
+                                <div class="p-3 rounded-3 border mb-3 font-monospace" style="background: var(--pb-cream);">
+                                    <small class="text-muted d-block text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Counter Claim Token</small>
+                                    <h3 class="fw-bold mb-0" style="color: var(--pb-sage-dark);">@issuedClaimToken</h3>
+                                </div>
+
+                                <small class="text-muted d-block mb-3">Legal Point of Handoff: Partner Clinic Counter</small>
+                                <button class="btn-pb-sage w-100 py-2" @onclick="CloseReceipt">Done</button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mb-3" style="max-height: 180px; overflow-y: auto;">
+                                @if (!CartItems.Any())
+                                {
+                                    <p class="text-muted text-center py-4 small">Your reservation basket is empty.</p>
+                                }
+                                else
+                                {
+                                    @foreach (var item in CartItems)
+                                    {
+                                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom small">
+                                            <div>
+                                                <span class="fw-bold">@item.Name</span>
+                                                <div class="text-muted">₱@item.Price.ToString("N2") × @item.Quantity</div>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="fw-bold" style="color: var(--pb-sage);">₱@item.Subtotal.ToString("N2")</span>
+                                                <button class="btn btn-sm btn-link text-danger p-0 text-decoration-none" @onclick="() => RemoveFromCart(item.ProductId)">✕</button>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+
+                            @if (CartItems.Any())
+                            {
+                                <div class="mb-2">
+                                    <label class="form-label small fw-bold text-muted mb-1">Pet Owner Full Name *</label>
+                                    <input class="form-control form-control-sm rounded-3" @bind="checkoutCustomerName" placeholder="Juan Dela Cruz" />
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small fw-bold text-muted mb-1">Contact Number (GCash/Maya) *</label>
+                                    <input class="form-control form-control-sm rounded-3" @bind="checkoutContact" placeholder="0917XXXXXXX" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-muted mb-1">Dispensation Method</label>
+                                    <select class="form-select form-select-sm rounded-3" @bind="selectedFulfillment">
+                                        <option value="In-Store Pickup">In-Store Counter Pickup (Self)</option>
+                                        <option value="Buyer-Arranged Courier">Buyer-Arranged Courier (Grab / Lalamove)</option>
+                                    </select>
+                                </div>
+
+                                <div class="p-3 rounded-3 small mb-3 border" style="background: var(--pb-cream);">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">Supplies Subtotal:</span>
+                                        <span class="fw-bold">₱@CartTotal.ToString("N2")</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">Gateway Fee:</span>
+                                        <span class="fw-bold">₱20.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between fw-bold pt-2 border-top">
+                                        <span>Total Payable:</span>
+                                        <span style="color: var(--pb-sage);">₱@((CartTotal + 20.00m).ToString("N2"))</span>
+                                    </div>
+                                </div>
+
+                                <button class="btn-pb-yellow w-100 py-2 shadow-sm"
+                                        disabled="@(string.IsNullOrWhiteSpace(checkoutCustomerName) || string.IsNullOrWhiteSpace(checkoutContact))"
+                                        @onclick="ExecuteClickAndCollectCheckout">
+                                    Authorize Reservation & Get Claim Token
+                                </button>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    private string currentTab = "home";
+    private string selectedServiceTab = "Vet";
+    private bool showUserMenu = false;
+    private bool showAuthModal = false;
+    private bool isRegisterMode = false;
+    private bool showCartModal = false;
+
+    private string regName = string.Empty;
+    private string regEmail = string.Empty;
+    private string regPassword = string.Empty;
+    private string regConfirmPassword = string.Empty;
+    private string regRole = "Pet Owner";
+    private string authErrorMessage = string.Empty;
+
+    private readonly string[] allowedDomains = { "shoppet.com", "gmail.com", "yahoo.com", "outlook.com", "nu.edu.ph" };
+
+    private int CartCount => CartItems.Sum(x => x.Quantity);
+    private decimal CartTotal => CartItems.Sum(x => x.Subtotal);
+
+    private List<ClinicTenant> clinics = new();
+    private List<PetProduct> allProducts = new();
+    private List<CartItem> CartItems = new();
+    private ClinicAppointment newAppointment = new() { ClinicId = 1, ServiceType = "General Checkup / Consultation" };
+    private bool appointmentSubmitted = false;
+
+    private string searchQuery = string.Empty;
+    private string selectedCategory = string.Empty;
+    private string selectedTier = string.Empty;
+    private readonly string[] petTiers = { "All", "Small Pets", "Medium Pets", "Large Pets" };
+
+    private string checkoutCustomerName = string.Empty;
+    private string checkoutContact = string.Empty;
+    private string selectedFulfillment = "In-Store Pickup";
+    private string issuedClaimToken = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        Auth.RegisterListener(() => InvokeAsync(StateHasChanged));
+        clinics = DbService.GetAllClinics();
+        allProducts = DbService.GetAllProducts();
+        CartItems = DbService.GetCartItems();
+    }
+
+    public void Dispose() => Auth.UnregisterListener(() => InvokeAsync(StateHasChanged));
+
+    private void HandleLogin()
+    {
+        if (string.IsNullOrWhiteSpace(regEmail) || string.IsNullOrWhiteSpace(regPassword))
+        {
+            authErrorMessage = "Please enter both email and password.";
+            return;
+        }
+
+        var user = DbService.AuthenticateUser(regEmail, regPassword);
+        if (user != null)
+        {
+            Auth.Login(user);
+            showAuthModal = false;
+            authErrorMessage = string.Empty;
+            regEmail = string.Empty;
+            regPassword = string.Empty;
+        }
+        else
+        {
+            authErrorMessage = "Invalid credentials. Try: user@shoppet.com / user123";
+        }
+    }
+
+    private void HandleRegister()
+    {
+        if (string.IsNullOrWhiteSpace(regName) || string.IsNullOrWhiteSpace(regEmail) ||
+            string.IsNullOrWhiteSpace(regPassword) || string.IsNullOrWhiteSpace(regConfirmPassword))
+        {
+            authErrorMessage = "All registration fields are required.";
+            return;
+        }
+
+        if (regPassword.Length < 6)
+        {
+            authErrorMessage = "Password must be at least 6 characters long.";
+            return;
+        }
+
+        if (regPassword != regConfirmPassword)
+        {
+            authErrorMessage = "Passwords do not match.";
+            return;
+        }
+
+        try
+        {
+            var emailParts = regEmail.Split('@');
+            if (emailParts.Length != 2)
+            {
+                authErrorMessage = "Invalid email format.";
+                return;
+            }
+            string domain = emailParts[1].Trim().ToLower();
+            if (!allowedDomains.Contains(domain))
+            {
+                authErrorMessage = $"Email domain '@{domain}' is not permitted. Allowed: {string.Join(", ", allowedDomains)}";
+                return;
+            }
+        }
+        catch
+        {
+            authErrorMessage = "Please enter a valid email address.";
+            return;
+        }
+
+        var newUser = DbService.RegisterUser(regName, regEmail, regPassword, regRole);
+        if (newUser != null)
+        {
+            Auth.Login(newUser);
+            showAuthModal = false;
+            authErrorMessage = string.Empty;
+            regName = string.Empty;
+            regEmail = string.Empty;
+            regPassword = string.Empty;
+            regConfirmPassword = string.Empty;
+        }
+        else
+        {
+            authErrorMessage = "This email address is already registered in the database.";
+        }
+    }
+
+    private void PerformLogout()
+    {
+        Auth.Logout();
+        showUserMenu = false;
+        Nav.NavigateTo("/");
+    }
+
+    private void HandleWidgetSearch()
+    {
+        if (selectedServiceTab == "Food" || selectedServiceTab == "Pharmacy")
+        {
+            selectedCategory = selectedServiceTab == "Food" ? "Food" : "Health";
+            currentTab = "shop";
+        }
+        else
+        {
+            newAppointment.ServiceType = selectedServiceTab switch
+            {
+                "Vaccine" => "Core Vaccination (Anti-Rabies / DHPP)",
+                "Grooming" => "Medicated Grooming & Skin Care",
+                _ => "General Checkup / Consultation"
+            };
+            currentTab = "appointments";
+        }
+    }
+
+    private void DirectBookService(string serviceType)
+    {
+        newAppointment.ServiceType = serviceType;
+        currentTab = "appointments";
+    }
+
+    private void FilterShopByCategory(string cat)
+    {
+        selectedCategory = cat;
+        currentTab = "shop";
+    }
+
+    private IEnumerable<PetProduct> FilteredProducts =>
+        allProducts.Where(p =>
+            (string.IsNullOrEmpty(selectedCategory) || p.Category.Equals(selectedCategory, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(selectedTier) || selectedTier == "All" || p.PetSize.Equals(selectedTier, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(searchQuery) ||
+             p.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+             p.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)));
+
+    private void SetActiveTier(string tier) => selectedTier = tier == "All" ? string.Empty : tier;
+
+    private void ToggleCategoryFilter(string cat)
+    {
+        selectedCategory = selectedCategory.Equals(cat, StringComparison.OrdinalIgnoreCase) ? string.Empty : cat;
+    }
+
+    private void ResetAllFilters()
+    {
+        searchQuery = string.Empty;
+        selectedCategory = string.Empty;
+        selectedTier = string.Empty;
+    }
+
+    private void AddToCart(int productId)
+    {
+        DbService.AddOrIncrementCart(productId);
+        CartItems = DbService.GetCartItems();
+    }
+
+    private void RemoveFromCart(int productId)
+    {
+        DbService.RemoveFromCart(productId);
+        CartItems = DbService.GetCartItems();
+    }
+
+    private void ExecuteClickAndCollectCheckout()
+    {
+        if (!CartItems.Any() || string.IsNullOrWhiteSpace(checkoutCustomerName)) return;
+
+        issuedClaimToken = DbService.CreateClickAndCollectOrder(1, checkoutCustomerName, checkoutContact, selectedFulfillment, CartItems);
+        CartItems = DbService.GetCartItems();
+    }
+
+    private void CloseReceipt()
+    {
+        issuedClaimToken = string.Empty;
+        showCartModal = false;
+        checkoutCustomerName = string.Empty;
+        checkoutContact = string.Empty;
+    }
+
+    private void SubmitAppointment()
+    {
+        DbService.BookAppointment(newAppointment);
+        appointmentSubmitted = true;
+        newAppointment = new ClinicAppointment { ClinicId = 1, ServiceType = "General Checkup / Consultation" };
+    }
+}

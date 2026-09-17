@@ -1,0 +1,24 @@
+﻿@inject NavigationManager Nav
+
+<div class="dropdown">
+    <button class="btn btn-sm btn-outline-dark rounded-pill px-3 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        👤 Switch Page / Role
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end shadow-sm border mt-2 p-1 rounded-3">
+        <li>
+            <button class="dropdown-item py-2 small fw-semibold rounded-2" @onclick='() => Nav.NavigateTo("/")'>
+                🏠 Pet Parent Storefront (`/`)
+            </button>
+        </li>
+        <li>
+            <button class="dropdown-item py-2 small fw-semibold rounded-2" @onclick='() => Nav.NavigateTo("/clinic-portal")'>
+                🏥 Clinic Staff Operations Desk (`/clinic-portal`)
+            </button>
+        </li>
+        <li>
+            <button class="dropdown-item py-2 small fw-semibold rounded-2" @onclick='() => Nav.NavigateTo("/admin-portal")'>
+                🛡️ Platform Admin Dashboard (`/admin-portal`)
+            </button>
+        </li>
+    </ul>
+</div>
