@@ -1,0 +1,108 @@
+﻿@page "/pet/{PetId:int}/card"
+@inject AuthService Auth
+@inject DatabaseService Db
+@inject CardService Cards
+
+<PageTitle>@(pet?.PetName ?? "Pet") — Pet ID Card</PageTitle>
+
+<div class="container mt-4">
+
+    @if (pet == null)
+    {
+        <div class="alert alert-warning">
+            Pet not found, or you don't have access to it.
+        </div>
+        <a href="/my-pets" class="btn btn-secondary">Back to My Pets</a>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">Pet ID Card</h2>
+            <div>
+                <a href="/pet/@PetId" class="btn btn-outline-secondary btn-sm">View Details</a>
+                <a href="/my-pets" class="btn btn-outline-secondary btn-sm">Back to My Pets</a>
+            </div>
+        </div>
+
+        <div class="pet-card @themeClass">
+            <div class="pet-card-header">
+                <span>SHOPPETCARE · PET ID</span>
+                @if (isPremium)
+                {
+                    <span class="badge-premium"><i class="bi bi-star-fill"></i> PREMIUM</span>
+                }
+            </div>
+
+            <div class="pet-card-body">
+                <div class="pet-photo-wrap">
+                    <div class="pet-photo-placeholder">@Initial</div>
+                </div>
+
+                <div class="pet-info">
+                    <h3>@pet.PetName</h3>
+                    <p>@pet.Species · @pet.Breed</p>
+                    @if (!string.IsNullOrEmpty(pet.Age))
+                    {
+                        <p>Age: @pet.Age</p>
+                    }
+                    @if (pet.WeightKg.HasValue)
+                    {
+                        <p>Weight: @pet.WeightKg.Value.ToString("0.##") kg</p>
+                    }
+                </div>
+
+                <div class="qr-zone">
+                    <img src="@qrDataUri" alt="QR Code" />
+                </div>
+            </div>
+
+            <div class="pet-card-footer">
+                <div>
+                    <small>Card ID</small>
+                    <div><code>@pet.CardId</code></div>
+                </div>
+                <div class="text-end">
+                    <small>Issued</small>
+                    <div>@pet.CardIssuedAt?.ToString("MMM yyyy")</div>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-muted mt-3 mb-1">
+            <small>Scan this QR code to view the pet's public card. Anyone with the link can see basic info — no login required.</small>
+        </p>
+
+        <a href="/pet/card/@pet.CardId" target="_blank" class="btn btn-link p-0">
+            Open public card in a new tab →
+        </a>
+    }
+
+</div>
+
+@code {
+    [Parameter] public int PetId { get; set; }
+
+    PetProfile? pet;
+    string qrDataUri = "";
+    string themeClass = "theme-classic";
+    bool isPremium;
+    string Initial = "?";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Auth.InitializeAsync();
+
+        var userId = Auth.CurrentUser?.Id ?? 0;
+        pet = Db.GetPetById(PetId);
+
+        if (pet == null || pet.UserId != userId) { pet = null; return; }
+
+        isPremium = Auth.IsPremium;
+        qrDataUri = Cards.GenerateQrDataUri(pet.CardId);
+        themeClass = Cards.GetThemeCssClass(pet.CardTheme);
+
+        Initial = string.IsNullOrEmpty(pet.PetName)
+            ? "?"
+            : pet.PetName.Substring(0, 1).ToUpperInvariant();
+    }
+}

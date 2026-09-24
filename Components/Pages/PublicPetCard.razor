@@ -1,0 +1,72 @@
+﻿@page "/pet/card/{CardId}"
+@inject DatabaseService Db
+
+<PageTitle>@(pet?.PetName ?? "Pet") — Public Card</PageTitle>
+
+<div class="container mt-4" style="max-width: 520px;">
+
+    @if (pet == null)
+    {
+        <div class="alert alert-warning">
+            This Pet ID card is not valid or has been removed.
+        </div>
+    }
+    else
+    {
+        <div class="pet-card theme-classic">
+            <div class="pet-card-header">
+                <span>SHOPPETCARE · PET ID</span>
+            </div>
+
+            <div class="pet-card-body">
+                <div class="pet-photo-wrap">
+                    <div class="pet-photo-placeholder">@Initial</div>
+                </div>
+
+                <div class="pet-info">
+                    <h3>@pet.PetName</h3>
+                    <p>@pet.Species · @pet.Breed</p>
+                    @if (!string.IsNullOrEmpty(pet.Age))
+                    {
+                        <p>Age: @pet.Age</p>
+                    }
+                </div>
+            </div>
+
+            <div class="pet-card-footer">
+                <div>
+                    <small>Card ID</small>
+                    <div><code>@pet.CardId</code></div>
+                </div>
+                <div class="text-end">
+                    <small>Issued</small>
+                    <div>@pet.CardIssuedAt?.ToString("MMM yyyy")</div>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-muted mt-3">
+            <small>This is a public ShoppetCare card. To manage this pet, log in to your ShoppetCare account.</small>
+        </p>
+
+        <a href="/" class="btn btn-secondary">Go to ShoppetCare</a>
+    }
+
+</div>
+
+@code {
+    [Parameter] public string CardId { get; set; } = "";
+
+    PetProfile? pet;
+    string Initial = "?";
+
+    protected override void OnParametersSet()
+    {
+        pet = Db.GetPetByCardId(CardId);
+
+        if (pet != null && !string.IsNullOrEmpty(pet.PetName))
+        {
+            Initial = pet.PetName.Substring(0, 1).ToUpperInvariant();
+        }
+    }
+}

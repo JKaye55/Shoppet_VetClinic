@@ -1,0 +1,138 @@
+﻿@page "/pet/{PetId:int}"
+@inject AuthService Auth
+@inject DatabaseService Db
+@inject CardService Cards
+
+<PageTitle>@(pet?.PetName ?? "Pet")</PageTitle>
+
+<div class="container mt-4">
+
+    @if (pet == null)
+    {
+        <div class="alert alert-warning">Pet not found.</div>
+        <a href="/my-pets" class="btn btn-secondary">Back to My Pets</a>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">@pet.PetName</h2>
+            <div>
+                <a href="/pet/@PetId/card" class="btn btn-primary btn-sm">View Pet ID Card</a>
+                <a href="/my-pets" class="btn btn-outline-secondary btn-sm">Back</a>
+            </div>
+        </div>
+
+        <div class="alert @feedingClass d-flex align-items-center" role="alert">
+            <span class="me-2 fs-4">@feedingEmoji</span>
+            <div>@feedingText</div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Pet Information</div>
+                    <div class="card-body">
+                        <p><strong>Species:</strong> @pet.Species</p>
+                        <p><strong>Breed:</strong> @(string.IsNullOrEmpty(pet.Breed) ? "—" : pet.Breed)</p>
+                        <p><strong>Age:</strong> @(string.IsNullOrEmpty(pet.Age) ? "—" : pet.Age)</p>
+                        <p><strong>Weight:</strong> @(pet.WeightKg.HasValue ? pet.WeightKg.Value.ToString("0.##") + " kg" : "—")</p>
+                        <p><strong>Diet:</strong> @(string.IsNullOrEmpty(pet.Diet) ? "—" : pet.Diet)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        Health Records
+                        <span class="badge bg-secondary ms-2">@records.Count</span>
+                    </div>
+                    <div class="card-body">
+                        @if (records.Count == 0)
+                        {
+                            <p class="text-muted mb-0">No health records yet. Add them from the mobile app.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-unstyled mb-0">
+                                @foreach (var r in records.Take(5))
+                                {
+                                    <li class="border-bottom py-2">
+                                        <div><strong>@r.Title</strong></div>
+                                        <small class="text-muted">
+                                            @r.RecordDate.ToString("MMM d, yyyy") · @r.RecordType
+                                        </small>
+                                    </li>
+                                }
+                            </ul>
+                            @if (records.Count > 5)
+                            {
+                                <small class="text-muted d-block mt-2">
+                                    + @(records.Count - 5) more — view all on mobile
+                                </small>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-muted mt-3">
+            <small> <i class="bi bi-lightbulb"></i> Health records and feeding logs are managed in the ShoppetCare mobile app.</small>
+        </p>
+    }
+
+</div>
+
+@code {
+    [Parameter] public int PetId { get; set; }
+
+    PetProfile? pet;
+    List<PetHealthRecord> records = new();
+    string feedingClass = "alert-secondary";
+    string feedingEmoji = "bi-cup-hot";
+    string feedingText = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Auth.InitializeAsync();
+
+        var userId = Auth.CurrentUser?.Id ?? 0;
+        pet = Db.GetPetById(PetId);
+
+        if (pet == null || pet.UserId != userId) { pet = null; return; }
+
+        records = Db.GetHealthRecords(PetId);
+
+        var lastFedAt = Db.GetLastFedAt(PetId);
+        var status = Cards.GetFeedingStatus(lastFedAt);
+
+        var hoursAgo = lastFedAt.HasValue
+            ? Math.Round((DateTime.Now - lastFedAt.Value).TotalHours, 1)
+            : 0;
+
+        switch (status)
+        {
+            case "happy":
+                feedingClass = "alert-success";
+                feedingEmoji = "bi-check-circle-fill";
+                feedingText = $"Fed {hoursAgo} hours ago. Happy and healthy.";
+                break;
+            case "hungry":
+                feedingClass = "alert-warning";
+                feedingEmoji = "bi-exclamation-triangle-fill";
+                feedingText = $"Needs to eat — last fed {hoursAgo} hours ago.";
+                break;
+            case "overdue":
+                feedingClass = "alert-danger";
+                feedingEmoji = "bi-exclamation-octagon-fill";
+                feedingText = $"Overdue for a meal — last fed {hoursAgo} hours ago.";
+                break;
+            default:
+                feedingClass = "alert-secondary";
+                feedingEmoji = "bi-cup-hot";
+                feedingText = "No feeding records yet. Log meals from the mobile app.";
+                break;
+        }
+    }
+}

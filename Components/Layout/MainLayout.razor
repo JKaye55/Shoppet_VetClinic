@@ -1,0 +1,1079 @@
+﻿@inherits LayoutComponentBase
+@implements IDisposable
+
+@using Shoppet_VetClinic.Services
+
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<style>
+    /* =========================================================
+       SHOPPETCARE — GLOBAL LAYOUT
+       ========================================================= */
+
+    :root {
+        --sp-sage: #5C766D;
+        --sp-sage-dark: #1E2D27;
+        --sp-sage-light: #EEF4F1;
+        --sp-cream: #FAF9F6;
+        --sp-yellow: #F7DD7D;
+        --sp-text: #34423C;
+        --sp-muted: #7B8882;
+        --sp-border: #E7EBE9;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background: var(--sp-cream);
+        color: var(--sp-text);
+        font-family:
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            Roboto,
+            Helvetica,
+            Arial,
+            sans-serif;
+    }
+
+    /* =========================================================
+       APP WRAPPER
+       ========================================================= */
+
+    .sp-layout {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(
+            180deg,
+            #FFFFFF 0%,
+            #FAF9F6 100%
+        );
+    }
+
+    /* =========================================================
+       TOP INFORMATION BAR
+       ========================================================= */
+
+    .sp-info-bar {
+        height: 34px;
+        background: var(--sp-sage-dark);
+        color: #E8EFEC;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+    }
+
+    .sp-info-inner {
+        max-width: 1380px;
+        height: 100%;
+        margin: 0 auto;
+        padding: 0 28px;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .sp-info-left {
+        opacity: 0.95;
+    }
+
+    .sp-info-right {
+        opacity: 0.78;
+    }
+
+    /* =========================================================
+       MAIN NAVIGATION
+       ========================================================= */
+
+    .sp-navigation {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+
+        background: rgba(255, 255, 255, 0.97);
+
+        border-bottom: 1px solid var(--sp-border);
+
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+
+        box-shadow:
+            0 3px 18px rgba(30, 45, 39, 0.045);
+    }
+
+    .sp-navigation-inner {
+        max-width: 1380px;
+        min-height: 78px;
+        margin: 0 auto;
+        padding: 0 28px;
+
+        display: flex;
+        align-items: center;
+        gap: 25px;
+    }
+
+    /* =========================================================
+       BRAND
+       ========================================================= */
+
+    .sp-brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+
+        text-decoration: none;
+        flex-shrink: 0;
+    }
+
+    .sp-logo {
+        width: 43px;
+        height: 43px;
+        object-fit: contain;
+    }
+
+    .sp-brand-content {
+        display: flex;
+        flex-direction: column;
+        line-height: 1;
+    }
+
+    .sp-brand-name {
+        color: var(--sp-sage-dark);
+        font-size: 1.16rem;
+        font-weight: 800;
+        letter-spacing: -0.035em;
+    }
+
+    .sp-brand-subtitle {
+        margin-top: 5px;
+
+        color: var(--sp-muted);
+        font-size: 0.62rem;
+        font-weight: 500;
+        letter-spacing: 0.035em;
+        text-transform: uppercase;
+    }
+
+    /* =========================================================
+       NAVIGATION LINKS
+       ========================================================= */
+
+    .sp-menu {
+        flex: 1;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        gap: 5px;
+        height: 100%;
+    }
+
+    .sp-menu-link {
+        position: relative;
+
+        height: 78px;
+        padding: 0 12px;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        color: #596760;
+        text-decoration: none;
+
+        font-size: 0.82rem;
+        font-weight: 600;
+
+        white-space: nowrap;
+
+        transition:
+            color 0.2s ease,
+            background 0.2s ease;
+    }
+
+    .sp-menu-link::after {
+        content: "";
+
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 0;
+
+        height: 3px;
+
+        border-radius: 3px 3px 0 0;
+
+        background: transparent;
+
+        transition:
+            background 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .sp-menu-link:hover {
+        color: var(--sp-sage-dark);
+    }
+
+    .sp-menu-link:hover::after {
+        background: #D8E4DF;
+    }
+
+    .sp-menu-link.active {
+        color: var(--sp-sage);
+        font-weight: 700;
+    }
+
+    .sp-menu-link.active::after {
+        background: var(--sp-sage);
+        transform: scaleX(1);
+    }
+
+    /* =========================================================
+       RIGHT ACTIONS
+       ========================================================= */
+
+    .sp-actions {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+
+        flex-shrink: 0;
+    }
+
+    /* =========================================================
+       FRONT DESK
+       ========================================================= */
+
+    .sp-contact {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        height: 38px;
+        padding: 0 16px;
+
+        border-radius: 9px;
+
+        background: var(--sp-sage);
+        color: #FFFFFF;
+
+        text-decoration: none;
+
+        font-size: 0.78rem;
+        font-weight: 700;
+
+        box-shadow:
+            0 4px 12px rgba(92, 118, 109, 0.15);
+
+        transition:
+            background 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .sp-contact:hover {
+        background: var(--sp-sage-dark);
+        color: #FFFFFF;
+
+        transform: translateY(-1px);
+    }
+
+    /* =========================================================
+       LOGGED-OUT BUTTONS
+       ========================================================= */
+
+    .sp-btn-register {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        height: 38px;
+        padding: 0 16px;
+
+        border-radius: 50rem;
+
+        background: #FEE2E2;
+        color: #991B1B;
+
+        text-decoration: none;
+
+        font-size: 0.78rem;
+        font-weight: 700;
+
+        border: 1px solid #FCA5A5;
+
+        transition: all 0.2s ease;
+    }
+
+    .sp-btn-register:hover {
+        background: #DC2626;
+        color: #FFFFFF;
+    }
+
+    .sp-btn-login {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        height: 38px;
+        padding: 0 14px;
+
+        border-radius: 9px;
+
+        background: transparent;
+        color: var(--sp-sage-dark);
+
+        text-decoration: none;
+
+        font-size: 0.78rem;
+        font-weight: 700;
+
+        border: 1px solid var(--sp-border);
+
+        transition: all 0.2s ease;
+    }
+
+    .sp-btn-login:hover {
+        background: var(--sp-sage-light);
+        color: var(--sp-sage-dark);
+    }
+
+    /* =========================================================
+       LOGGED-IN USER AREA
+       ========================================================= */
+
+    .sp-user-area {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* USER PROFILE */
+
+    .sp-user-profile {
+        display: inline-flex;
+        align-items: center;
+
+        gap: 9px;
+
+        min-height: 42px;
+
+        padding: 4px 11px 4px 6px;
+
+        border: 1px solid var(--sp-border);
+        border-radius: 12px;
+
+        background: #FFFFFF;
+
+        text-decoration: none;
+
+        transition:
+            all 0.2s ease;
+    }
+
+    .sp-user-profile:hover {
+        background: var(--sp-sage-light);
+        border-color: #D2DED9;
+
+        transform: translateY(-1px);
+    }
+
+    .sp-user-avatar {
+        width: 31px;
+        height: 31px;
+
+        border-radius: 50%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: var(--sp-sage-dark);
+        color: #FFFFFF;
+
+        font-size: 0.72rem;
+        font-weight: 800;
+
+        flex-shrink: 0;
+    }
+
+    .sp-user-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        line-height: 1.1;
+    }
+
+    .sp-user-name {
+        color: var(--sp-sage-dark);
+
+        font-size: 0.76rem;
+        font-weight: 750;
+
+        max-width: 145px;
+
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sp-user-role {
+        margin-top: 3px;
+
+        color: var(--sp-muted);
+
+        font-size: 0.61rem;
+        font-weight: 600;
+
+        text-transform: uppercase;
+        letter-spacing: 0.035em;
+    }
+
+    /* =========================================================
+       ROLE PORTAL BUTTON
+       ========================================================= */
+
+    .sp-btn-portal {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        height: 38px;
+        padding: 0 14px;
+
+        border-radius: 9px;
+
+        background: var(--sp-sage-light);
+        color: var(--sp-sage-dark);
+
+        text-decoration: none;
+
+        font-size: 0.76rem;
+        font-weight: 700;
+
+        border: 1px solid #D9E4E0;
+
+        transition: all 0.2s ease;
+    }
+
+    .sp-btn-portal:hover {
+        background: #DCE9E4;
+        color: var(--sp-sage-dark);
+    }
+
+    /* =========================================================
+       SIGN OUT
+       ========================================================= */
+
+    .sp-btn-signout {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        height: 38px;
+        padding: 0 13px;
+
+        border-radius: 9px;
+
+        background: transparent;
+        color: #6B7772;
+
+        font-size: 0.76rem;
+        font-weight: 700;
+
+        border: 1px solid var(--sp-border);
+
+        cursor: pointer;
+
+        transition: all 0.2s ease;
+    }
+
+    .sp-btn-signout:hover {
+        background: #FEE2E2;
+        color: #991B1B;
+        border-color: #FCA5A5;
+    }
+
+    /* =========================================================
+       MAIN CONTENT
+       ========================================================= */
+
+    .sp-content {
+        flex: 1 1 auto;
+        min-width: 0;
+
+        background:
+            linear-gradient(
+                180deg,
+                #FAF9F6 0%,
+                #F7F5EF 100%
+            );
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @@media (max-width: 1200px) {
+
+        .sp-navigation-inner {
+            gap: 15px;
+            padding: 0 15px;
+        }
+
+        .sp-menu-link {
+            padding: 0 8px;
+            font-size: 0.76rem;
+        }
+
+        .sp-user-name {
+            max-width: 105px;
+        }
+
+        .sp-btn-portal {
+            padding: 0 10px;
+        }
+    }
+
+    @@media (max-width: 950px) {
+
+        .sp-info-right {
+            display: none;
+        }
+
+        .sp-navigation-inner {
+            gap: 10px;
+        }
+
+        .sp-menu {
+            justify-content: flex-start;
+        }
+
+        .sp-menu-link {
+            padding: 0 7px;
+            font-size: 0.72rem;
+        }
+
+        .sp-contact {
+            display: none;
+        }
+
+        .sp-user-role {
+            display: none;
+        }
+    }
+
+    @@media (max-width: 760px) {
+
+        .sp-navigation-inner {
+            min-height: 70px;
+            padding: 0 12px;
+
+            flex-wrap: wrap;
+        }
+
+        .sp-brand {
+            min-height: 70px;
+        }
+
+        .sp-menu {
+            order: 3;
+
+            width: 100%;
+            flex-basis: 100%;
+
+            justify-content: flex-start;
+
+            overflow-x: auto;
+
+            min-height: 45px;
+        }
+
+        .sp-menu-link {
+            height: 45px;
+        }
+
+        .sp-actions {
+            margin-left: auto;
+        }
+
+        .sp-user-info {
+            display: none;
+        }
+
+        .sp-user-profile {
+            padding: 4px;
+        }
+
+        .sp-btn-portal {
+            display: none;
+        }
+    }
+    /* =========================================================
+           PREMIUM MENU LINK
+           ========================================================= */
+
+    .sp-menu-link-premium {
+        color: #B8860B;
+        font-weight: 700;
+    }
+
+        .sp-menu-link-premium:hover {
+            color: #8B6508;
+        }
+
+        .sp-menu-link-premium::after {
+            background: transparent;
+        }
+
+        .sp-menu-link-premium.active::after {
+            background: #F7DD7D;
+        }
+
+    /* =========================================================
+           NOTIFICATION BELL ADJUSTMENT
+           ========================================================= */
+
+    .sp-user-area {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+</style>
+
+
+<div class="sp-layout">
+
+    <!-- =====================================================
+         TOP INFORMATION BAR
+         ===================================================== -->
+
+    <div class="sp-info-bar">
+
+        <div class="sp-info-inner">
+
+            <span class="sp-info-left">
+                Trusted Pet Care in Lipa City &amp; Tanauan
+            </span>
+
+            <span class="sp-info-right">
+                Veterinary Care
+                &nbsp;•&nbsp;
+                Pet Supplies
+                &nbsp;•&nbsp;
+                Pilot Testing Portal
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MAIN NAVIGATION
+         ===================================================== -->
+
+    <header class="sp-navigation">
+
+        <div class="sp-navigation-inner">
+
+            <!-- =================================================
+                 BRAND
+                 ================================================= -->
+
+            <a href="/" class="sp-brand">
+
+                <img src="/shoppetlogo.png"
+                     alt="ShoppetCare"
+                     class="sp-logo" />
+
+                <div class="sp-brand-content">
+
+                    <span class="sp-brand-name">
+                        ShoppetCare
+                    </span>
+
+                    <span class="sp-brand-subtitle">
+                        Pet Care Directory
+                    </span>
+
+                </div>
+
+            </a>
+
+
+            <!-- =================================================
+                 MAIN MENU
+                 ================================================= -->
+
+            <nav class="sp-menu">
+
+                <a href="/"
+                   class="sp-menu-link @(IsActive("/") ? "active" : "")">
+                    Home
+                </a>
+
+                <a href="/services"
+                   class="sp-menu-link @(IsActive("/services") ? "active" : "")">
+                    Services
+                </a>
+
+                <a href="/clinics"
+                   class="sp-menu-link @(IsActive("/clinics") ? "active" : "")">
+                    Verified Clinics
+                </a>
+
+                <a href="/brands"
+                   class="sp-menu-link @(IsActive("/brands") ? "active" : "")">
+                    Brands &amp; Diets
+                </a>
+
+                <a href="/community"
+                   class="sp-menu-link @(IsActive("/community") ? "active" : "")">
+                    Community
+                </a>
+
+                <a href="/announcements"
+                   class="sp-menu-link @(IsActive("/announcements") ? "active" : "")">
+                    Announcements
+                </a>
+
+
+                @if (Auth.IsLoggedIn && IsPetOwner())
+                {
+                    <a href="/dashboard"
+                       class="sp-menu-link @(IsActive("/dashboard") ? "active" : "")">
+                        My Dashboard
+                    </a>
+
+                    @if (!Auth.IsPremium)
+                    {
+                        <a href="/premium"
+                           class="sp-menu-link sp-menu-link-premium @(IsActive("/premium") ? "active" : "")">
+                            <i class="bi bi-star-fill"></i> PREMIUM
+                        </a>
+                    }
+                }
+
+            </nav>
+
+
+            <!-- =================================================
+                 RIGHT SIDE
+                 ================================================= -->
+
+            <div class="sp-actions">
+
+                <!-- FRONT DESK -->
+
+                <a href="/inquire"
+                   class="sp-contact">
+                    Front Desk
+                </a>
+
+
+                @if (Auth.IsLoggedIn)
+                {
+                    <!-- =================================================
+                         LOGGED-IN USER
+                         ================================================= -->
+
+                    <div class="sp-user-area">
+
+                        <!-- NOTIFICATION BELL -->
+                        <NotificationBell />
+
+                        <!-- USER PROFILE -->
+
+                        <a href="@GetProfileDestination()"
+                           class="sp-user-profile"
+                           title="Open your account">
+
+                            <span class="sp-user-avatar">
+                                @GetUserInitials()
+                            </span>
+
+                            <span class="sp-user-info">
+
+                                <span class="sp-user-name">
+                                    @GetUserDisplayName()
+                                </span>
+
+                                <span class="sp-user-role">
+                                    @GetUserRole()
+                                </span>
+
+                            </span>
+
+                        </a>
+
+
+                        <!-- ROLE-SPECIFIC PORTAL -->
+
+                        @if (IsAdmin())
+                        {
+                            <a href="/admin-portal"
+                               class="sp-btn-portal">
+                                Admin Portal
+                            </a>
+                        }
+                        else if (IsClinicStaff())
+                        {
+                            <a href="/clinic-portal"
+                               class="sp-btn-portal">
+                                Clinic Portal
+                            </a>
+                        }
+
+
+                        <!-- SIGN OUT -->
+
+                        <button type="button"
+                                class="sp-btn-signout"
+                                @onclick="Logout">
+                            Sign Out
+                        </button>
+
+                    </div>
+                }
+                else
+                {
+                    <!-- =================================================
+                         LOGGED-OUT USER
+                         ================================================= -->
+
+                    <a href="/login"
+                       class="sp-btn-login">
+                        Sign In
+                    </a>
+
+                    <a href="/register"
+                       class="sp-btn-register">
+                        Register
+                    </a>
+                }
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         PAGE CONTENT
+         ===================================================== -->
+
+    <main class="sp-content">
+        @Body
+    </main>
+
+
+    <!-- =====================================================
+         SHARED FOOTER
+         ===================================================== -->
+
+    <SiteFooter />
+
+</div>
+
+
+@code {
+
+    /* =========================================================
+       AUTH STATE LISTENER
+       ========================================================= */
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Auth.InitializeAsync();
+        Auth.RegisterListener(OnAuthStateChanged);
+    }
+
+    private void OnAuthStateChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+
+    /* =========================================================
+       ACTIVE NAVIGATION
+       ========================================================= */
+
+    private bool IsActive(string path)
+    {
+        var current = Nav.ToBaseRelativePath(Nav.Uri);
+
+        current = "/" + current.TrimStart('/');
+
+        if (path == "/")
+        {
+            return current == "/";
+        }
+
+        return current.StartsWith(
+            path,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    /* =========================================================
+       ROLE CHECKS
+       ========================================================= */
+
+    private bool IsPetOwner()
+    {
+        if (Auth.CurrentUser is null)
+            return false;
+
+        return string.Equals(
+            Auth.CurrentUser.Role,
+            "Pet Owner",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private bool IsClinicStaff()
+    {
+        if (Auth.CurrentUser is null)
+            return false;
+
+        return string.Equals(
+            Auth.CurrentUser.Role,
+            "Clinic Staff",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private bool IsAdmin()
+    {
+        if (Auth.CurrentUser is null)
+            return false;
+
+        return string.Equals(
+            Auth.CurrentUser.Role,
+            "Admin",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    /* =========================================================
+       PROFILE DESTINATION
+       ========================================================= */
+
+    private string GetProfileDestination()
+    {
+        if (IsAdmin())
+            return "/admin-portal";
+
+        if (IsClinicStaff())
+            return "/clinic-portal";
+
+        return "/dashboard";
+    }
+
+
+    /* =========================================================
+       USER DISPLAY NAME
+       ========================================================= */
+
+    private string GetUserDisplayName()
+    {
+        if (Auth.CurrentUser is null)
+            return "Account";
+
+        var name = Auth.CurrentUser.FullName?.Trim();
+
+        if (string.IsNullOrWhiteSpace(name))
+            return "Account";
+
+        return name;
+    }
+
+
+    /* =========================================================
+       USER ROLE
+       ========================================================= */
+
+    private string GetUserRole()
+    {
+        if (Auth.CurrentUser is null)
+            return "Account";
+
+        var role = Auth.CurrentUser.Role?.Trim();
+
+        if (string.IsNullOrWhiteSpace(role))
+            return "Account";
+
+        return role;
+    }
+
+
+    /* =========================================================
+       USER INITIALS
+       ========================================================= */
+
+    private string GetUserInitials()
+    {
+        if (Auth.CurrentUser is null)
+            return "U";
+
+        var name = Auth.CurrentUser.FullName?.Trim();
+
+        if (string.IsNullOrWhiteSpace(name))
+            return "U";
+
+        var parts = name.Split(
+            ' ',
+            StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length == 1)
+        {
+            return parts[0]
+                .Substring(
+                    0,
+                    Math.Min(2, parts[0].Length))
+                .ToUpperInvariant();
+        }
+
+        return (
+            parts[0].Substring(0, 1) +
+            parts[^1].Substring(0, 1)
+        ).ToUpperInvariant();
+    }
+
+
+    /* =========================================================
+       LOGOUT
+       ========================================================= */
+
+    private void Logout()
+    {
+        Auth.Logout();
+
+        Nav.NavigateTo("/");
+    }
+
+
+    /* =========================================================
+       DISPOSE
+       ========================================================= */
+
+    public void Dispose()
+    {
+        Auth.UnregisterListener(OnAuthStateChanged);
+    }
+
+}

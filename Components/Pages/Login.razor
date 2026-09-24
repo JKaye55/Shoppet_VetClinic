@@ -1,0 +1,174 @@
+@page "/login"
+@rendermode InteractiveServer
+@using Shoppet_VetClinic.Services
+@inject DatabaseService DbService
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<div class="container-xl py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+
+                <div class="text-center mb-4">
+
+                    <div class="small fw-bold text-uppercase mb-2"
+                         style="color:#5C766D; letter-spacing:.08em;">
+                        ShoppetCare
+                    </div>
+
+                    <h2 class="fw-bold mb-2"
+                        style="color:#1E2D27;">
+                        Sign in
+                    </h2>
+
+                    <p class="text-muted small mb-0">
+                        Access your pet care dashboard and saved activity.
+                    </p>
+
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="alert alert-danger small rounded-3">
+                        @errorMessage
+                    </div>
+                }
+
+                <div class="vstack gap-3">
+
+                    <div>
+                        <label class="form-label small fw-bold">
+                            Email Address
+                        </label>
+
+                        <input type="email"
+                               class="form-control rounded-3"
+                               @bind="email"
+                               autocomplete="email" />
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-bold">
+                            Password
+                        </label>
+
+                        <input type="password"
+                               class="form-control rounded-3"
+                               @bind="password"
+                               autocomplete="current-password" />
+                    </div>
+
+                    <button type="button"
+                            class="btn w-100 py-3 fw-bold rounded-pill"
+                            style="background:#F7DD7D;color:#2F423B;"
+                            @onclick="HandleLoginAsync"
+                            disabled="@isSigningIn">
+
+                        @(isSigningIn ? "Signing in..." : "Sign In")
+
+                    </button>
+
+                    <div class="text-center small text-muted">
+
+                        Don't have an account?
+
+                        <a href="/register"
+                           class="fw-bold text-decoration-none"
+                           style="color:#5C766D;">
+                            Create one
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string errorMessage = string.Empty;
+
+    private bool isSigningIn = false;
+
+    private async Task HandleLoginAsync()
+    {
+        if (isSigningIn)
+            return;
+
+        errorMessage = string.Empty;
+
+        email = email.Trim().ToLowerInvariant();
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            errorMessage = "Please enter your email address.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            errorMessage = "Please enter your password.";
+            return;
+        }
+
+        isSigningIn = true;
+
+        try
+        {
+            var user = DbService.AuthenticateUser(email, password);
+
+            if (user is null)
+            {
+                errorMessage = "Invalid email or password.";
+                return;
+            }
+
+            var role = user.Role?.Trim() ?? string.Empty;
+
+            if (string.Equals(
+                    role,
+                    "Clinic Staff",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                if (!user.ClinicId.HasValue)
+                {
+                    errorMessage =
+                        "This clinic staff account has not been assigned to a clinic yet.";
+                    return;
+                }
+            }
+
+            await Auth.LoginAsync(user);
+
+            // 🎯 Redirect based on role
+            var destination = role switch
+            {
+                "Admin" => "/admin-portal",
+                "Clinic Staff" => "/clinic-portal",
+                _ => "/dashboard"
+            };
+
+            Nav.NavigateTo(destination);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Login Error] {ex}");
+
+            errorMessage =
+                "Unable to sign in right now. " +
+                "Please check the database connection and try again.";
+        }
+        finally
+        {
+            isSigningIn = false;
+        }
+    }
+}

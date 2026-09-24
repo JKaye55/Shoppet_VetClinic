@@ -1,0 +1,234 @@
+﻿@inject AuthService Auth
+@inject DatabaseService Db
+@inject NavigationManager Nav
+@implements IDisposable
+
+@if (Auth.IsLoggedIn)
+{
+    <div class="nb-wrap">
+
+        <button type="button"
+                class="nb-btn"
+                @onclick="ToggleDropdown"
+                title="Notifications">
+            <i class="bi bi-bell-fill"></i>
+
+            @if (unreadCount > 0)
+            {
+                <span class="nb-badge">
+                    @(unreadCount > 99 ? "99+" : unreadCount.ToString())
+                </span>
+            }
+        </button>
+
+        @if (showDropdown)
+        {
+            <div class="nb-backdrop" @onclick="CloseDropdown"></div>
+
+            <div class="nb-dropdown">
+
+                <div class="nb-header">
+                    <div class="nb-header-left">
+                        <div class="nb-header-title">
+                            <i class="bi bi-bell-fill"></i>
+                            Notifications
+                        </div>
+                        @if (unreadCount > 0)
+                        {
+                            <span class="nb-new-pill">@unreadCount new</span>
+                        }
+                    </div>
+
+                    @if (unreadCount > 0)
+                    {
+                        <button type="button"
+                                class="nb-mark-btn"
+                                @onclick="MarkAllRead">
+                            Mark all read
+                        </button>
+                    }
+                </div>
+
+                <div class="nb-list">
+
+                    @if (recent.Count == 0)
+                    {
+                        <div class="nb-empty">
+                            <div class="nb-empty-icon">
+                                <i class="bi bi-bell-slash"></i>
+                            </div>
+                            <div class="nb-empty-title">You're all caught up</div>
+                            <p class="nb-empty-sub">We'll let you know when something happens.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var n in recent)
+                        {
+                            var expanded = expandedId == n.Id;
+
+                            <div class="nb-item @(n.IsRead ? "" : "nb-unread") @(expanded ? "nb-expanded" : "")"
+                                 @onclick="() => ToggleExpand(n)">
+
+                                <span class="nb-icon @GetIconTone(n.Icon)">
+                                    <i class="bi @n.Icon"></i>
+                                </span>
+
+                                <div class="nb-content">
+                                    <div class="nb-title">@n.Title</div>
+
+                                    @if (!expanded)
+                                    {
+                                        @if (!string.IsNullOrEmpty(n.Body))
+                                        {
+                                            <div class="nb-body">@n.Body</div>
+                                        }
+                                        <div class="nb-time">
+                                            <i class="bi bi-clock"></i>
+                                            @n.RelativeTime
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="nb-body-full">@n.Body</div>
+                                        <div class="nb-time">
+                                            <i class="bi bi-clock"></i>
+                                            @n.RelativeTime
+                                        </div>
+
+                                        @if (!string.IsNullOrEmpty(n.Link))
+                                        {
+                                            <button type="button"
+                                                    class="nb-open-btn"
+                                                    @onclick:stopPropagation="true"
+                                                    @onclick="() => OpenNotification(n)">
+                                                Open
+                                                <i class="bi bi-arrow-right"></i>
+                                            </button>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+
+                </div>
+
+                <div class="nb-footer">
+                    <a href="/notifications">
+                        See all
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+
+            </div>
+        }
+
+    </div>
+}
+
+@code
+{
+    bool showDropdown = false;
+    int unreadCount = 0;
+    int? expandedId = null;
+    List<Shoppet_VetClinic.Models.Notification> recent = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Auth.RegisterListener(OnAuthChanged);
+        await LoadNotifications();
+    }
+
+    private void OnAuthChanged()
+    {
+        _ = InvokeAsync(async () =>
+        {
+            await LoadNotifications();
+            StateHasChanged();
+        });
+    }
+
+    async Task LoadNotifications()
+    {
+        await Auth.InitializeAsync();
+
+        if (!Auth.IsLoggedIn)
+        {
+            unreadCount = 0;
+            recent.Clear();
+            return;
+        }
+
+        var userId = Auth.CurrentUser!.Id;
+        unreadCount = Db.GetUnreadNotificationCount(userId);
+        recent = Db.GetNotifications(userId, 5);
+    }
+
+    async Task ToggleDropdown()
+    {
+        showDropdown = !showDropdown;
+        expandedId = null;
+
+        if (showDropdown)
+        {
+            await LoadNotifications();
+        }
+    }
+
+    void CloseDropdown()
+    {
+        showDropdown = false;
+        expandedId = null;
+    }
+
+    async Task ToggleExpand(Shoppet_VetClinic.Models.Notification n)
+    {
+        expandedId = (expandedId == n.Id) ? null : n.Id;
+
+        if (!n.IsRead)
+        {
+            Db.MarkNotificationRead(n.Id, Auth.CurrentUser!.Id);
+            n.IsRead = true;
+            unreadCount = Math.Max(0, unreadCount - 1);
+        }
+
+        await Task.CompletedTask;
+    }
+
+    async Task OpenNotification(Shoppet_VetClinic.Models.Notification n)
+    {
+        showDropdown = false;
+        expandedId = null;
+
+        if (!string.IsNullOrEmpty(n.Link))
+        {
+            Nav.NavigateTo(n.Link);
+        }
+
+        await LoadNotifications();
+    }
+
+    async Task MarkAllRead()
+    {
+        Db.MarkAllNotificationsRead(Auth.CurrentUser!.Id);
+        await LoadNotifications();
+    }
+
+    private string GetIconTone(string icon)
+    {
+        if (string.IsNullOrEmpty(icon)) return "";
+
+        if (icon.Contains("star")) return "tone-gold";
+        if (icon.Contains("heart")) return "tone-pink";
+        if (icon.Contains("megaphone")) return "tone-blue";
+        if (icon.Contains("patch-check") || icon.Contains("check")) return "tone-green";
+
+        return "";
+    }
+
+    public void Dispose()
+    {
+        Auth.UnregisterListener(OnAuthChanged);
+    }
+}

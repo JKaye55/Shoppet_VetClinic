@@ -1,0 +1,166 @@
+﻿@page "/admin/announcements"
+@inject AuthService Auth
+@inject DatabaseService Db
+@inject NotificationService Notify
+
+<PageTitle>Admin — Announcements</PageTitle>
+
+<div class="container mt-4">
+
+    @if (!Auth.IsAdmin)
+    {
+        <div class="alert alert-danger">Admin access required.</div>
+    }
+    else
+    {
+        <h2 class="mb-3"><i class="bi bi-megaphone-fill"></i> Announcements</h2>
+
+        <div class="card mb-4">
+            <div class="card-header">Post a new announcement</div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <input class="form-control" placeholder="Title"
+                           @bind="newTitle" maxlength="150" />
+                </div>
+                <div class="mb-2">
+                    <textarea class="form-control" rows="3" placeholder="Body"
+                              @bind="newBody" maxlength="2000"></textarea>
+                </div>
+                <div class="row g-2 mb-2">
+                    <div class="col-md-4">
+                        <select class="form-select" @bind="newCategory">
+                            <option>System</option>
+                            <option>Update</option>
+                            <option>Benefit</option>
+                            <option>Maintenance</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" @bind="newPriority">
+                            <option>Low</option>
+                            <option>Normal</option>
+                            <option>High</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="date" class="form-control" @bind="newExpiresAt" />
+                    </div>
+                </div>
+                <button class="btn btn-primary" @onclick="Post">Post</button>
+                @if (!string.IsNullOrEmpty(message))
+                {
+                    <div class="alert alert-info mt-2 mb-0">@message</div>
+                }
+            </div>
+        </div>
+
+        <h5>All announcements</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Posted</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in list)
+                {
+                    <tr>
+                        <td>@a.PostedAt.ToString("MMM d")</td>
+                        <td>@a.Title</td>
+                        <td>@a.Category</td>
+                        <td>@a.Priority</td>
+                        <td>
+                            @if (a.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            @if (a.IsActive)
+                            {
+                                <button class="btn btn-sm btn-outline-danger"
+                                        @onclick="() => Deactivate(a.Id)">
+                                    Deactivate
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+</div>
+
+@code {
+    List<Shoppet_VetClinic.Models.Announcement> list = new();
+
+    string newTitle = "";
+    string newBody = "";
+    string newCategory = "System";
+    string newPriority = "Normal";
+    DateTime? newExpiresAt;
+
+    string message = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Auth.InitializeAsync();
+        LoadList();
+    }
+
+    void LoadList()
+    {
+        list = Db.GetAllAnnouncementsForAdmin();
+    }
+
+    void Post()
+    {
+        if (string.IsNullOrWhiteSpace(newTitle) || string.IsNullOrWhiteSpace(newBody))
+        {
+            message = "Title and body are required.";
+            return;
+        }
+
+        var a = new Shoppet_VetClinic.Models.Announcement
+        {
+            ClinicId = null,
+            Title = newTitle.Trim(),
+            Body = newBody.Trim(),
+            Category = newCategory,
+            Priority = newPriority,
+            ExpiresAt = newExpiresAt
+        };
+
+        var ok = Db.PostAnnouncement(a);
+
+        if (ok)
+        {
+            // 🔔 Notify all pet owners
+            Notify.NewAnnouncement(a);
+
+            message = "Posted successfully.";
+            newTitle = ""; newBody = ""; newExpiresAt = null;
+            LoadList();
+        }
+        else
+        {
+            message = "Could not post announcement.";
+        }
+    }
+
+    void Deactivate(int id)
+    {
+        Db.DeactivateAnnouncement(id);
+        LoadList();
+    }
+}

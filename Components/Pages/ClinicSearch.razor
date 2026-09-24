@@ -1,0 +1,285 @@
+﻿@page "/clinics"
+@inject DatabaseService Db
+@inject NavigationManager Nav
+
+
+<PageTitle>Find a Clinic — ShoppetCare</PageTitle>
+
+<div class="container mt-4" style="max-width: 1100px;">
+
+    <div class="text-center mb-4">
+        <h1>🏥 Find Pet Care Near You</h1>
+        <p class="text-muted">
+            Verified and listed pet-care providers in Lipa City, Tanauan & nearby Batangas.
+        </p>
+    </div>
+
+    @* =============== SEARCH & FILTERS =============== *@
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+
+                <div class="col-md-5">
+                    <label class="form-label small fw-bold">Search</label>
+                    <input class="form-control"
+                           placeholder="Clinic or pet shop name…"
+                           @bind="searchText"
+                           @bind:event="oninput" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Location</label>
+                    <select class="form-select" @bind="locationFilter">
+                        <option value="">All locations</option>
+                        <option value="lipa">Lipa City</option>
+                        <option value="tanauan">Tanauan</option>
+                        <option value="batangas">Other Batangas</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Type</label>
+                    <select class="form-select" @bind="typeFilter">
+                        <option value="">All types</option>
+                        <option value="vet">Veterinary Clinic</option>
+                        <option value="petshop">Pet Shop</option>
+                        <option value="both">Clinic + Pet Shop</option>
+                        <option value="grooming">Grooming</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox"
+                           id="verifiedOnly" @bind="verifiedOnly" />
+                    <label class="form-check-label small" for="verifiedOnly">
+                        Show <strong>verified partners</strong> only
+                    </label>
+                </div>
+
+                <button class="btn btn-sm btn-outline-secondary"
+                        @onclick="ClearFilters">
+                    Clear filters
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    @* =============== RESULTS =============== *@
+    <div class="mb-3">
+        <span class="text-muted">
+            Showing <strong>@Filtered.Count</strong> of @allClinics.Count providers
+        </span>
+    </div>
+
+    @if (Filtered.Count == 0)
+    {
+        <div class="alert alert-light border text-center py-5">
+            <i class="bi bi-search fs-1 text-muted d-block mb-2"></i>
+            No providers match your filters.
+            <div class="mt-2">
+                <button class="btn btn-sm btn-outline-primary"
+                        @onclick="ClearFilters">
+                    Clear filters
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+
+            @foreach (var clinic in Filtered)
+            {
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm clinic-card"
+                         @onclick="() => OpenClinic(clinic.Id)">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <div class="fw-bold fs-5 mb-1">
+                                        @clinic.ClinicName
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(clinic.Branch))
+                                    {
+                                        <div class="text-muted small">
+                                            @clinic.Branch
+                                        </div>
+                                    }
+                                </div>
+
+                                @if (clinic.IsVerified)
+                                {
+                                    <span class="badge bg-success-subtle text-success-emphasis border">
+                                        <i class="bi bi-patch-check-fill"></i> Verified
+                                    </span>
+                                }
+                            </div>
+
+                            <div class="text-muted small mb-2">
+                                <i class="bi bi-geo-alt"></i> @clinic.Address
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(clinic.ContactPhone))
+                            {
+                                <div class="text-muted small mb-2">
+                                    <i class="bi bi-telephone"></i> @clinic.ContactPhone
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(clinic.OperatingHours))
+                            {
+                                <div class="text-muted small mb-2">
+                                    <i class="bi bi-clock"></i> @clinic.OperatingHours
+                                </div>
+                            }
+
+                            <div class="mt-3 d-flex flex-wrap gap-1">
+                                @if (clinic.HasClinic)
+                                {
+                                    <span class="badge bg-primary-subtle text-primary-emphasis">
+                                        Veterinary
+                                    </span>
+                                }
+                                @if (clinic.HasPetShop)
+                                {
+                                    <span class="badge bg-warning-subtle text-warning-emphasis">
+                                        Pet Shop
+                                    </span>
+                                }
+                                @if (!string.IsNullOrEmpty(clinic.FacilityType))
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary-emphasis">
+                                        @clinic.FacilityType
+                                    </span>
+                                }
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(clinic.ServiceCapabilities))
+                            {
+                                <div class="mt-3 small text-muted">
+                                    <strong>Services:</strong>
+                                    @(clinic.ServiceCapabilities.Length > 100
+                                        ? clinic.ServiceCapabilities.Substring(0, 100) + "..."
+                                        : clinic.ServiceCapabilities)
+                                </div>
+                            }
+
+                        </div>
+
+                        <div class="card-footer bg-transparent border-0 d-flex justify-content-between">
+                            <a class="btn btn-sm btn-success rounded-pill px-3"
+                               href="@($"/inquire?clinicId={clinic.Id}")">
+                                Contact Clinic
+                            </a>
+                            @if (!string.IsNullOrEmpty(clinic.MessengerUrl))
+                            {
+                                <a class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                   href="@clinic.MessengerUrl"
+                                   target="_blank">
+                                    Messenger
+                                </a>
+                            }
+                        </div>
+
+                    </div>
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+<style>
+    .clinic-card {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .clinic-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(30, 45, 39, 0.12) !important;
+        }
+</style>
+
+@code {
+    List<ClinicTenant> allClinics = new();
+
+    string searchText = "";
+    string locationFilter = "";
+    string typeFilter = "";
+    bool verifiedOnly = false;
+
+    protected override void OnParametersSet()
+    {
+        allClinics = Db.GetAllClinics();
+    }
+
+    List<ClinicTenant> Filtered
+    {
+        get
+        {
+            var q = allClinics.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                var s = searchText.Trim().ToLowerInvariant();
+                q = q.Where(c =>
+                    (c.ClinicName ?? "").ToLowerInvariant().Contains(s) ||
+                    (c.Branch ?? "").ToLowerInvariant().Contains(s));
+            }
+
+            if (!string.IsNullOrWhiteSpace(locationFilter))
+            {
+                q = locationFilter switch
+                {
+                    "lipa" => q.Where(c => (c.Address ?? "").ToLowerInvariant().Contains("lipa")),
+                    "tanauan" => q.Where(c => (c.Address ?? "").ToLowerInvariant().Contains("tanauan")),
+                    "batangas" => q.Where(c => (c.Address ?? "").ToLowerInvariant().Contains("batangas")),
+                    _ => q
+                };
+            }
+
+            if (!string.IsNullOrWhiteSpace(typeFilter))
+            {
+                q = typeFilter switch
+                {
+                    "vet" => q.Where(c => c.HasClinic && !c.HasPetShop),
+                    "petshop" => q.Where(c => c.HasPetShop && !c.HasClinic),
+                    "both" => q.Where(c => c.HasClinic && c.HasPetShop),
+                    "grooming" => q.Where(c => (c.ServiceCapabilities ?? "").ToLowerInvariant().Contains("groom")),
+                    _ => q
+                };
+            }
+
+            if (verifiedOnly)
+            {
+                q = q.Where(c => c.IsVerified);
+            }
+
+            return q
+                .OrderByDescending(c => c.IsVerified)
+                .ThenBy(c => c.ClinicName)
+                .ToList();
+        }
+    }
+
+    void ClearFilters()
+    {
+        searchText = "";
+        locationFilter = "";
+        typeFilter = "";
+        verifiedOnly = false;
+    }
+
+    void OpenClinic(int clinicId)
+    {
+        Nav.NavigateTo($"/inquire?clinicId={clinicId}");
+    }
+}

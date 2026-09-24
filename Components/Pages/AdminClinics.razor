@@ -1,0 +1,116 @@
+﻿@page "/admin/clinics"
+@inject AuthService Auth
+@inject DatabaseService Db
+@inject NotificationService Notify
+
+<PageTitle>Admin — Clinics</PageTitle>
+
+<div class="container mt-4">
+
+    @if (!Auth.IsAdmin)
+    {
+        <div class="alert alert-danger">Admin access required.</div>
+    }
+    else
+    {
+        <h2 class="mb-3"><i class="bi bi-hospital"></i> Manage Clinics</h2>
+
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Clinic</th>
+                    <th>Address</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in clinics)
+                {
+                    <tr>
+                        <td>
+                            <strong>@c.ClinicName</strong>
+                            @if (!string.IsNullOrEmpty(c.Branch))
+                            {
+                                <span class="text-muted"> — @c.Branch</span>
+                            }
+                        </td>
+                        <td>@c.Address</td>
+                        <td>
+                            @if (c.IsVerified)
+                            {
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle-fill"></i> Verified
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Unverified</span>
+                            }
+                        </td>
+                        <td>
+                            @if (c.IsVerified)
+                            {
+                                <button class="btn btn-sm btn-outline-danger"
+                                        @onclick="() => Unverify(c.Id)">
+                                    Unverify
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-success"
+                                        @onclick="() => Verify(c.Id)">
+                                    <i class="bi bi-check-circle-fill"></i> Verify
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div class="alert alert-info mt-3">@message</div>
+        }
+    }
+
+</div>
+
+@code {
+    List<ClinicTenant> clinics = new();
+    string message = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Auth.InitializeAsync();
+        clinics = Db.GetAllClinics();
+    }
+
+    void Verify(int clinicId)
+    {
+        var reference = "BV-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+        var ok = Db.VerifyClinic(clinicId, reference, 200m);
+
+        if (ok)
+        {
+            // 🔔 Notify clinic staff
+            Notify.ClinicVerified(clinicId);
+
+            message = $"Clinic verified. Reference: {reference}";
+        }
+        else
+        {
+            message = "Could not verify clinic.";
+        }
+
+        clinics = Db.GetAllClinics();
+    }
+
+    void Unverify(int clinicId)
+    {
+        var ok = Db.UnverifyClinic(clinicId);
+        message = ok ? "Clinic unverified." : "Could not unverify clinic.";
+        clinics = Db.GetAllClinics();
+    }
+}

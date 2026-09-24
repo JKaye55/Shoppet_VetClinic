@@ -1,0 +1,116 @@
+﻿@page "/premium"
+@inject AuthService Auth
+@inject DatabaseService Db
+@inject NavigationManager Nav
+@inject NotificationService Notify
+
+<PageTitle>Upgrade to Premium</PageTitle>
+
+<div class="container mt-4" style="max-width: 640px;">
+
+    <h2 class="mb-3"><i class="bi bi-star-fill"></i> Pet ID Virtual Card Premium</h2>
+
+    @if (!Auth.IsLoggedIn)
+    {
+        <div class="alert alert-warning">Please <a href="/login">log in</a> to upgrade.</div>
+    }
+    else if (Auth.IsPremium)
+    {
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle-fill"></i> You are already a Premium member.
+            <div class="mt-2">
+                <small>
+                    Activated: @Auth.CurrentUser!.PremiumActivatedAt?.ToString("MMM d, yyyy")<br />
+                    Reference: <code>@Auth.CurrentUser.PremiumReference</code>
+                </small>
+            </div>
+        </div>
+        <a href="/my-pets" class="btn btn-primary">Go to My Pets</a>
+    }
+    else
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">What you get for ₱49 (one-time)</h5>
+                <ul>
+                    <li><i class="bi bi-check-circle-fill"></i> Unlimited pet profiles (free tier: 1 pet)</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Unlimited health records (free tier: 5 per pet)</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Exportable health records</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Premium badge on your Pet ID Cards</li>
+                </ul>
+            </div>
+        </div>
+
+        @if (isProcessing)
+        {
+            <div class="alert alert-info">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Processing payment...
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <button class="btn btn-warning btn-lg w-100"
+                disabled="@isProcessing"
+                @onclick="PayNow">
+            <i class="bi bi-credit-card"></i> Pay ₱49 with GCash (simulated)
+        </button>
+
+        <p class="text-muted mt-3 small">
+            <em>Demo mode:</em> This button simulates a GCash payment.
+            In production, we'd redirect to PayMongo's GCash gateway.
+        </p>
+    }
+
+</div>
+
+@code {
+    bool isProcessing;
+    string errorMessage = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Auth.InitializeAsync();
+    }
+
+    async Task PayNow()
+    {
+        errorMessage = "";
+        isProcessing = true;
+        StateHasChanged();
+
+        await Task.Delay(2000);
+
+        try
+        {
+            var reference = "PP-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+
+            var ok = Db.ActivatePremiumUpgrade(Auth.CurrentUser!.Id, reference);
+
+            if (!ok)
+            {
+                errorMessage = "Payment could not be processed. Please try again.";
+                return;
+            }
+
+            // 🔔 Send premium activated notification
+            Notify.PremiumActivated(Auth.CurrentUser!.Id, reference);
+
+            var refreshed = Db.GetUserById(Auth.CurrentUser.Id);
+            if (refreshed != null) Auth.RefreshUser(refreshed);
+
+            Nav.NavigateTo("/premium");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error: " + ex.Message;
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+}

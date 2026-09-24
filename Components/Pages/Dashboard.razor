@@ -1,0 +1,2156 @@
+@page "/dashboard"
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Components.Forms
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+@inject FileStorageService FileStorage
+@inject DatabaseService DbService
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<div class="dashboard-page">
+
+    @if (isCheckingAuth)
+    {
+        <div class="container-xl py-5">
+            <div class="loading-card">
+                Loading your dashboard...
+            </div>
+        </div>
+    }
+    else if (isAuthenticated)
+    {
+        <main class="container-xl py-5">
+
+            @if (!string.IsNullOrWhiteSpace(message) && !showUpgradePrompt)
+            {
+                <div class="alert @(messageIsError ? "alert-danger" : "alert-success")
+                    rounded-4 border-0 shadow-sm mb-4">
+                    @message
+                </div>
+            }
+            @if (showUpgradePrompt)
+            {
+                <div class="alert alert-warning rounded-3 border d-flex justify-content-between align-items-center flex-wrap gap-3 mt-3">
+                    <div>
+                        <strong>Free plan limit reached</strong><br />
+                        <span class="small">
+                            Upgrade to Pet ID Virtual Card Premium for unlimited pets
+                            and unlimited health records.
+                        </span>
+                    </div>
+                    <a href="/premium" class="btn btn-warning rounded-pill fw-bold px-4">
+                        <i class="bi bi-star-fill"></i> Upgrade for ₱49
+                    </a>
+                </div>
+            }
+
+            <!-- =====================================================
+                 PROFILE HEADER
+                 ===================================================== -->
+
+            <section class="profile-card mb-4">
+
+                <div class="profile-photo-area">
+
+                    @if (!string.IsNullOrWhiteSpace(profilePhotoPreview))
+                    {
+                        <img src="@profilePhotoPreview"
+                             class="profile-photo"
+                             alt="Profile photo" />
+                    }
+                    else
+                    {
+                        <div class="profile-photo-placeholder">
+                            @GetUserInitials()
+                        </div>
+                    }
+
+                    <label class="photo-upload-button">
+                        Change Photo
+
+                        <InputFile OnChange="HandleProfilePhotoSelected"
+                                   accept="image/png,image/jpeg,image/webp"
+                                   class="file-input-hidden" />
+                    </label>
+
+                </div>
+
+                <div class="profile-information">
+
+                    <span class="eyebrow">
+                        MY ACCOUNT
+                    </span>
+
+                    <h1>
+                        Welcome, @userName
+                    </h1>
+
+                    <p>
+                        @userEmail
+                    </p>
+
+                    <span class="account-role">
+                        @userRole
+                    </span>
+
+                </div>
+
+                <div class="profile-actions">
+
+                    <a href="/inquire"
+                       class="primary-action">
+                        New Inquiry
+                    </a>
+
+                    <a href="/clinics"
+                       class="secondary-action">
+                        Find a Clinic
+                    </a>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+                 STATISTICS
+                 ===================================================== -->
+
+            <div class="row g-4 mb-4">
+
+                <div class="col-md-4">
+
+                    <div class="stat-card">
+
+                        <span>MY PETS</span>
+
+                        <strong>
+                            @pets.Count
+                        </strong>
+
+                        <small>
+                            Saved pet profiles
+                        </small>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <div class="stat-card">
+
+                        <span>MY INQUIRIES</span>
+
+                        <strong>
+                            @inquiryCount
+                        </strong>
+
+                        <small>
+                            Front-desk requests
+                        </small>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <div class="stat-card">
+
+                        <span>UPCOMING APPOINTMENTS</span>
+
+                        <strong>
+                            @appointments.Count
+                        </strong>
+
+                        <small>
+                            Scheduled clinic visits
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================================
+                 MAIN CONTENT
+                 ===================================================== -->
+
+            <div class="row g-4">
+
+                <!-- =================================================
+                     PET PROFILES
+                     ================================================= -->
+
+                <div class="col-lg-7">
+
+                    <section class="panel-card h-100">
+
+                        <div class="panel-header">
+
+                            <div>
+
+                                <span class="section-label">
+                                    PET MANAGEMENT
+                                </span>
+
+                                <h2>
+                                    My Pet Profiles
+                                </h2>
+
+                                <p>
+                                    Save your pets once so you can easily select them
+                                    for inquiries and appointments.
+                                </p>
+
+                            </div>
+
+                            <button type="button"
+                                    class="outline-action"
+                                    @onclick="OpenAddPetForm">
+
+                                Add Pet
+
+                            </button>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             PET FORM
+                             ================================================= -->
+                        @if (showPetForm)
+                        {
+                            <div class="pet-form">
+
+                                <div class="form-top">
+
+                                    <div>
+
+                                        <div class="form-section-title">
+                                            @(isEditingPet
+                                                ? "Edit Pet Profile"
+                                                : "New Pet Profile")
+                                        </div>
+
+                                        <div class="form-section-subtitle">
+                                            Add your pet's information and photo.
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- PET PHOTO -->
+
+                                <div class="pet-photo-section">
+
+                                    <div class="pet-photo-preview">
+
+                                        @if (!string.IsNullOrWhiteSpace(petPhotoPreview))
+                                        {
+                                            <img src="@petPhotoPreview"
+                                                 alt="Pet photo"
+                                                 class="pet-photo" />
+                                        }
+                                        else
+                                        {
+                                            <div class="pet-photo-placeholder">
+                                                Pet Photo
+                                            </div>
+                                        }
+
+                                    </div>
+
+                                    <div class="pet-photo-controls">
+
+                                        <strong>
+                                            Pet Photo
+                                        </strong>
+
+                                        <span>
+                                            Add a clear photo of your pet.
+                                        </span>
+
+                                        <label class="upload-photo-button">
+
+                                            Choose Photo
+
+                                            <InputFile OnChange="HandlePetPhotoSelected"
+                                                       accept="image/png,image/jpeg,image/webp"
+                                                       class="file-input-hidden" />
+
+                                        </label>
+
+                                        @if (!string.IsNullOrWhiteSpace(selectedPetFileName))
+                                        {
+                                            <small>
+                                                @selectedPetFileName
+                                            </small>
+                                        }
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- PET DETAILS -->
+
+                                <div class="row g-3">
+
+                                    <div class="col-md-6">
+
+                                        <label>
+                                            Pet Name
+                                        </label>
+
+                                        <input class="form-control"
+                                               @bind="petForm.PetName"
+                                               placeholder="e.g. Beba" />
+
+                                    </div>
+
+
+                                    <div class="col-md-6">
+
+                                        <label>
+                                            Species
+                                        </label>
+
+                                        <select class="form-select"
+                                                @bind="petForm.Species"
+                                                @bind:after="SpeciesChanged">
+
+                                            <option value="Dog">
+                                                Dog
+                                            </option>
+
+                                            <option value="Cat">
+                                                Cat
+                                            </option>
+
+                                            <option value="Rabbit">
+                                                Rabbit
+                                            </option>
+
+                                            <option value="Bird">
+                                                Bird
+                                            </option>
+
+                                            <option value="Other">
+                                                Other
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+
+                                    <div class="col-md-6">
+
+                                        <label>
+                                            Breed
+                                        </label>
+
+                                        <select class="form-select"
+                                                @bind="petForm.Breed">
+
+                                            @foreach (var breed in CurrentBreeds)
+                                            {
+                                                <option value="@breed">
+                                                    @breed
+                                                </option>
+                                            }
+
+                                        </select>
+
+                                    </div>
+
+
+                                    <div class="col-md-6">
+
+                                        <label>
+                                            Age
+                                        </label>
+
+                                        <select class="form-select"
+                                                @bind="petForm.Age">
+
+                                            <option value="">
+                                                Select age
+                                            </option>
+
+                                            <option>
+                                                Under 1 year
+                                            </option>
+
+                                            <option>
+                                                1 year
+                                            </option>
+
+                                            <option>
+                                                2 years
+                                            </option>
+
+                                            <option>
+                                                3 years
+                                            </option>
+
+                                            <option>
+                                                4 years
+                                            </option>
+
+                                            <option>
+                                                5 years
+                                            </option>
+
+                                            <option>
+                                                6–8 years
+                                            </option>
+
+                                            <option>
+                                                9–12 years
+                                            </option>
+
+                                            <option>
+                                                13+ years
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+
+                                    <div class="col-md-6">
+
+                                        <label>
+                                            Weight
+                                        </label>
+
+                                        <select class="form-select"
+                                                @bind="selectedWeight">
+
+                                            <option value="">
+                                                Not set
+                                            </option>
+
+                                            @for (decimal kg = 1; kg <= 30; kg++)
+                                            {
+                                                <option value="@kg">
+                                                    @kg.ToString("0") kg
+                                                </option>
+                                            }
+
+                                        </select>
+
+                                    </div>
+
+
+                                    <div class="col-md-6">
+
+                                        <label>
+                                            Diet
+                                        </label>
+
+                                        <select class="form-select"
+                                                @bind="petForm.Diet">
+
+                                            <option value="">
+                                                Not specified
+                                            </option>
+
+                                            <option>
+                                                Regular Pet Food
+                                            </option>
+
+                                            <option>
+                                                Royal Canin
+                                            </option>
+
+                                            <option>
+                                                Hill's
+                                            </option>
+
+                                            <option>
+                                                Purina
+                                            </option>
+
+                                            <option>
+                                                Special / Prescription Diet
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- FORM BUTTONS -->
+
+                                <div class="form-actions">
+
+                                    <button type="button"
+                                            class="save-action"
+                                            @onclick="SavePet"
+                                            disabled="@isSavingPet">
+
+                                        @(isSavingPet
+                                            ? "Saving..."
+                                            : isEditingPet
+                                                ? "Update Pet"
+                                                : "Save Pet")
+
+                                    </button>
+
+                                    <button type="button"
+                                            class="cancel-action"
+                                            @onclick="ClosePetForm"
+                                            disabled="@isSavingPet">
+
+                                        Cancel
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+                        }
+
+
+                        <!-- =================================================
+                             PET LIST
+                             ================================================= -->
+                        @if (pets.Count == 0)
+                        {
+                            <div class="empty-box">
+
+                                <strong>
+                                    No saved pets yet.
+                                </strong>
+
+                                <span>
+                                    Add your first pet above.
+                                </span>
+
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="pet-list">
+
+                                @foreach (var pet in pets)
+                                {
+                                    <div class="pet-row">
+
+                                        <div class="pet-row-left">
+
+                                            <div class="pet-list-photo">
+
+                                                @{
+                                                    var photoUrl = GetPetPhoto(pet.Id);
+                                                }
+
+                                                @if (!string.IsNullOrWhiteSpace(photoUrl))
+                                                {
+                                                    <img src="@photoUrl"
+                                                         alt="@pet.PetName" />
+                                                }
+                                                else
+                                                {
+                                                    <span>
+                                                        @GetPetInitial(pet)
+                                                    </span>
+                                                }
+
+                                            </div>
+
+
+                                            <div class="pet-details">
+
+                                                <strong>
+                                                    @pet.PetName
+                                                </strong>
+
+                                                <span>
+                                                    @pet.Species · @pet.Breed
+                                                </span>
+
+                                                <small>
+
+                                                    @(string.IsNullOrWhiteSpace(pet.Age)
+                                                        ? "Age not set"
+                                                        : pet.Age)
+
+                                                    ·
+
+                                                    @(pet.WeightKg.HasValue
+                                                        ? $"{pet.WeightKg:0.#} kg"
+                                                        : "Weight not set")
+
+                                                    ·
+
+                                                    @(string.IsNullOrWhiteSpace(pet.Diet)
+                                                        ? "Diet not set"
+                                                        : pet.Diet)
+
+                                                </small>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        <div class="pet-row-actions">
+
+                                            <button type="button"
+                                                    class="edit-pet-button"
+                                                    @onclick="() => OpenEditPetForm(pet)"
+                                                    disabled="@isSavingPet">
+
+                                                Edit
+
+                                            </button>
+
+                                            <button type="button"
+                                                    class="delete-pet-button"
+                                                    @onclick="() => DeletePet(pet)"
+                                                    disabled="@isSavingPet">
+
+                                                Delete
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+                                }
+
+                            </div>
+                        }
+
+                    </section>
+
+                </div>
+
+
+                <!-- =================================================
+                     APPOINTMENTS
+                     ================================================= -->
+
+                <div class="col-lg-5">
+
+                    <section class="panel-card h-100">
+
+                        <div class="panel-header">
+
+                            <div>
+
+                                <span class="section-label">
+                                    SCHEDULE
+                                </span>
+
+                                <h2>
+                                    Upcoming Appointments
+                                </h2>
+
+                                <p>
+                                    Your scheduled clinic visits and selected time slots.
+                                </p>
+
+                            </div>
+
+                            <a href="/clinics"
+                               class="outline-action text-decoration-none">
+
+                                Book
+
+                            </a>
+
+                        </div>
+
+
+                        @if (appointments.Count == 0)
+                        {
+                            <div class="empty-box">
+
+                                <strong>
+                                    No appointments scheduled.
+                                </strong>
+
+                                <span>
+                                    Choose a clinic, pet, service, date, and available time.
+                                </span>
+
+                                <a href="/clinics"
+                                   class="empty-action">
+
+                                    Find Available Clinics
+
+                                </a>
+
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="appointment-list">
+
+                                @foreach (var appointment in appointments)
+                                {
+                                    <div class="appointment-row">
+
+                                        <div class="appointment-date">
+
+                                            <strong>
+                                                @appointment.AppointmentDate.ToString("dd")
+                                            </strong>
+
+                                            <span>
+                                                @appointment.AppointmentDate.ToString("MMM")
+                                            </span>
+
+                                        </div>
+
+
+                                        <div class="appointment-info">
+
+                                            <strong>
+                                                @appointment.ServiceType
+                                            </strong>
+
+                                            <span>
+                                                @appointment.PetName
+                                            </span>
+
+                                            <small>
+                                                @GetClinicName(appointment.ClinicId)
+                                            </small>
+
+                                            <small>
+                                                @appointment.AppointmentDate.ToString(
+                                                    "dddd, MMM d, yyyy · h:mm tt")
+                                            </small>
+
+                                        </div>
+
+
+                                        <button type="button"
+                                                class="cancel-link"
+                                                @onclick="() => CancelAppointment(appointment.Id)">
+
+                                            Cancel
+
+                                        </button>
+
+                                    </div>
+                                }
+
+                            </div>
+                        }
+
+                    </section>
+
+                </div>
+
+            </div>
+
+        </main>
+    }
+
+</div>
+
+
+<style>
+
+    .dashboard-page {
+        min-height: 100vh;
+        background: #FAF8F5;
+        color: #1E2824;
+    }
+
+    .loading-card {
+        background: white;
+        border-radius: 20px;
+        padding: 50px;
+        text-align: center;
+        box-shadow: 0 12px 35px rgba(30,40,36,.07);
+    }
+
+    .profile-card {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        background: white;
+        border: 1px solid #E5E9E6;
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(30,40,36,.05);
+    }
+
+    .profile-photo-area {
+        width: 108px;
+        flex-shrink: 0;
+        text-align: center;
+    }
+
+    .profile-photo,
+    .profile-photo-placeholder {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        object-fit: cover;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: auto;
+    }
+
+    .profile-photo-placeholder {
+        background: #1E2D27;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 850;
+    }
+
+    .photo-upload-button {
+        display: inline-flex;
+        margin-top: 9px;
+        cursor: pointer;
+        background: #EEF4F1;
+        color: #3F6256;
+        border-radius: 999px;
+        padding: 6px 11px;
+        font-size: .68rem;
+        font-weight: 800;
+    }
+
+    .file-input-hidden {
+        display: none;
+    }
+
+    .profile-information {
+        flex: 1;
+    }
+
+    .eyebrow,
+    .section-label {
+        color: #5C766D;
+        font-size: .7rem;
+        font-weight: 850;
+        letter-spacing: .13em;
+    }
+
+    .profile-information h1 {
+        margin: 5px 0 5px;
+        font-size: clamp(1.7rem, 3vw, 2.4rem);
+        font-weight: 850;
+        letter-spacing: -.04em;
+    }
+
+    .profile-information p {
+        margin: 0;
+        color: #7C8782;
+        font-size: .85rem;
+    }
+
+    .account-role {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: #EEF4F1;
+        color: #3F6256;
+        font-size: .67rem;
+        font-weight: 850;
+        text-transform: uppercase;
+    }
+
+    .profile-actions {
+        display: flex;
+        gap: 9px;
+        flex-wrap: wrap;
+    }
+
+    .primary-action,
+    .save-action {
+        border: 0;
+        background: #F7DD7D;
+        color: #2F423B;
+        border-radius: 999px;
+        padding: 12px 20px;
+        font-weight: 850;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+        .primary-action:hover,
+        .save-action:hover {
+            background: #F2D257;
+            color: #2F423B;
+        }
+
+        .save-action:disabled,
+        .cancel-action:disabled,
+        .edit-pet-button:disabled,
+        .delete-pet-button:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+    .secondary-action {
+        border: 1px solid #CBD6D1;
+        background: white;
+        color: #456157;
+        border-radius: 999px;
+        padding: 11px 18px;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+        .secondary-action:hover {
+            background: #EEF4F1;
+            color: #1E2D27;
+        }
+
+    .stat-card {
+        background: white;
+        border: 1px solid #E5E9E6;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(30,40,36,.05);
+    }
+
+        .stat-card span {
+            display: block;
+            color: #7C8782;
+            font-size: .7rem;
+            font-weight: 850;
+            letter-spacing: .08em;
+        }
+
+        .stat-card strong {
+            display: block;
+            color: #1E2824;
+            font-size: 2.5rem;
+            line-height: 1.1;
+            margin: 8px 0 4px;
+        }
+
+        .stat-card small {
+            color: #68746F;
+        }
+
+    .panel-card {
+        background: white;
+        border: 1px solid #E5E9E6;
+        border-radius: 22px;
+        padding: 26px;
+        box-shadow: 0 10px 30px rgba(30,40,36,.05);
+    }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+        .panel-header h2 {
+            margin: 4px 0;
+            font-size: 1.35rem;
+            font-weight: 850;
+        }
+
+        .panel-header p {
+            margin: 0;
+            color: #7C8782;
+            font-size: .82rem;
+        }
+
+    .outline-action {
+        border: 1px solid #AAB8B2;
+        background: white;
+        color: #456157;
+        border-radius: 999px;
+        padding: 8px 15px;
+        font-weight: 750;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+        .outline-action:hover {
+            background: #EEF4F1;
+            color: #1E2D27;
+        }
+
+    .pet-form {
+        background: #EEF4F1;
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 18px;
+    }
+
+    .form-top {
+        margin-bottom: 18px;
+    }
+
+    .form-section-title {
+        font-weight: 850;
+        color: #1E2D27;
+    }
+
+    .form-section-subtitle {
+        color: #74817B;
+        font-size: .78rem;
+        margin-top: 3px;
+    }
+
+    .pet-form label {
+        display: block;
+        font-size: .72rem;
+        font-weight: 800;
+        margin-bottom: 6px;
+        color: #4F5D57;
+    }
+
+    .pet-form .form-control,
+    .pet-form .form-select {
+        min-height: 44px;
+        border-radius: 11px;
+        border: 1px solid #D9E1DD;
+    }
+
+    .pet-photo-section {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 15px;
+        background: white;
+        border: 1px solid #DDE6E1;
+        border-radius: 16px;
+        margin-bottom: 18px;
+    }
+
+    .pet-photo-preview {
+        width: 82px;
+        height: 82px;
+        flex-shrink: 0;
+    }
+
+    .pet-photo,
+    .pet-photo-placeholder {
+        width: 82px;
+        height: 82px;
+        border-radius: 16px;
+        object-fit: cover;
+    }
+
+    .pet-photo-placeholder {
+        background: #DDE9E4;
+        color: #547067;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: .7rem;
+        font-weight: 800;
+    }
+
+    .pet-photo-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+        .pet-photo-controls strong {
+            color: #25362F;
+            font-size: .82rem;
+        }
+
+        .pet-photo-controls span {
+            color: #7C8782;
+            font-size: .72rem;
+        }
+
+        .pet-photo-controls small {
+            color: #5C766D;
+            font-size: .65rem;
+        }
+
+    .upload-photo-button {
+        width: fit-content;
+        margin-top: 7px;
+        cursor: pointer;
+        background: #1E2D27;
+        color: white;
+        border-radius: 999px;
+        padding: 7px 13px;
+        font-size: .68rem;
+        font-weight: 800;
+    }
+
+        .upload-photo-button:hover {
+            background: #5C766D;
+        }
+
+    .form-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    .cancel-action {
+        border: 0;
+        background: white;
+        color: #44534D;
+        border-radius: 999px;
+        padding: 12px 20px;
+        font-weight: 750;
+        cursor: pointer;
+    }
+
+    .empty-box {
+        border: 1px dashed #CBD6D1;
+        border-radius: 16px;
+        padding: 25px;
+        text-align: center;
+        color: #7C8782;
+    }
+
+        .empty-box strong,
+        .empty-box span {
+            display: block;
+        }
+
+        .empty-box strong {
+            color: #34443D;
+            margin-bottom: 5px;
+        }
+
+    .empty-action {
+        display: inline-block;
+        margin-top: 13px;
+        color: #456157;
+        font-size: .76rem;
+        font-weight: 850;
+        text-decoration: none;
+    }
+
+    .pet-list,
+    .appointment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .pet-row {
+        border: 1px solid #E6EBE8;
+        border-radius: 15px;
+        padding: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .pet-row-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    .pet-list-photo {
+        width: 58px;
+        height: 58px;
+        flex-shrink: 0;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #EEF4F1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #456157;
+        font-weight: 850;
+    }
+
+        .pet-list-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .pet-details {
+        min-width: 0;
+    }
+
+        .pet-details strong,
+        .pet-details span,
+        .pet-details small {
+            display: block;
+        }
+
+        .pet-details strong {
+            color: #26352F;
+        }
+
+        .pet-details span {
+            color: #5C766D;
+            font-size: .82rem;
+            margin-top: 3px;
+        }
+
+        .pet-details small {
+            color: #7C8782;
+            margin-top: 4px;
+            font-size: .7rem;
+        }
+
+    .pet-row-actions {
+        display: flex;
+        gap: 5px;
+        flex-shrink: 0;
+    }
+
+    .edit-pet-button,
+    .delete-pet-button {
+        border: 0;
+        border-radius: 999px;
+        padding: 7px 11px;
+        font-size: .68rem;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .edit-pet-button {
+        background: #EEF4F1;
+        color: #3F6256;
+    }
+
+    .delete-pet-button {
+        background: #FDECEC;
+        color: #9C4842;
+    }
+
+    .appointment-row {
+        display: grid;
+        grid-template-columns: 54px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        border: 1px solid #E6EBE8;
+        border-radius: 15px;
+        padding: 12px;
+    }
+
+    .appointment-date {
+        width: 50px;
+        height: 58px;
+        background: #1E2D27;
+        color: white;
+        border-radius: 13px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+        .appointment-date strong {
+            font-size: 1.15rem;
+            line-height: 1;
+        }
+
+        .appointment-date span {
+            font-size: .65rem;
+            text-transform: uppercase;
+            margin-top: 3px;
+            color: #F7DD7D;
+        }
+
+    .appointment-info strong,
+    .appointment-info span,
+    .appointment-info small {
+        display: block;
+    }
+
+    .appointment-info strong {
+        font-size: .84rem;
+    }
+
+    .appointment-info span {
+        color: #5C766D;
+        font-size: .78rem;
+        margin-top: 2px;
+    }
+
+    .appointment-info small {
+        color: #7C8782;
+        font-size: .7rem;
+        margin-top: 2px;
+    }
+
+    .cancel-link {
+        border: 0;
+        background: transparent;
+        color: #A34B45;
+        font-size: .72rem;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    @@media(max-width: 800px) {
+
+        .profile-card {
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .profile-actions {
+            width: 100%;
+        }
+    }
+
+    @@media(max-width: 575px) {
+
+        .panel-card {
+            padding: 20px;
+        }
+
+        .pet-row {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .pet-row-actions {
+            width: 100%;
+        }
+
+        .edit-pet-button,
+        .delete-pet-button {
+            flex: 1;
+        }
+
+        .appointment-row {
+            grid-template-columns: 50px 1fr;
+        }
+
+        .cancel-link {
+            grid-column: 2;
+            text-align: left;
+            padding: 0;
+        }
+
+        .profile-photo-area {
+            width: 90px;
+        }
+    }
+</style>
+
+@code {
+
+    private string userName = "Pet Owner";
+    private string userEmail = string.Empty;
+    private string userRole = "Pet Owner";
+
+    private string message = string.Empty;
+    private bool messageIsError;
+
+    private bool isCheckingAuth = true;
+    private bool isAuthenticated;
+
+    private bool showPetForm;
+    private bool isEditingPet;
+    private bool isSavingPet;
+    private bool showUpgradePrompt;
+
+    private List<PetProfile> pets = new();
+    private List<ClinicAppointment> appointments = new();
+    private List<ClinicTenant> clinics = new();
+
+    private int inquiryCount;
+
+    private PetProfile petForm = new();
+
+    private string selectedWeight = string.Empty;
+
+    private string profilePhotoPreview = string.Empty;
+
+    private string petPhotoPreview = string.Empty;
+    private string selectedPetFileName = string.Empty;
+
+    private IBrowserFile? selectedPetFile;
+
+
+    // =========================================================
+    // BREEDS
+    // =========================================================
+
+    private readonly Dictionary<string, List<string>> breedOptions =
+        new()
+        {
+            ["Dog"] = new()
+            {
+                "Shih Tzu",
+                "Labrador Retriever",
+                "Golden Retriever",
+                "Pomeranian",
+                "Beagle",
+                "Aspins / Mixed Breed",
+                "Other Dog Breed"
+            },
+
+            ["Cat"] = new()
+            {
+                "Persian",
+                "Siamese",
+                "British Shorthair",
+                "Domestic Shorthair",
+                "Puspin / Mixed Breed",
+                "Other Cat Breed"
+            },
+
+            ["Rabbit"] = new()
+            {
+                "Holland Lop",
+                "Lionhead",
+                "Netherland Dwarf",
+                "Mixed Breed Rabbit",
+                "Other Rabbit Breed"
+            },
+
+            ["Bird"] = new()
+            {
+                "Parakeet",
+                "Lovebird",
+                "Cockatiel",
+                "African Grey",
+                "Other Bird"
+            },
+
+            ["Other"] = new()
+            {
+                "Other"
+            }
+        };
+
+
+    private IEnumerable<string> CurrentBreeds =>
+        breedOptions.TryGetValue(
+            petForm.Species ?? "Dog",
+            out var breeds)
+            ? breeds
+            : breedOptions["Other"];
+
+
+    // =========================================================
+    // INITIAL LOAD
+    // =========================================================
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        if (!Auth.IsLoggedIn || Auth.CurrentUser is null)
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+
+        // 🎯 Redirect admins to their portal
+        if (Auth.IsAdmin)
+        {
+            Nav.NavigateTo("/admin-portal", replace: true);
+            return;
+        }
+
+        // 🎯 Redirect clinic staff to their portal
+        if (Auth.IsClinicStaff)
+        {
+            Nav.NavigateTo("/clinic-portal", replace: true);
+            return;
+        }
+
+        isAuthenticated = true;
+        isCheckingAuth = false;
+
+        LoadData();
+
+        // Load saved profile photo from wwwroot/uploads/users.
+        profilePhotoPreview =
+            FileStorage.GetImageUrl(
+                "users",
+                Auth.CurrentUser.Id)
+            ?? string.Empty;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private void LoadData()
+    {
+        if (Auth.CurrentUser is null)
+            return;
+
+        var user = Auth.CurrentUser;
+
+        userName =
+            user.FullName ?? "Pet Owner";
+
+        userEmail =
+            user.Email ?? string.Empty;
+
+        userRole =
+            string.IsNullOrWhiteSpace(user.Role)
+                ? "Pet Owner"
+                : user.Role;
+
+        pets =
+            DbService.GetPetsByUser(user.Id);
+
+        inquiryCount =
+            DbService.GetInquiryCountByUser(user.Id);
+
+        appointments =
+            DbService.GetAppointments(userId: user.Id)
+                .Where(a =>
+                    a.AppointmentDate >= DateTime.Now)
+                .OrderBy(a =>
+                    a.AppointmentDate)
+                .ToList();
+
+        clinics =
+            DbService.GetAllClinics()
+            ?? new List<ClinicTenant>();
+    }
+
+
+    // =========================================================
+    // PROFILE PHOTO
+    // =========================================================
+
+    private async Task HandleProfilePhotoSelected(
+        InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        if (file is null || Auth.CurrentUser is null)
+            return;
+
+        if (!IsValidImage(file))
+        {
+            ShowError(
+                "Please choose a JPG, PNG, or WEBP image up to 5 MB.");
+
+            return;
+        }
+
+        try
+        {
+            // Show immediate preview.
+            profilePhotoPreview =
+                await CreatePreview(file);
+
+            await InvokeAsync(StateHasChanged);
+
+            // Persist the image.
+            var savedUrl =
+                await FileStorage.SaveImageAsync(
+                    "users",
+                    Auth.CurrentUser.Id,
+                    file);
+
+            // Use the actual saved file URL.
+            profilePhotoPreview =
+                savedUrl;
+
+            ShowSuccess(
+                "Profile photo saved successfully.");
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Profile Photo Error] {ex}");
+
+            ShowError(
+                $"The profile photo could not be saved. {ex.Message}");
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    private string GetUserInitials()
+    {
+        if (string.IsNullOrWhiteSpace(userName))
+            return "U";
+
+        var parts =
+            userName.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length == 1)
+        {
+            return parts[0]
+                .Substring(
+                    0,
+                    Math.Min(
+                        2,
+                        parts[0].Length))
+                .ToUpperInvariant();
+        }
+
+        return (
+            parts[0].Substring(0, 1) +
+            parts[^1].Substring(0, 1)
+        ).ToUpperInvariant();
+    }
+
+
+    // =========================================================
+    // ADD PET
+    // =========================================================
+
+    private void OpenAddPetForm()
+    {
+        message = string.Empty;
+        messageIsError = false;
+        showUpgradePrompt = false;
+        isEditingPet = false;
+        isSavingPet = false;
+
+        petForm =
+            new PetProfile
+            {
+                Species = "Dog",
+                Breed = "Shih Tzu"
+            };
+
+        selectedWeight =
+            string.Empty;
+
+        selectedPetFile =
+            null;
+
+        petPhotoPreview =
+            string.Empty;
+
+        selectedPetFileName =
+            string.Empty;
+
+        showPetForm = true;
+    }
+
+
+    // =========================================================
+    // EDIT PET
+    // =========================================================
+
+    private void OpenEditPetForm(PetProfile pet)
+    {
+        message = string.Empty;
+        messageIsError = false;
+
+        isEditingPet = true;
+        isSavingPet = false;
+
+        petForm =
+            new PetProfile
+            {
+                Id = pet.Id,
+                UserId = pet.UserId,
+                PetName = pet.PetName,
+                Species = pet.Species,
+                Breed = pet.Breed,
+                Age = pet.Age,
+                WeightKg = pet.WeightKg,
+                Diet = pet.Diet,
+                CreatedAt = pet.CreatedAt
+            };
+
+        selectedWeight =
+            pet.WeightKg.HasValue
+                ? pet.WeightKg.Value.ToString("0")
+                : string.Empty;
+
+        selectedPetFile =
+            null;
+
+        selectedPetFileName =
+            string.Empty;
+
+        petPhotoPreview =
+            FileStorage.GetImageUrl(
+                "pets",
+                pet.Id)
+            ?? string.Empty;
+
+        showPetForm = true;
+    }
+
+
+    private void SpeciesChanged()
+    {
+        petForm.Breed =
+            CurrentBreeds.FirstOrDefault()
+            ?? "Other";
+    }
+
+
+    private void ClosePetForm()
+    {
+        if (isSavingPet)
+            return;
+
+        showPetForm = false;
+        isEditingPet = false;
+
+        selectedPetFile =
+            null;
+
+        selectedPetFileName =
+            string.Empty;
+
+        petPhotoPreview =
+            string.Empty;
+
+        petForm =
+            new PetProfile();
+
+        selectedWeight =
+            string.Empty;
+    }
+
+
+    // =========================================================
+    // PET PHOTO
+    // =========================================================
+
+    private async Task HandlePetPhotoSelected(
+        InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        if (file is null)
+            return;
+
+        if (!IsValidImage(file))
+        {
+            ShowError(
+                "Please choose a JPG, PNG, or WEBP image up to 5 MB.");
+
+            return;
+        }
+
+        try
+        {
+            // IMPORTANT:
+            // Keep the IBrowserFile so SavePet()
+            // can actually save it to disk.
+            selectedPetFile =
+                file;
+
+            selectedPetFileName =
+                file.Name;
+
+            // Immediate browser preview.
+            petPhotoPreview =
+                await CreatePreview(file);
+
+            ShowSuccess(
+                "Pet photo selected. Click Save Pet to upload it.");
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Pet Photo Error] {ex}");
+
+            ShowError(
+                "The pet photo could not be loaded.");
+        }
+    }
+
+
+    private static bool IsValidImage(
+        IBrowserFile file)
+    {
+        const long maxSize =
+            5 * 1024 * 1024;
+
+        var allowedTypes =
+            new[]
+            {
+                "image/jpeg",
+                "image/png",
+                "image/webp"
+            };
+
+        return file.Size <= maxSize
+            && allowedTypes.Contains(
+                file.ContentType,
+                StringComparer.OrdinalIgnoreCase);
+    }
+
+
+    private static async Task<string> CreatePreview(
+        IBrowserFile file)
+    {
+        const long maxSize =
+            5 * 1024 * 1024;
+
+        await using var stream =
+            file.OpenReadStream(maxSize);
+
+        using var memory =
+            new MemoryStream();
+
+        await stream.CopyToAsync(memory);
+
+        return
+            $"data:{file.ContentType};base64," +
+            Convert.ToBase64String(
+                memory.ToArray());
+    }
+
+
+    // =========================================================
+    // SAVE PET
+    // =========================================================
+
+    private async Task SavePet()
+    {
+        // Prevent double-click / duplicate records.
+        if (isSavingPet)
+            return;
+
+        message = string.Empty;
+        messageIsError = false;
+
+        if (Auth.CurrentUser is null)
+        {
+            ShowError(
+                "Your session has expired. Please log in again.");
+
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(petForm.PetName))
+        {
+            ShowError(
+                "Please enter your pet's name.");
+
+            return;
+        }
+
+        isSavingPet = true;
+
+        // Store this BEFORE changing isEditingPet.
+        bool wasEditing =
+            isEditingPet;
+
+        try
+        {
+            petForm.UserId =
+                Auth.CurrentUser.Id;
+
+            // Convert selected weight.
+            if (decimal.TryParse(
+                selectedWeight,
+                out var weight))
+            {
+                petForm.WeightKg =
+                    weight;
+            }
+            else
+            {
+                petForm.WeightKg =
+                    null;
+            }
+
+
+            int petId;
+
+
+            // =================================================
+            // UPDATE EXISTING PET
+            // =================================================
+
+            if (wasEditing)
+            {
+                bool updated =
+                    DbService.UpdatePet(
+                        petForm);
+
+                if (!updated)
+                {
+                    ShowError(
+                        "The pet could not be updated. Please try again.");
+
+                    return;
+                }
+
+                petId =
+                    petForm.Id;
+            }
+
+
+            // =================================================
+            // ADD NEW PET
+            // =================================================
+
+            else
+            {
+                petId =
+                    DbService.AddPet(
+                        petForm);
+            }
+
+
+            // =================================================
+            // SAVE PET PHOTO
+            // =================================================
+
+            if (selectedPetFile is not null)
+            {
+                await FileStorage.SaveImageAsync(
+                    "pets",
+                    petId,
+                    selectedPetFile);
+            }
+
+
+            var savedName =
+                petForm.PetName;
+
+
+            // =================================================
+            // RESET FORM
+            // =================================================
+
+            showPetForm = false;
+            isEditingPet = false;
+
+            petForm =
+                new PetProfile();
+
+            selectedWeight =
+                string.Empty;
+
+            selectedPetFile =
+                null;
+
+            selectedPetFileName =
+                string.Empty;
+
+            petPhotoPreview =
+                string.Empty;
+
+
+            // Reload actual database data.
+            LoadData();
+
+
+            // Correct message depending on operation.
+            if (wasEditing)
+            {
+                ShowSuccess(
+                    $"{savedName} was updated successfully.");
+            }
+            else
+            {
+                ShowSuccess(
+                    $"{savedName} was saved successfully.");
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Premium paywall hit — show upgrade prompt
+            Console.WriteLine($"[Dashboard SavePet Error] {ex}");
+
+            message = ex.Message;
+            messageIsError = true;
+            showUpgradePrompt = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Dashboard SavePet Error] {ex}");
+            ShowError("Something went wrong. Please try again.");
+        }
+        finally
+        {
+            isSavingPet = false;
+        }
+    }
+
+
+    // =========================================================
+    // DELETE PET
+    // =========================================================
+
+    private void DeletePet(
+        PetProfile pet)
+    {
+        if (isSavingPet)
+            return;
+
+        message = string.Empty;
+        messageIsError = false;
+
+        if (Auth.CurrentUser is null)
+        {
+            ShowError(
+                "Your session has expired. Please log in again.");
+
+            return;
+        }
+
+        try
+        {
+            bool deleted =
+                DbService.DeletePet(
+                    pet.Id,
+                    Auth.CurrentUser.Id);
+
+            if (!deleted)
+            {
+                ShowError(
+                    "The pet could not be deleted.");
+
+                return;
+            }
+
+
+            // Delete the corresponding image file.
+            FileStorage.DeleteImage(
+                "pets",
+                pet.Id);
+
+
+            // Close the edit form if this pet
+            // was currently being edited.
+            if (petForm.Id == pet.Id)
+            {
+                ClosePetForm();
+            }
+
+
+            // Reload from SQL Server.
+            LoadData();
+
+            ShowSuccess(
+                $"{pet.PetName} was deleted successfully.");
+        }
+        catch (Exception ex)
+        {
+            // Do NOT use SqlException here.
+            // Dashboard does not need Microsoft.Data.SqlClient.
+            Console.WriteLine(
+                $"[Dashboard DeletePet Error] {ex}");
+
+            ShowError(
+                $"The pet could not be deleted. {ex.Message}");
+        }
+    }
+
+
+    // =========================================================
+    // PET PHOTO DISPLAY
+    // =========================================================
+
+    private string GetPetPhoto(
+        int petId)
+    {
+        return
+            FileStorage.GetImageUrl(
+                "pets",
+                petId)
+            ?? string.Empty;
+    }
+
+
+    private static string GetPetInitial(
+        PetProfile pet)
+    {
+        if (string.IsNullOrWhiteSpace(
+            pet.PetName))
+        {
+            return "P";
+        }
+
+        return pet.PetName
+            .Substring(0, 1)
+            .ToUpperInvariant();
+    }
+
+
+    // =========================================================
+    // APPOINTMENTS
+    // =========================================================
+
+    private string GetClinicName(
+        int clinicId)
+    {
+        return clinics
+            .FirstOrDefault(
+                c => c.Id == clinicId)
+            ?.ClinicName
+            ?? "Clinic";
+    }
+
+
+    private void CancelAppointment(
+        int appointmentId)
+    {
+        try
+        {
+            DbService.CancelAppointment(
+                appointmentId);
+
+            ShowSuccess(
+                "Appointment cancelled.");
+
+            LoadData();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Dashboard CancelAppointment Error] {ex}");
+
+            ShowError(
+                "The appointment could not be cancelled.");
+        }
+    }
+
+
+    // =========================================================
+    // MESSAGES
+    // =========================================================
+
+    private void ShowSuccess(
+        string text)
+    {
+        message = text;
+        messageIsError = false;
+    }
+
+
+    private void ShowError(
+        string text)
+    {
+        message = text;
+        messageIsError = true;
+    }
+}

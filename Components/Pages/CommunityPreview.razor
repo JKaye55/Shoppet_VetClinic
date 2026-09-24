@@ -1,0 +1,284 @@
+﻿@page "/community"
+@inject DatabaseService Db
+@inject CardService Cards
+@inject AuthService Auth
+@inject FileStorageService FileStorage
+@inject NavigationManager Nav
+
+<PageTitle>ShoppetCare Community</PageTitle>
+
+<div class="container mt-4" style="max-width: 720px;">
+
+    <div class="text-center mb-4">
+        <h1>🐾 ShoppetCare Community</h1>
+        <p class="text-muted">Share moments with your pets and see what others are posting.</p>
+    </div>
+
+    @* =============== POST FORM =============== *@
+    @if (Auth.IsLoggedIn)
+    {
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body">
+
+                @if (!string.IsNullOrEmpty(postMessage))
+                {
+                    <div class="alert @(postError ? "alert-danger" : "alert-success") small py-2 mb-3">
+                        @postMessage
+                    </div>
+                }
+
+                <div class="d-flex gap-3 align-items-start">
+
+                    <div class="avatar-circle">
+                        @GetUserInitial()
+                    </div>
+
+                    <div class="flex-grow-1">
+
+                        <textarea class="form-control mb-2"
+                                  rows="3"
+                                  placeholder="What's your pet up to today?"
+                                  @bind="newCaption"
+                                  maxlength="500"></textarea>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <select class="form-select form-select-sm" @bind="newPetId">
+                                    <option value="0">— Tag a pet (optional) —</option>
+                                    @foreach (var p in myPets)
+                                    {
+                                        <option value="@p.Id">@p.PetName</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text"
+                                       class="form-control form-control-sm"
+                                       placeholder="Image URL (optional)"
+                                       @bind="newImageUrl" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                @(500 - newCaption.Length) characters left
+                            </small>
+
+                            <button class="btn btn-success btn-sm px-4"
+                                    @onclick="SubmitPost"
+                                    disabled="@isPosting">
+                                @(isPosting ? "Posting..." : "Post")
+                            </button>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <a href="/login">Log in</a> to share your own posts.
+        </div>
+    }
+
+    @* =============== FEED =============== *@
+    @if (posts.Count == 0)
+    {
+        <div class="alert alert-light border text-center">
+            No community posts yet. Be the first to share!
+        </div>
+    }
+    else
+    {
+        @foreach (var p in posts)
+        {
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="card-body">
+
+                    <div class="d-flex gap-3 align-items-start mb-3">
+                        <div class="avatar-circle small">
+                            @GetPostAuthorInitial(p.AuthorName)
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">@p.AuthorName</div>
+                            <div class="text-muted small">
+                                @Relative(p.PostedAt)
+                                @if (!string.IsNullOrEmpty(p.PetName))
+                                {
+                                    <span> · with @p.PetName</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(p.ImageUrl))
+                    {
+                        <img src="@p.ImageUrl"
+                             class="img-fluid rounded-3 mb-3"
+                             alt="@p.Caption"
+                             style="max-height: 400px; object-fit: cover; width: 100%;" />
+                    }
+
+                    <p class="mb-0" style="white-space: pre-wrap;">@p.Caption</p>
+
+                </div>
+            </div>
+        }
+    }
+
+    @* =============== MOBILE CTA =============== *@
+    <div class="card bg-light mt-4 text-center border-0">
+        <div class="card-body py-4">
+            <h5 class="mb-2">📱 Like, comment, and connect</h5>
+            <p class="text-muted mb-3">Get the full ShoppetCare community on mobile.</p>
+            <div class="d-inline-block">
+                <img src="@qrToDownload"
+                     alt="Scan to download"
+                     style="width: 140px; height: 140px;" />
+                <p class="mt-2 mb-0 text-muted small">Scan to download</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .avatar-circle {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #5C766D, #1E2D27);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+        .avatar-circle.small {
+            width: 38px;
+            height: 38px;
+            font-size: 0.82rem;
+        }
+</style>
+
+@code {
+    List<Shoppet_VetClinic.Models.CommunityPost> posts = new();
+    List<Shoppet_VetClinic.Models.PetProfile> myPets = new();
+
+    string newCaption = "";
+    string newImageUrl = "";
+    int newPetId = 0;
+
+    bool isPosting = false;
+    string postMessage = "";
+    bool postError = false;
+
+    string qrToDownload = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Auth.InitializeAsync();
+
+        LoadPosts();
+
+        if (Auth.IsLoggedIn)
+        {
+            myPets = Db.GetPetsByUser(Auth.CurrentUser!.Id);
+        }
+
+        qrToDownload = Cards.GenerateQrDataUri(
+            "download-the-app",
+            "https://shoppetcare.app/mobile");
+    }
+
+    void LoadPosts()
+    {
+        posts = Db.GetRecentCommunityPosts(20);
+    }
+
+    async Task SubmitPost()
+    {
+        postMessage = "";
+        postError = false;
+
+        if (!Auth.IsLoggedIn)
+        {
+            postError = true;
+            postMessage = "Please log in to post.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newCaption))
+        {
+            postError = true;
+            postMessage = "Please write something before posting.";
+            return;
+        }
+
+        isPosting = true;
+
+        try
+        {
+            var ok = Db.CreateCommunityPost(
+                Auth.CurrentUser!.Id,
+                newPetId > 0 ? newPetId : (int?)null,
+                newCaption.Trim(),
+                newImageUrl?.Trim() ?? "");
+
+            if (ok)
+            {
+                postMessage = "Posted! 🎉";
+                newCaption = "";
+                newImageUrl = "";
+                newPetId = 0;
+                LoadPosts();
+            }
+            else
+            {
+                postError = true;
+                postMessage = "Could not post. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            postError = true;
+            postMessage = "Error: " + ex.Message;
+        }
+        finally
+        {
+            isPosting = false;
+        }
+
+        await Task.CompletedTask;
+    }
+
+    string GetUserInitial()
+    {
+        var name = Auth.CurrentUser?.FullName;
+        if (string.IsNullOrWhiteSpace(name)) return "U";
+        return name.Substring(0, 1).ToUpperInvariant();
+    }
+
+    string GetPostAuthorInitial(string author)
+    {
+        if (string.IsNullOrWhiteSpace(author)) return "?";
+        return author.Substring(0, 1).ToUpperInvariant();
+    }
+
+    string Relative(DateTime dt)
+    {
+        var span = DateTime.Now - dt;
+        if (span.TotalMinutes < 1) return "just now";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+        if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
+        return dt.ToString("MMM d");
+    }
+}

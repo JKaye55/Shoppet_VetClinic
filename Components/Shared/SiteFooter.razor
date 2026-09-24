@@ -1,0 +1,234 @@
+@namespace Shoppet_VetClinic.Components.Shared
+
+<footer class="sp-footer">
+
+    <div class="sp-footer-inner">
+
+        <div class="sp-footer-brand">
+
+            <div class="sp-footer-logo">
+                <img src="/shoppetlogo.png"
+                     alt="ShoppetCare" />
+            </div>
+
+            <div>
+                <div class="sp-footer-name">
+                    ShoppetCare
+                </div>
+
+                <div class="sp-footer-tagline">
+                    Pet Care Directory
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="sp-footer-links">
+
+            <a href="/">
+                Home
+            </a>
+
+            <a href="/services">
+                Services
+            </a>
+
+            <a href="/clinics">
+                Verified Clinics
+            </a>
+
+            <a href="/brands">
+                Brands &amp; Diets
+            </a>
+
+            <a href="/inquire">
+                Front Desk
+            </a>
+
+        </div>
+
+
+        <div class="sp-footer-location">
+
+            <strong>
+                Serving Lipa City &amp; Tanauan
+            </strong>
+
+            <span>
+                Veterinary care, pet supplies, and
+                verified local providers.
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="sp-footer-bottom">
+
+        <span>
+            © @DateTime.Now.Year ShoppetCare. All rights reserved.
+        </span>
+
+        <span>
+            Pilot Testing Portal
+        </span>
+
+    </div>
+
+</footer>
+
+
+<style>
+
+    .sp-footer {
+        width: 100%;
+        background: #1E2D27;
+        color: #FFFFFF;
+        margin-top: auto;
+    }
+
+    .sp-footer-inner {
+        width: 100%;
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 42px 28px 34px;
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) minmax(280px, 1fr) minmax(220px, 1fr);
+        gap: 45px;
+        align-items: start;
+    }
+
+
+    /* BRAND */
+
+    .sp-footer-brand {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+    }
+
+    .sp-footer-logo {
+        width: 46px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #FFFFFF;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+        .sp-footer-logo img {
+            width: 38px;
+            height: 38px;
+            object-fit: contain;
+        }
+
+    .sp-footer-name {
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    .sp-footer-tagline {
+        margin-top: 5px;
+        color: #B9C8C2;
+        font-size: 0.72rem;
+        font-weight: 500;
+    }
+
+
+    /* LINKS */
+
+    .sp-footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px 22px;
+    }
+
+        .sp-footer-links a {
+            color: #DDE7E3;
+            text-decoration: none;
+            font-size: 0.76rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+            .sp-footer-links a:hover {
+                color: #F7DD7D;
+            }
+
+
+    /* LOCATION */
+
+    .sp-footer-location {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+        .sp-footer-location strong {
+            color: #FFFFFF;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .sp-footer-location span {
+            max-width: 270px;
+            color: #AEBDB7;
+            font-size: 0.72rem;
+            line-height: 1.6;
+        }
+
+
+    /* BOTTOM */
+
+    .sp-footer-bottom {
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 16px 28px;
+        border-top: 1px solid rgba(255,255,255,0.10);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        color: #93A59E;
+        font-size: 0.66rem;
+        font-weight: 500;
+    }
+
+
+    /* RESPONSIVE */
+
+    @@media (max-width: 850px) {
+
+        .sp-footer-inner {
+            grid-template-columns: 1fr;
+            gap: 28px;
+        }
+
+        .sp-footer-location span {
+            max-width: 100%;
+        }
+    }
+
+
+    @@media (max-width: 600px) {
+
+        .sp-footer-inner {
+            padding: 32px 18px 26px;
+        }
+
+        .sp-footer-bottom {
+            padding: 14px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .sp-footer-links {
+            gap: 10px 18px;
+        }
+    }
+</style>

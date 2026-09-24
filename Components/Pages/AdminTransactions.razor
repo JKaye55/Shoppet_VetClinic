@@ -1,0 +1,76 @@
+﻿@page "/admin/transactions"
+@inject AuthService Auth
+@inject DatabaseService Db
+
+<PageTitle>Admin — Transactions</PageTitle>
+
+<div class="container mt-4">
+
+    @if (!Auth.IsAdmin)
+    {
+        <div class="alert alert-danger">Admin access required.</div>
+    }
+    else
+    {
+        <h2 class="mb-3">💰 Transactions</h2>
+
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="card text-bg-success">
+                    <div class="card-body">
+                        <small>Total Revenue</small>
+                        <h3>₱ @total.ToString("N2")</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <table class="table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Reference</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in transactions)
+                {
+                    <tr>
+                        <td>@t.PaidAt.ToString("MMM d, yyyy HH:mm")</td>
+                        <td>
+                            @if (t.Type == "PremiumUpgrade")
+                            {
+                                <span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i> Premium</span>
+                            }
+                            else if (t.Type == "BusinessVerification")
+                            {
+                                <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Verification</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">@t.Type</span>
+                            }
+                        </td>
+                        <td>₱ @t.Amount.ToString("N2")</td>
+                        <td><code>@t.Reference</code></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+</div>
+
+@code {
+    List<Transaction> transactions = new();
+    decimal total;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Auth.InitializeAsync();
+        transactions = Db.GetAllTransactions();
+        total = Db.GetTotalRevenue();
+    }
+}

@@ -1,0 +1,565 @@
+@page "/admin-portal"
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+@inject DatabaseService DbService
+@inject AuthService Auth
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<style>
+    .admin-bg {
+        background: #F8FAF9;
+        min-height: 100vh;
+        color: #1F2824;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .admin-topbar {
+        background: #1E2D27;
+        color: #EEF4F1;
+        font-size: .74rem;
+    }
+
+    .admin-navbar {
+        background: #FFFFFF;
+        border-bottom: 2px solid #5C766D;
+        padding: .85rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+    }
+
+    .admin-tab-btn {
+        background: transparent;
+        border: 0;
+        color: #53635C;
+        font-weight: 700;
+        font-size: .88rem;
+        padding: .55rem 1rem;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: .15s ease;
+    }
+
+    .admin-tab-btn:hover { background: #EEF4F1; color: #1E2D27; }
+    .admin-tab-btn.active { background: #5C766D; color: #FFF; }
+
+    .ops-stat-card {
+        background: #FFF;
+        border: 1px solid #E6EAE8;
+        border-radius: 16px;
+        padding: 1.35rem;
+        box-shadow: 0 4px 16px rgba(0,0,0,.03);
+        height: 100%;
+    }
+
+    .admin-panel {
+        background: #FFF;
+        border: 1px solid #E6EAE8;
+        border-radius: 18px;
+        box-shadow: 0 4px 18px rgba(0,0,0,.03);
+    }
+
+    .assignment-card {
+        background: #F8FAF9;
+        border: 1px solid #E1E8E5;
+        border-radius: 14px;
+    }
+
+    .admin-label {
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        font-weight: 800;
+        color: #718078;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    @@media (max-width: 1100px) {
+        .admin-navbar .container-xl { flex-wrap: wrap; gap: 12px; }
+        .admin-tabs { order: 3; width: 100%; overflow-x: auto; justify-content: flex-start !important; }
+    }
+</style>
+
+@if (!isAuthorized)
+{
+    <div class="admin-bg d-flex align-items-center justify-content-center p-4" style="min-height:70vh;">
+        <div class="admin-panel p-5 text-center" style="max-width:520px;">
+            <div class="admin-label mb-2">Administrator Access</div>
+            <h2 class="fw-bold text-dark">Redirecting to sign in</h2>
+            <p class="text-muted mb-0">This management console is available only to administrator accounts.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="admin-bg">
+        <div class="admin-topbar px-4 py-2">
+            <div class="container-xl d-flex justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="status-dot" style="background:#34D399;"></span>
+                    <strong>SHOPPETCARE ADMINISTRATION</strong>
+                    <span class="opacity-75">Central management console</span>
+                </div>
+                <span class="opacity-75">@Auth.CurrentUser?.FullName</span>
+            </div>
+        </div>
+
+        <header class="admin-navbar px-4">
+            <div class="container-xl d-flex justify-content-between align-items-center gap-3">
+                <a class="d-flex align-items-center gap-2 text-decoration-none flex-shrink-0" href="/admin-portal">
+                    <img src="/shoppetlogo.png" alt="ShoppetCare" style="height:38px;" />
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Shoppet<span style="color:#5C766D;">Care</span> Admin</h5>
+                        <small class="text-muted fw-bold" style="font-size:.62rem;">USERS, CLINICS &amp; OPERATIONS</small>
+                    </div>
+                </a>
+
+                <div class="admin-tabs d-flex gap-1 flex-wrap justify-content-center">
+                    <button type="button" class="admin-tab-btn @(activeTab == "overview" ? "active" : "")" @onclick='() => activeTab = "overview"'>Overview</button>
+                    <button type="button" class="admin-tab-btn @(activeTab == "staff" ? "active" : "")" @onclick='() => activeTab = "staff"'>Staff Assignment</button>
+                    <button type="button" class="admin-tab-btn @(activeTab == "users" ? "active" : "")" @onclick='() => activeTab = "users"'>Users</button>
+                    <button type="button" class="admin-tab-btn @(activeTab == "clinics" ? "active" : "")" @onclick='() => activeTab = "clinics"'>Clinics</button>
+                    <button type="button" class="admin-tab-btn @(activeTab == "commerce" ? "active" : "")" @onclick='() => activeTab = "commerce"'>Orders</button>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                    <a class="btn btn-sm btn-outline-dark rounded-pill px-3 fw-bold text-decoration-none" href="/">Storefront</a>
+                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" type="button" @onclick="SignOut">Sign Out</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="container-xl py-4">
+            @if (!string.IsNullOrWhiteSpace(feedbackMessage))
+            {
+                <div class="alert @(feedbackIsError ? "alert-danger" : "alert-success") rounded-3 border mb-4" role="alert">
+                    @feedbackMessage
+                </div>
+            }
+
+            @if (activeTab == "overview")
+            {
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="ops-stat-card">
+                            <div class="admin-label">Registered Clinics</div>
+                            <h2 class="fw-bold text-dark mb-1">@clinics.Count</h2>
+                            <small class="text-muted">Clinic tenant records</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="ops-stat-card">
+                            <div class="admin-label">Clinic Staff</div>
+                            <h2 class="fw-bold text-dark mb-1">@staffUsers.Count</h2>
+                            <small class="text-muted">Staff accounts</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="ops-stat-card">
+                            <div class="admin-label">Assigned Staff</div>
+                            <h2 class="fw-bold text-dark mb-1">@staffUsers.Count(x => x.ClinicId.HasValue)</h2>
+                            <small class="text-muted">Linked to a clinic</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="ops-stat-card">
+                            <div class="admin-label">Catalog Products</div>
+                            <h2 class="fw-bold text-dark mb-1">@products.Count</h2>
+                            <small class="text-muted">Products across clinics</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-panel p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1">Administration status</h5>
+                            <p class="text-muted small mb-0">Current database-backed account and clinic relationships.</p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-dark rounded-pill px-3" @onclick="RefreshData">Refresh Data</button>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="assignment-card p-3 h-100">
+                                <div class="admin-label">Clinic isolation</div>
+                                <strong class="text-dark">Enabled</strong>
+                                <div class="small text-muted mt-1">Clinic staff records are filtered using ClinicId.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="assignment-card p-3 h-100">
+                                <div class="admin-label">Staff assignment</div>
+                                <strong class="text-dark">Database controlled</strong>
+                                <div class="small text-muted mt-1">Administrators can assign or unassign clinic staff.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="assignment-card p-3 h-100">
+                                <div class="admin-label">Signed-in administrator</div>
+                                <strong class="text-dark">@Auth.CurrentUser?.FullName</strong>
+                                <div class="small text-muted mt-1">@Auth.CurrentUser?.Email</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (activeTab == "staff")
+            {
+                <div class="admin-panel p-4">
+                    <div class="mb-4">
+                        <div class="admin-label">Clinic Staff Management</div>
+                        <h4 class="fw-bold text-dark mb-1">Assign staff to a clinic</h4>
+                        <p class="text-muted small mb-0">Choose a clinic staff account, select its clinic tenant, then save the assignment.</p>
+                    </div>
+
+                    @if (staffUsers.Count == 0)
+                    {
+                        <div class="alert alert-light border rounded-3">No Clinic Staff accounts were found.</div>
+                    }
+                    else
+                    {
+                        <div class="row g-4">
+                            <div class="col-lg-5">
+                                <div class="assignment-card p-4 h-100">
+                                    <label class="form-label admin-label">Staff account</label>
+                                    <select class="form-select rounded-3" value="@selectedStaffId" @onchange="OnStaffChanged">
+                                        <option value="0">Select clinic staff</option>
+                                        @foreach (var staff in staffUsers)
+                                        {
+                                            <option value="@staff.Id">@staff.FullName — @staff.Email</option>
+                                        }
+                                    </select>
+
+                                    @if (selectedStaff is not null)
+                                    {
+                                        <div class="mt-4 p-3 bg-white rounded-3 border">
+                                            <div class="fw-bold text-dark">@selectedStaff.FullName</div>
+                                            <div class="small text-muted">@selectedStaff.Email</div>
+                                            <div class="small mt-2">
+                                                <span class="text-muted">Current clinic:</span>
+                                                <strong>@GetClinicName(selectedStaff.ClinicId)</strong>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="col-lg-7">
+                                <div class="assignment-card p-4 h-100">
+                                    <label class="form-label admin-label">Assign to clinic</label>
+                                    <select class="form-select rounded-3" @bind="selectedClinicId">
+                                        <option value="0">Select clinic</option>
+                                        @foreach (var clinic in clinics)
+                                        {
+                                            <option value="@clinic.Id">@clinic.ClinicName — @clinic.Branch</option>
+                                        }
+                                    </select>
+
+                                    <div class="d-flex gap-2 mt-4 flex-wrap">
+                                        <button class="btn btn-dark rounded-pill px-4 fw-bold" type="button" @onclick="AssignSelectedStaff" disabled="@(selectedStaffId <= 0 || selectedClinicId <= 0)">
+                                            Save Clinic Assignment
+                                        </button>
+                                        <button class="btn btn-outline-danger rounded-pill px-4 fw-bold" type="button" @onclick="UnassignSelectedStaff" disabled="@(selectedStaffId <= 0)">
+                                            Remove Clinic Assignment
+                                        </button>
+                                    </div>
+
+                                    <div class="small text-muted mt-3">
+                                        Removing an assignment sets ClinicId to NULL. The staff account will then be prevented from loading a clinic portal until an administrator assigns it again.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive mt-4">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light small text-uppercase text-muted">
+                                    <tr>
+                                        <th>Staff</th>
+                                        <th>Email</th>
+                                        <th>Assigned Clinic</th>
+                                        <th>Account Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var staff in staffUsers)
+                                    {
+                                        <tr>
+                                            <td class="fw-semibold text-dark">@staff.FullName</td>
+                                            <td>@staff.Email</td>
+                                            <td>
+                                                @if (staff.ClinicId.HasValue)
+                                                {
+                                                    <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">@GetClinicName(staff.ClinicId)</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis px-3 py-2">Unassigned</span>
+                                                }
+                                            </td>
+                                            <td class="small text-muted">@staff.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            }
+            else if (activeTab == "users")
+            {
+                <div class="admin-panel p-4">
+                    <div class="mb-3">
+                        <div class="admin-label">Account Directory</div>
+                        <h4 class="fw-bold text-dark mb-1">Registered users</h4>
+                        <p class="text-muted small mb-0">Read-only account overview. Clinic Staff assignment is managed in the Staff Assignment tab.</p>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light small text-uppercase text-muted">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Clinic</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in users)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@user.FullName</td>
+                                        <td>@user.Email</td>
+                                        <td><span class="badge bg-light text-dark border rounded-pill px-3">@user.Role</span></td>
+                                        <td>@GetClinicName(user.ClinicId)</td>
+                                        <td class="small text-muted">@user.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+            else if (activeTab == "clinics")
+            {
+                <div class="admin-panel p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
+                        <div>
+                            <div class="admin-label">Clinic Directory</div>
+                            <h4 class="fw-bold text-dark mb-1">Registered clinic tenants</h4>
+                            <p class="text-muted small mb-0">Clinic records currently stored in the database.</p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-dark rounded-pill px-3" @onclick="RefreshData">Refresh</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light small text-uppercase text-muted">
+                                <tr>
+                                    <th>Clinic</th>
+                                    <th>Branch</th>
+                                    <th>Address</th>
+                                    <th>PRC License</th>
+                                    <th>Staff</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var clinic in clinics)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">@clinic.ClinicName</td>
+                                        <td>@clinic.Branch</td>
+                                        <td>@clinic.Address</td>
+                                        <td class="font-monospace small">@clinic.PrcLicenseNo</td>
+                                        <td><span class="badge bg-light text-dark border rounded-pill px-3">@GetStaffCount(clinic.Id)</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+            else if (activeTab == "commerce")
+            {
+                <div class="admin-panel p-4">
+                    <div class="admin-label">Orders</div>
+                    <h4 class="fw-bold text-dark mb-1">Commerce monitoring</h4>
+                    <p class="text-muted small mb-4">The current portal exposes the database-backed product and order workflow without inventing transaction totals.</p>
+                    <div class="assignment-card p-4">
+                        <div class="fw-bold text-dark">Product catalog</div>
+                        <div class="text-muted small">@products.Count products are currently stored across clinic tenants.</div>
+                    </div>
+                </div>
+            }
+        </main>
+    </div>
+}
+
+@code {
+    private string activeTab = "overview";
+    private bool isAuthorized;
+    private string feedbackMessage = string.Empty;
+    private bool feedbackIsError;
+
+    private List<ClinicTenant> clinics = new();
+    private List<PetProduct> products = new();
+    private List<UserAccount> users = new();
+    private List<UserAccount> staffUsers = new();
+
+    private int selectedStaffId;
+    private int selectedClinicId;
+
+    private UserAccount? selectedStaff => staffUsers.FirstOrDefault(x => x.Id == selectedStaffId);
+
+    protected override void OnInitialized()
+    {
+        if (!Auth.IsLoggedIn)
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+
+        if (!string.Equals(Auth.CurrentUser!.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+        {
+            Nav.NavigateTo("/dashboard");
+            return;
+        }
+
+        isAuthorized = true;
+        RefreshData();
+    }
+
+    private void RefreshData()
+    {
+        feedbackMessage = string.Empty;
+        feedbackIsError = false;
+
+        try
+        {
+            clinics = DbService.GetAllClinics();
+            products = DbService.GetAllProducts();
+            users = DbService.GetAllUsers();
+            staffUsers = DbService.GetClinicStaffUsers();
+
+            // Keep the selected staff/clinic values valid after refreshing.
+            if (selectedStaffId > 0)
+            {
+                var staff = staffUsers.FirstOrDefault(
+                    x => x.Id == selectedStaffId);
+
+                if (staff is null)
+                {
+                    selectedStaffId = 0;
+                    selectedClinicId = 0;
+                }
+                else
+                {
+                    selectedClinicId = staff.ClinicId ?? 0;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            clinics = new List<ClinicTenant>();
+            products = new List<PetProduct>();
+            users = new List<UserAccount>();
+            staffUsers = new List<UserAccount>();
+
+            feedbackIsError = true;
+            feedbackMessage =
+                $"Unable to load administrator data: {ex.Message}";
+
+            Console.WriteLine(
+                $"[AdminDashboard RefreshData Error] {ex}");
+        }
+    }
+    private void OnStaffChanged(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out selectedStaffId))
+            selectedStaffId = 0;
+
+        var staff = staffUsers.FirstOrDefault(x => x.Id == selectedStaffId);
+        selectedClinicId = staff?.ClinicId ?? 0;
+        feedbackMessage = string.Empty;
+    }
+
+    private void AssignSelectedStaff()
+    {
+        feedbackMessage = string.Empty;
+        feedbackIsError = false;
+
+        if (selectedStaffId <= 0 || selectedClinicId <= 0)
+        {
+            ShowError("Select both a Clinic Staff account and a clinic before saving.");
+            return;
+        }
+
+        var success = DbService.AssignUserToClinic(selectedStaffId, selectedClinicId);
+        if (!success)
+        {
+            ShowError("The staff account could not be assigned. Verify that the account is Clinic Staff and the clinic exists.");
+            return;
+        }
+
+        var clinicName = GetClinicName(selectedClinicId);
+        ShowSuccess($"Clinic assignment saved. {selectedStaff?.FullName} is now assigned to {clinicName}.");
+        RefreshData();
+    }
+
+    private void UnassignSelectedStaff()
+    {
+        feedbackMessage = string.Empty;
+        feedbackIsError = false;
+
+        if (selectedStaffId <= 0)
+        {
+            ShowError("Select a Clinic Staff account first.");
+            return;
+        }
+
+        var name = selectedStaff?.FullName ?? "The staff account";
+        if (!DbService.UnassignUserFromClinic(selectedStaffId))
+        {
+            ShowError("The clinic assignment could not be removed.");
+            return;
+        }
+
+        selectedClinicId = 0;
+        ShowSuccess($"Clinic assignment removed from {name}.");
+        RefreshData();
+    }
+
+    private string GetClinicName(int? clinicId)
+    {
+        if (!clinicId.HasValue) return "Unassigned";
+        var clinic = clinics.FirstOrDefault(x => x.Id == clinicId.Value);
+        return clinic is null ? $"Clinic #{clinicId.Value}" : $"{clinic.ClinicName} — {clinic.Branch}";
+    }
+
+    private int GetStaffCount(int clinicId) => staffUsers.Count(x => x.ClinicId == clinicId);
+
+    private void ShowSuccess(string message)
+    {
+        feedbackIsError = false;
+        feedbackMessage = message;
+    }
+
+    private void ShowError(string message)
+    {
+        feedbackIsError = true;
+        feedbackMessage = message;
+    }
+
+    private void SignOut()
+    {
+        Auth.Logout();
+        Nav.NavigateTo("/");
+    }
+}
