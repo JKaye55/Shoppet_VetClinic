@@ -5,175 +5,680 @@
 @layout LandingLayout
 
 @using Shoppet_VetClinic.Services
+
 @inject DatabaseService DbService
 @inject AuthService Auth
 @inject NavigationManager Nav
 
-<div class="container-xl py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
+<PageTitle>Sign In | ShoppetCare</PageTitle>
 
-            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+<div class="sc-auth-page">
 
-                <div class="text-center mb-4">
+    <div class="sc-auth-shell">
 
-                    <div class="small fw-bold text-uppercase mb-2"
-                         style="color:#5C766D; letter-spacing:.08em;">
+        <!-- =====================================================
+             LEFT SIDE
+             ===================================================== -->
+
+        <section class="sc-auth-story">
+
+            <a href="/"
+               class="sc-auth-brand">
+
+                <img src="/shoppetlogo.png"
+                     alt="ShoppetCare" />
+
+                <span>
+
+                    <strong>
                         ShoppetCare
-                    </div>
+                    </strong>
 
-                    <h2 class="fw-bold mb-2"
-                        style="color:#1E2D27;">
+                    <small>
+                        Connected pet care
+                    </small>
+
+                </span>
+
+            </a>
+
+
+            <div class="sc-auth-story-copy">
+
+                <span class="sc-auth-eyebrow">
+                    WELCOME BACK
+                </span>
+
+                <h1>
+                    Your pet care,
+                    <em>
+                        ready when you are.
+                    </em>
+                </h1>
+
+                <p>
+                    Sign in to manage your pets,
+                    Digital Pet IDs, health records,
+                    community activity, and other
+                    account-only ShoppetCare features.
+                </p>
+
+            </div>
+
+
+            <div class="sc-auth-story-points">
+
+                <span>
+                    Pet Profiles
+                </span>
+
+                <span>
+                    Digital Pet ID
+                </span>
+
+                <span>
+                    Health Records
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             LOGIN FORM
+             ===================================================== -->
+
+        <section class="sc-auth-panel">
+
+            <div class="sc-auth-card">
+
+                <div class="sc-auth-card-head">
+
+                    <span class="sc-auth-eyebrow">
+                        SHOPPETCARE ACCOUNT
+                    </span>
+
+                    <h2>
                         Sign in
                     </h2>
 
-                    <p class="text-muted small mb-0">
-                        Access your pet care dashboard and saved activity.
+                    <p>
+                        Continue to your ShoppetCare account.
                     </p>
 
                 </div>
 
+
                 @if (!string.IsNullOrWhiteSpace(errorMessage))
                 {
-                    <div class="alert alert-danger small rounded-3">
+                    <div class="sc-auth-alert"
+                         role="alert">
+
                         @errorMessage
+
                     </div>
                 }
 
-                <div class="vstack gap-3">
 
-                    <div>
-                        <label class="form-label small fw-bold">
+                <div class="sc-auth-form">
+
+                    <div class="sc-auth-field">
+
+                        <label for="login-email">
                             Email Address
                         </label>
 
-                        <input type="email"
-                               class="form-control rounded-3"
+                        <input id="login-email"
+                               type="email"
+                               placeholder="you@example.com"
                                @bind="email"
-                               autocomplete="email" />
+                               autocomplete="email"
+                               disabled="@isSigningIn" />
+
                     </div>
 
-                    <div>
-                        <label class="form-label small fw-bold">
+
+                    <div class="sc-auth-field">
+
+                        <label for="login-password">
                             Password
                         </label>
 
-                        <input type="password"
-                               class="form-control rounded-3"
+                        <input id="login-password"
+                               type="password"
+                               placeholder="Enter your password"
                                @bind="password"
-                               autocomplete="current-password" />
+                               autocomplete="current-password"
+                               disabled="@isSigningIn" />
+
                     </div>
 
+
                     <button type="button"
-                            class="btn w-100 py-3 fw-bold rounded-pill"
-                            style="background:#F7DD7D;color:#2F423B;"
+                            class="sc-auth-primary"
                             @onclick="HandleLoginAsync"
                             disabled="@isSigningIn">
 
-                        @(isSigningIn ? "Signing in..." : "Sign In")
+                        @(isSigningIn
+                            ? "Signing in..."
+                            : "Sign In")
 
                     </button>
 
-                    <div class="text-center small text-muted">
+
+                    <div class="sc-auth-divider">
+
+                        <span>
+                            or
+                        </span>
+
+                    </div>
+
+
+                    <button type="button"
+                            class="sc-auth-guest"
+                            @onclick="ContinueAsGuestAsync"
+                            disabled="@isSigningIn">
+
+                        Explore ShoppetCare as Guest
+
+                    </button>
+
+
+                    <p class="sc-auth-account-switch">
 
                         Don't have an account?
 
-                        <a href="/register"
-                           class="fw-bold text-decoration-none"
-                           style="color:#5C766D;">
-                            Create one
+                        <a href="/register">
+                            Create a free account
                         </a>
 
-                    </div>
+                    </p>
 
                 </div>
 
             </div>
 
-        </div>
+        </section>
+
     </div>
+
 </div>
+
+
+<style>
+
+    .sc-auth-page {
+        min-height: calc(100vh - 74px);
+        padding: 34px;
+        display: grid;
+        place-items: center;
+        background: radial-gradient( circle at 8% 12%, rgba(47,144,152,.12), transparent 28% ), radial-gradient( circle at 92% 88%, rgba(243,210,122,.16), transparent 25% ), #FBF8F2;
+        color: #172A28;
+    }
+
+
+    .sc-auth-shell {
+        width: min(1120px, 100%);
+        min-height: 650px;
+        display: grid;
+        grid-template-columns: minmax(0, .95fr) minmax(430px, 1.05fr);
+        overflow: hidden;
+        border: 1px solid #DDE7E4;
+        border-radius: 28px;
+        background: #FFFFFF;
+        box-shadow: 0 30px 80px rgba(23,61,61,.13);
+    }
+
+
+    /* =========================================================
+           LEFT SIDE
+           ========================================================= */
+
+    .sc-auth-story {
+        padding: 42px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background: radial-gradient( circle at 78% 18%, rgba(243,210,122,.18), transparent 27% ), linear-gradient( 145deg, #173D3D 0%, #102E2D 100% );
+        color: #FFFFFF;
+    }
+
+
+    .sc-auth-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 11px;
+        color: #FFFFFF;
+        text-decoration: none;
+    }
+
+
+        .sc-auth-brand img {
+            width: 52px;
+            height: 52px;
+            padding: 5px;
+            object-fit: contain;
+            border-radius: 14px;
+            background: #FFFFFF;
+        }
+
+
+        .sc-auth-brand span,
+        .sc-auth-brand strong,
+        .sc-auth-brand small {
+            display: block;
+        }
+
+
+        .sc-auth-brand strong {
+            font-size: 1.05rem;
+        }
+
+
+        .sc-auth-brand small {
+            margin-top: 3px;
+            color: rgba(255,255,255,.55);
+            font-size: .68rem;
+        }
+
+
+    .sc-auth-story-copy {
+        max-width: 470px;
+        margin: 52px 0;
+    }
+
+
+    .sc-auth-eyebrow {
+        display: inline-block;
+        margin-bottom: 12px;
+        color: #2F9098;
+        font-size: .67rem;
+        font-weight: 900;
+        letter-spacing: .11em;
+    }
+
+
+    .sc-auth-story .sc-auth-eyebrow {
+        color: #9ADBDD;
+    }
+
+
+    .sc-auth-story h1 {
+        margin: 0;
+        font-size: clamp( 2.8rem, 4.5vw, 4.8rem );
+        font-weight: 900;
+        line-height: .96;
+        letter-spacing: -.055em;
+    }
+
+
+        .sc-auth-story h1 em {
+            display: block;
+            margin-top: 5px;
+            color: #F3D27A;
+            font-family: Georgia, "Times New Roman", serif;
+            font-weight: 500;
+            font-size: .92em;
+        }
+
+
+    .sc-auth-story-copy p {
+        max-width: 450px;
+        margin: 22px 0 0;
+        color: rgba(255,255,255,.68);
+        font-size: .93rem;
+        line-height: 1.7;
+    }
+
+
+    .sc-auth-story-points {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+
+        .sc-auth-story-points span {
+            padding: 8px 11px;
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 999px;
+            background: rgba(255,255,255,.07);
+            color: rgba(255,255,255,.78);
+            font-size: .7rem;
+            font-weight: 750;
+        }
+
+
+    /* =========================================================
+           RIGHT SIDE
+           ========================================================= */
+
+    .sc-auth-panel {
+        padding: 44px;
+        display: grid;
+        place-items: center;
+        background: #FFFFFF;
+    }
+
+
+    .sc-auth-card {
+        width: min(430px, 100%);
+    }
+
+
+    .sc-auth-card-head h2 {
+        margin: 0;
+        color: #173D3D;
+        font-size: 2.4rem;
+        font-weight: 900;
+        letter-spacing: -.045em;
+    }
+
+
+    .sc-auth-card-head p {
+        margin: 9px 0 0;
+        color: #7C8C87;
+        font-size: .84rem;
+        line-height: 1.5;
+    }
+
+
+    .sc-auth-alert {
+        margin-top: 22px;
+        padding: 12px 14px;
+        border: 1px solid #F5B8B8;
+        border-radius: 11px;
+        background: #FFF2F2;
+        color: #9B2C2C;
+        font-size: .78rem;
+        line-height: 1.45;
+    }
+
+
+    .sc-auth-form {
+        margin-top: 25px;
+        display: grid;
+        gap: 16px;
+    }
+
+
+    .sc-auth-field label {
+        display: block;
+        margin-bottom: 7px;
+        color: #173D3D;
+        font-size: .76rem;
+        font-weight: 800;
+    }
+
+
+    .sc-auth-field input {
+        width: 100%;
+        min-height: 50px;
+        padding: 0 14px;
+        border: 1px solid #C9D9D5;
+        border-radius: 11px;
+        background: #FFFFFF;
+        color: #172A28;
+        outline: none;
+    }
+
+
+        .sc-auth-field input:focus {
+            border-color: #2F9098;
+            box-shadow: 0 0 0 3px rgba(47,144,152,.10);
+        }
+
+
+    .sc-auth-primary,
+    .sc-auth-guest {
+        min-height: 51px;
+        border-radius: 11px;
+        font-weight: 850;
+        cursor: pointer;
+        transition: transform .18s ease, background .18s ease, border-color .18s ease;
+    }
+
+
+    .sc-auth-primary {
+        border: 1px solid #2F9098;
+        background: #2F9098;
+        color: #FFFFFF;
+    }
+
+
+        .sc-auth-primary:hover {
+            transform: translateY(-2px);
+            background: #267C83;
+            border-color: #267C83;
+        }
+
+
+    .sc-auth-guest {
+        border: 1px solid #C9D9D5;
+        background: #FFFFFF;
+        color: #173D3D;
+    }
+
+
+        .sc-auth-guest:hover {
+            transform: translateY(-2px);
+            background: #EAF5F5;
+            border-color: #AFCBC7;
+        }
+
+
+        .sc-auth-primary:disabled,
+        .sc-auth-guest:disabled {
+            opacity: .65;
+            cursor: wait;
+            transform: none;
+        }
+
+
+    .sc-auth-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #9AA6A2;
+        font-size: .68rem;
+    }
+
+
+        .sc-auth-divider::before,
+        .sc-auth-divider::after {
+            content: "";
+            height: 1px;
+            flex: 1;
+            background: #E1E9E6;
+        }
+
+
+    .sc-auth-account-switch {
+        margin: 2px 0 0;
+        text-align: center;
+        color: #7C8C87;
+        font-size: .76rem;
+    }
+
+
+        .sc-auth-account-switch a {
+            color: #267C83;
+            font-weight: 850;
+            text-decoration: none;
+        }
+
+
+    @@media (max-width: 850px) {
+
+        .sc-auth-page {
+            padding: 18px;
+        }
+
+
+        .sc-auth-shell {
+            grid-template-columns: 1fr;
+        }
+
+
+        .sc-auth-story {
+            min-height: 330px;
+            padding: 30px;
+        }
+
+
+        .sc-auth-story-copy {
+            margin: 36px 0 18px;
+        }
+
+
+        .sc-auth-panel {
+            padding: 34px 24px;
+        }
+    }
+
+</style>
+
 
 @code {
 
-    private string email = string.Empty;
-    private string password = string.Empty;
-    private string errorMessage = string.Empty;
+    private string email =
+        string.Empty;
 
-    private bool isSigningIn = false;
+    private string password =
+        string.Empty;
+
+    private string errorMessage =
+        string.Empty;
+
+    private bool isSigningIn;
+
 
     private async Task HandleLoginAsync()
     {
         if (isSigningIn)
             return;
 
-        errorMessage = string.Empty;
 
-        email = email.Trim().ToLowerInvariant();
+        errorMessage =
+            string.Empty;
+
+
+        email =
+            email
+                .Trim()
+                .ToLowerInvariant();
+
 
         if (string.IsNullOrWhiteSpace(email))
         {
-            errorMessage = "Please enter your email address.";
+            errorMessage =
+                "Please enter your email address.";
+
             return;
         }
+
 
         if (string.IsNullOrWhiteSpace(password))
         {
-            errorMessage = "Please enter your password.";
+            errorMessage =
+                "Please enter your password.";
+
             return;
         }
 
+
         isSigningIn = true;
+
 
         try
         {
-            var user = DbService.AuthenticateUser(email, password);
+            var user =
+                DbService.AuthenticateUser(
+                    email,
+                    password);
+
 
             if (user is null)
             {
-                errorMessage = "Invalid email or password.";
+                errorMessage =
+                    "Invalid email or password.";
+
                 return;
             }
 
-            var role = user.Role?.Trim() ?? string.Empty;
+
+            var role =
+                user.Role?.Trim()
+                ?? string.Empty;
+
 
             if (string.Equals(
                     role,
                     "Clinic Staff",
-                    StringComparison.OrdinalIgnoreCase))
+                    StringComparison.OrdinalIgnoreCase)
+                &&
+                !user.ClinicId.HasValue)
             {
-                if (!user.ClinicId.HasValue)
-                {
-                    errorMessage =
-                        "This clinic staff account has not been assigned to a clinic yet.";
-                    return;
-                }
+                errorMessage =
+                    "This clinic staff account has not been assigned to a clinic yet.";
+
+                return;
             }
+
 
             await Auth.LoginAsync(user);
 
-            // 🎯 Redirect based on role
-            var destination = role switch
-            {
-                "Admin" => "/admin-portal",
-                "SuperAdmin" => "/admin-portal",
-                "Super Admin" => "/admin-portal",
-                "Clinic Staff" => "/clinic-portal",
-                _ => "/home"
-            };      
+
+            var destination =
+                role switch
+                {
+                    "Admin"
+                        => "/admin-portal",
+
+                    "SuperAdmin"
+                        => "/admin-portal",
+
+                    "Super Admin"
+                        => "/admin-portal",
+
+                    "Clinic Staff"
+                        => "/clinic-portal",
+
+                    _
+                        => "/home"
+                };
+
+
             Nav.NavigateTo(destination);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Login Error] {ex}");
+            Console.WriteLine(
+                $"[Login Error] {ex}");
+
 
             errorMessage =
-                "Unable to sign in right now. " +
-                "Please check the database connection and try again.";
+                "Unable to sign in right now. Please try again.";
         }
         finally
         {
             isSigningIn = false;
         }
     }
+
+
+    private async Task ContinueAsGuestAsync()
+    {
+        if (isSigningIn)
+            return;
+
+
+        await Auth.EnterGuestModeAsync();
+
+
+        Nav.NavigateTo("/home");
+    }
+
 }

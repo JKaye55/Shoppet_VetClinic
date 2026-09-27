@@ -1,0 +1,2963 @@
+﻿@page "/marketplace"
+@rendermode InteractiveServer
+@implements IDisposable
+
+@inject MarketplaceService ListingService
+@inject FileStorageService FileStorage
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Pre-Loved Marketplace | ShoppetCare</PageTitle>
+
+
+<div class="sc-marketplace-page">
+
+    <!-- =========================================================
+         HERO
+         ========================================================= -->
+
+    <section class="sc-marketplace-hero">
+
+        <div class="sc-marketplace-shell sc-marketplace-hero-inner">
+
+            <div class="sc-marketplace-hero-copy">
+
+                <span class="sc-marketplace-kicker light">
+                    PRE-LOVED PET MARKETPLACE
+                </span>
+
+                <h1>
+                    Give pet essentials
+                    <em>a second home.</em>
+                </h1>
+
+                <p>
+                    Browse pre-loved pet items from fellow
+                    ShoppetCare pet owners in the local community.
+                </p>
+
+            </div>
+
+
+            <div class="sc-marketplace-hero-actions">
+
+                @if (Auth.IsLoggedIn && Auth.IsPetOwner)
+                {
+                    <button type="button"
+                            class="sc-marketplace-sell"
+                            @onclick="StartCreating">
+
+                        <i class="bi bi-plus-lg"
+                           aria-hidden="true"></i>
+
+                        Sell an Item
+
+                    </button>
+                }
+                else
+                {
+                    <button type="button"
+                            class="sc-marketplace-sell"
+                            @onclick="GoToRegister">
+
+                        <i class="bi bi-lock-fill"
+                           aria-hidden="true"></i>
+
+                        Sell an Item
+
+                    </button>
+                }
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         GUEST MESSAGE
+         ========================================================= -->
+    @if (Auth.IsGuest)
+    {
+        <section class="sc-marketplace-guest">
+
+            <div class="sc-marketplace-shell">
+
+                <div class="sc-marketplace-guest-card">
+
+                    <div class="sc-marketplace-guest-icon">
+                        <i class="bi bi-eye-fill"
+                           aria-hidden="true"></i>
+                    </div>
+
+                    <div class="sc-marketplace-guest-copy">
+
+                        <strong>
+                            Browsing as Guest
+                        </strong>
+
+                        <span>
+                            You can browse marketplace listings.
+                            Create an account or sign in to sell an
+                            item or contact a seller.
+                        </span>
+
+                    </div>
+
+                    <a href="/register">
+                        Create Account
+                    </a>
+
+                </div>
+
+            </div>
+
+        </section>
+    }
+
+
+    <!-- =========================================================
+         STATUS MESSAGE
+         ========================================================= -->
+    @if (!string.IsNullOrWhiteSpace(statusMessage))
+    {
+        <div class="sc-marketplace-shell">
+
+            <div class="@(isError
+                                ? "sc-marketplace-alert error"
+                                : "sc-marketplace-alert success")">
+
+                @statusMessage
+
+            </div>
+
+        </div>
+    }
+
+
+    <!-- =========================================================
+         CREATE / EDIT FORM
+         ========================================================= -->
+    @if (showForm)
+    {
+        <section class="sc-marketplace-form-section">
+
+            <div class="sc-marketplace-shell">
+
+                <div class="sc-marketplace-form-card">
+
+                    <div class="sc-marketplace-form-head">
+
+                        <div>
+
+                            <span class="sc-marketplace-kicker">
+                                @(editingId.HasValue
+                                    ? "EDIT LISTING"
+                                    : "NEW LISTING")
+                            </span>
+
+                            <h2>
+                                @(editingId.HasValue
+                                    ? "Update your item"
+                                    : "List a pre-loved item")
+                            </h2>
+
+                            <p>
+                                Add the important details another pet
+                                owner should know about your item.
+                            </p>
+
+                        </div>
+
+                        <button type="button"
+                                class="sc-marketplace-close"
+                                @onclick="CancelForm"
+                                aria-label="Close listing form">
+
+                            <i class="bi bi-x-lg"
+                               aria-hidden="true"></i>
+
+                        </button>
+
+                    </div>
+
+
+                    <div class="sc-marketplace-form-grid">
+
+                        <!-- TITLE -->
+
+                        <div class="sc-marketplace-field field-wide">
+
+                            <label>
+                                Item Title <span>*</span>
+                            </label>
+
+                            <input type="text"
+                                   maxlength="150"
+                                   @bind="formTitle"
+                                   placeholder="Example: Large Pet Carrier" />
+
+                        </div>
+
+
+                        <!-- CATEGORY -->
+
+                        <div class="sc-marketplace-field">
+
+                            <label>
+                                Category <span>*</span>
+                            </label>
+
+                            <select @bind="formCategory">
+
+                                <option value="">
+                                    Select category
+                                </option>
+
+                                @foreach (var category in categories)
+                                {
+                                    <option value="@category">
+                                        @category
+                                    </option>
+                                }
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- CONDITION -->
+
+                        <div class="sc-marketplace-field">
+
+                            <label>
+                                Condition <span>*</span>
+                            </label>
+
+                            <select @bind="formCondition">
+
+                                <option value="">
+                                    Select condition
+                                </option>
+
+                                <option value="Like New">
+                                    Like New
+                                </option>
+
+                                <option value="Good">
+                                    Good
+                                </option>
+
+                                <option value="Fair">
+                                    Fair
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- PRICE -->
+
+                        <div class="sc-marketplace-field">
+
+                            <label>
+                                Price <span>*</span>
+                            </label>
+
+                            <div class="sc-marketplace-price-input">
+
+                                <span>₱</span>
+
+                                <input type="number"
+                                       min="0"
+                                       step="0.01"
+                                       @bind="formPrice"
+                                       placeholder="0.00" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- LOCATION -->
+
+                        <div class="sc-marketplace-field">
+
+                            <label>
+                                Location
+                            </label>
+
+                            <input type="text"
+                                   maxlength="150"
+                                   @bind="formLocation"
+                                   placeholder="Example: Lipa City" />
+
+                        </div>
+
+
+                        <!-- DESCRIPTION -->
+
+                        <div class="sc-marketplace-field field-wide">
+
+                            <label>
+                                Description
+                            </label>
+
+                            <textarea rows="4"
+                                      maxlength="1000"
+                                      @bind="formDescription"
+                                      placeholder="Describe the item, size, usage, or anything the next owner should know.">
+                            </textarea>
+
+                        </div>
+
+
+                        <!-- IMAGE -->
+
+                        <div class="sc-marketplace-field field-wide">
+
+                            <label>
+                                Item Photo
+                            </label>
+
+                            <div class="sc-marketplace-upload">
+
+                                <InputFile OnChange="HandleImageSelected"
+                                           accept=".jpg,.jpeg,.png,.webp" />
+
+                                <small>
+                                    JPG, JPEG, PNG or WEBP · Maximum 5 MB
+                                </small>
+
+                                @if (selectedImage is not null)
+                                {
+                                    <strong>
+                                        Selected: @selectedImage.Name
+                                    </strong>
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sc-marketplace-form-actions">
+
+                        <button type="button"
+                                class="sc-marketplace-save"
+                                disabled="@isSaving"
+                                @onclick="SaveListingAsync">
+
+                            @if (isSaving)
+                            {
+                                <span>
+                                    Saving...
+                                </span>
+                            }
+                            else if (editingId.HasValue)
+                            {
+                                <span>
+                                    Save Changes
+                                </span>
+                            }
+                            else
+                            {
+                                <span>
+                                    Publish Listing
+                                </span>
+                            }
+
+                        </button>
+
+
+                        <button type="button"
+                                class="sc-marketplace-cancel"
+                                disabled="@isSaving"
+                                @onclick="CancelForm">
+
+                            Cancel
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+    }
+
+
+    <!-- =========================================================
+         MARKETPLACE
+         ========================================================= -->
+
+    <section class="sc-marketplace-content">
+
+        <div class="sc-marketplace-shell">
+
+
+            <!-- =================================================
+                 USER TABS
+                 ================================================= -->
+            @if (Auth.IsLoggedIn && Auth.IsPetOwner)
+            {
+                <div class="sc-marketplace-tabs">
+
+                    <button type="button"
+                            class="@(!showMyListings ? "active" : "")"
+                            @onclick="ShowBrowse">
+
+                        Browse Marketplace
+
+                    </button>
+
+                    <button type="button"
+                            class="@(showMyListings ? "active" : "")"
+                            @onclick="ShowMine">
+
+                        My Listings
+
+                    </button>
+
+                </div>
+            }
+
+
+            <!-- =================================================
+                 FILTERS
+                 ================================================= -->
+
+            <div class="sc-marketplace-filters">
+
+                <div class="sc-marketplace-search">
+
+                    <i class="bi bi-search"
+                       aria-hidden="true"></i>
+
+                    <input type="search"
+                           @bind="searchText"
+                           @bind:event="oninput"
+                           placeholder="Search pre-loved items..." />
+
+                </div>
+
+
+                <select @bind="categoryFilter">
+
+                    <option value="">
+                        All Categories
+                    </option>
+
+                    @foreach (var category in categories)
+                    {
+                        <option value="@category">
+                            @category
+                        </option>
+                    }
+
+                </select>
+
+
+                <select @bind="conditionFilter">
+
+                    <option value="">
+                        Any Condition
+                    </option>
+
+                    <option value="Like New">
+                        Like New
+                    </option>
+
+                    <option value="Good">
+                        Good
+                    </option>
+
+                    <option value="Fair">
+                        Fair
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- =================================================
+                 RESULT HEADER
+                 ================================================= -->
+
+            <div class="sc-marketplace-result-head">
+
+                <div>
+
+                    <span class="sc-marketplace-kicker">
+                        @(showMyListings
+                            ? "YOUR ITEMS"
+                            : "COMMUNITY LISTINGS")
+                    </span>
+
+                    <h2>
+                        @(showMyListings
+                            ? "My Listings"
+                            : "Find something useful for your pet")
+                    </h2>
+
+                </div>
+
+                <span class="sc-marketplace-count">
+
+                    @FilteredListings.Count
+                    @(FilteredListings.Count == 1
+                        ? "item"
+                        : "items")
+
+                </span>
+
+            </div>
+
+
+            <!-- =================================================
+                 EMPTY STATE
+                 ================================================= -->
+            @if (FilteredListings.Count == 0)
+            {
+                <div class="sc-marketplace-empty">
+
+                    <div class="sc-marketplace-empty-icon">
+
+                        <i class="bi bi-bag-heart"
+                           aria-hidden="true"></i>
+
+                    </div>
+
+                    <h3>
+                        @(showMyListings
+                            ? "You haven't listed anything yet."
+                            : "No listings match your search.")
+                    </h3>
+
+                    <p>
+                        @(showMyListings
+                            ? "Give one of your pet items a second home by creating your first listing."
+                            : "Try another search, category, or condition.")
+                    </p>
+
+                    @if (showMyListings)
+                    {
+                        <button type="button"
+                                class="sc-marketplace-empty-button"
+                                @onclick="StartCreating">
+
+                            Create Listing
+
+                        </button>
+                    }
+
+                </div>
+            }
+            else
+            {
+                <!-- =================================================
+                     LISTING GRID
+                     ================================================= -->
+
+                <div class="sc-marketplace-grid">
+
+                    @foreach (var listing in FilteredListings)
+                    {
+                        <article class="sc-marketplace-card">
+
+
+                            <!-- =====================================
+                                 IMAGE
+                                 ===================================== -->
+
+                            <div class="sc-marketplace-card-image">
+
+                                @if (!string.IsNullOrWhiteSpace(listing.ImageUrl))
+                                {
+                                    <img src="@listing.ImageUrl"
+                                         alt="@listing.Title" />
+                                }
+                                else
+                                {
+                                    <div class="sc-marketplace-image-placeholder">
+
+                                        <i class="bi bi-image"
+                                           aria-hidden="true"></i>
+
+                                        <span>
+                                            No photo
+                                        </span>
+
+                                    </div>
+                                }
+
+
+                                <span class="@GetStatusClass(listing.Status)">
+                                    @listing.Status
+                                </span>
+
+                            </div>
+
+
+                            <!-- =====================================
+                                 INFORMATION
+                                 ===================================== -->
+
+                            <div class="sc-marketplace-card-body">
+
+                                <div class="sc-marketplace-card-meta">
+
+                                    <span>
+                                        @listing.Category
+                                    </span>
+
+                                    <span>
+                                        @listing.ItemCondition
+                                    </span>
+
+                                </div>
+
+
+                                <h3>
+                                    @listing.Title
+                                </h3>
+
+
+                                <div class="sc-marketplace-price">
+                                    ₱@listing.Price.ToString("N2")
+                                </div>
+
+
+                                @if (!string.IsNullOrWhiteSpace(listing.Location))
+                                {
+                                    <div class="sc-marketplace-location">
+
+                                        <i class="bi bi-geo-alt"
+                                           aria-hidden="true"></i>
+
+                                        <span>
+                                            @listing.Location
+                                        </span>
+
+                                    </div>
+                                }
+
+
+                                @if (!string.IsNullOrWhiteSpace(listing.Description))
+                                {
+                                    <p class="sc-marketplace-description">
+                                        @listing.Description
+                                    </p>
+                                }
+
+
+                                <!-- =================================
+                                     SELLER
+                                     ================================= -->
+
+                                <div class="sc-marketplace-seller">
+
+                                    <div class="sc-marketplace-seller-avatar">
+                                        @GetInitials(listing.SellerName)
+                                    </div>
+
+                                    <div>
+
+                                        <span>
+                                            Listed by
+                                        </span>
+
+                                        <strong>
+                                            @listing.SellerName
+                                        </strong>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- =================================
+                                     OWNER ACTIONS
+                                     ================================= -->
+                                @if (IsOwnListing(listing))
+                                {
+                                    <div class="sc-marketplace-owner-label">
+
+                                        <i class="bi bi-person-check-fill"
+                                           aria-hidden="true"></i>
+
+                                        Your listing
+
+                                    </div>
+
+
+                                    <div class="sc-marketplace-owner-actions">
+
+                                        <button type="button"
+                                                @onclick="() => EditListing(listing)">
+
+                                            Edit
+
+                                        </button>
+
+
+                                        @if (!IsReserved(listing))
+                                        {
+                                            <button type="button"
+                                                    @onclick="() => ReserveListing(listing)">
+
+                                                Reserve
+
+                                            </button>
+                                        }
+
+
+                                        @if (!IsSold(listing))
+                                        {
+                                            <button type="button"
+                                                    @onclick="() => MarkSold(listing)">
+
+                                                Mark Sold
+
+                                            </button>
+                                        }
+
+
+                                        @if (!IsAvailable(listing))
+                                        {
+                                            <button type="button"
+                                                    @onclick="() => MakeAvailable(listing)">
+
+                                                Make Available
+
+                                            </button>
+                                        }
+
+
+                                        <button type="button"
+                                                class="danger"
+                                                @onclick="() => DeleteListing(listing)">
+
+                                            Delete
+
+                                        </button>
+
+                                    </div>
+                                }
+                                else
+                                {
+                                    <!-- =================================
+                                         SIGNED-IN BUYER
+                                         ================================= -->
+                                    @if (Auth.IsLoggedIn)
+                                    {
+                                        <button type="button"
+                                                class="sc-marketplace-contact"
+                                                disabled="@IsSold(listing)"
+                                                @onclick="() => ToggleContact(listing.Id)">
+
+                                            <i class="bi bi-envelope"
+                                               aria-hidden="true"></i>
+
+                                            @(IsSold(listing)
+                                                ? "Item Sold"
+                                                : "Contact Seller")
+
+                                        </button>
+
+
+                                        @if (contactListingId == listing.Id)
+                                        {
+                                            <div class="sc-marketplace-contact-box">
+
+                                                <span>
+                                                    Seller Contact
+                                                </span>
+
+                                                @if (!string.IsNullOrWhiteSpace(listing.SellerEmail))
+                                                {
+                                                    <a href="@($"mailto:{listing.SellerEmail}")">
+                                                        @listing.SellerEmail
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <strong>
+                                                        Contact information unavailable.
+                                                    </strong>
+                                                }
+
+                                                <small>
+                                                    ShoppetCare only connects buyers
+                                                    and sellers. Arrange the transaction
+                                                    responsibly with the owner.
+                                                </small>
+
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <!-- =============================
+                                             GUEST
+                                             ============================= -->
+
+                                        <button type="button"
+                                                class="sc-marketplace-contact locked"
+                                                @onclick="GoToLogin">
+
+                                            <i class="bi bi-lock-fill"
+                                               aria-hidden="true"></i>
+
+                                            Sign in to Contact Seller
+
+                                        </button>
+                                    }
+                                }
+
+                            </div>
+
+                        </article>
+                    }
+
+                </div>
+            }
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<style>
+
+    /* =========================================================
+           PAGE
+           ========================================================= */
+
+    .sc-marketplace-page {
+        min-height: 100vh;
+        background: #FAF9F6;
+        color: #172A28;
+    }
+
+
+    .sc-marketplace-shell {
+        width: min(1320px, calc(100% - 40px));
+        margin: 0 auto;
+    }
+
+
+    /* =========================================================
+           HERO
+           ========================================================= */
+
+    .sc-marketplace-hero {
+        padding: 68px 0 58px;
+        background: radial-gradient( circle at 86% 16%, rgba(243,210,122,.22), transparent 26% ), linear-gradient( 135deg, #173D3D, #102E2D );
+        color: #FFFFFF;
+    }
+
+
+    .sc-marketplace-hero-inner {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 40px;
+    }
+
+
+    .sc-marketplace-hero-copy {
+        max-width: 760px;
+    }
+
+
+    .sc-marketplace-kicker {
+        display: inline-block;
+        color: #2F9098;
+        font-size: .66rem;
+        font-weight: 900;
+        letter-spacing: .11em;
+    }
+
+
+        .sc-marketplace-kicker.light {
+            color: #9ADBDD;
+        }
+
+
+    .sc-marketplace-hero h1 {
+        max-width: 700px;
+        margin: 10px 0 0;
+        font-size: clamp( 2.8rem, 5vw, 5rem );
+        font-weight: 900;
+        line-height: .94;
+        letter-spacing: -.055em;
+    }
+
+
+        .sc-marketplace-hero h1 em {
+            display: block;
+            color: #F3D27A;
+            font-family: Georgia, "Times New Roman", serif;
+            font-weight: 500;
+        }
+
+
+    .sc-marketplace-hero p {
+        max-width: 620px;
+        margin: 20px 0 0;
+        color: rgba( 255, 255, 255, .66 );
+        line-height: 1.65;
+    }
+
+
+    .sc-marketplace-sell {
+        min-height: 48px;
+        padding: 0 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 0;
+        border-radius: 10px;
+        background: #F3D27A;
+        color: #173D3D;
+        font-size: .78rem;
+        font-weight: 900;
+        cursor: pointer;
+        transition: transform .18s ease, background .18s ease;
+    }
+
+
+        .sc-marketplace-sell:hover {
+            transform: translateY(-2px);
+            background: #F8DF98;
+        }
+
+
+    /* =========================================================
+           GUEST MESSAGE
+           ========================================================= */
+
+    .sc-marketplace-guest {
+        padding-top: 20px;
+    }
+
+
+    .sc-marketplace-guest-card {
+        padding: 15px 18px;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 13px;
+        border: 1px solid #D6E5E1;
+        border-radius: 14px;
+        background: #EEF7F5;
+    }
+
+
+    .sc-marketplace-guest-icon {
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border-radius: 11px;
+        background: #FFFFFF;
+        color: #2F9098;
+    }
+
+
+    .sc-marketplace-guest-copy strong,
+    .sc-marketplace-guest-copy span {
+        display: block;
+    }
+
+
+    .sc-marketplace-guest-copy strong {
+        color: #173D3D;
+        font-size: .77rem;
+    }
+
+
+    .sc-marketplace-guest-copy span {
+        margin-top: 3px;
+        color: #71807B;
+        font-size: .69rem;
+        line-height: 1.45;
+    }
+
+
+    .sc-marketplace-guest-card a {
+        color: #267C83;
+        font-size: .72rem;
+        font-weight: 850;
+        text-decoration: none;
+    }
+
+
+    /* =========================================================
+           ALERT
+           ========================================================= */
+
+    .sc-marketplace-alert {
+        margin-top: 18px;
+        padding: 12px 15px;
+        border-radius: 10px;
+        font-size: .76rem;
+    }
+
+
+        .sc-marketplace-alert.success {
+            border: 1px solid #B8DDCF;
+            background: #EFFAF5;
+            color: #28664D;
+        }
+
+
+        .sc-marketplace-alert.error {
+            border: 1px solid #F2B8B8;
+            background: #FFF3F3;
+            color: #9B2C2C;
+        }
+
+
+    /* =========================================================
+           LISTING FORM
+           ========================================================= */
+
+    .sc-marketplace-form-section {
+        padding: 22px 0 0;
+    }
+
+
+    .sc-marketplace-form-card {
+        padding: 26px;
+        border: 1px solid #DDE7E4;
+        border-radius: 20px;
+        background: #FFFFFF;
+        box-shadow: 0 16px 40px rgba(23,61,61,.07);
+    }
+
+
+    .sc-marketplace-form-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 24px;
+    }
+
+
+        .sc-marketplace-form-head h2 {
+            margin: 6px 0 0;
+            color: #173D3D;
+            font-size: 1.55rem;
+            font-weight: 900;
+            letter-spacing: -.025em;
+        }
+
+
+        .sc-marketplace-form-head p {
+            margin: 7px 0 0;
+            color: #7C8C87;
+            font-size: .77rem;
+        }
+
+
+    .sc-marketplace-close {
+        width: 39px;
+        height: 39px;
+        flex: 0 0 39px;
+        display: grid;
+        place-items: center;
+        border: 1px solid #DDE7E4;
+        border-radius: 10px;
+        background: #FFFFFF;
+        color: #66746F;
+        cursor: pointer;
+    }
+
+
+    .sc-marketplace-form-grid {
+        margin-top: 23px;
+        display: grid;
+        grid-template-columns: repeat( 2, minmax(0, 1fr) );
+        gap: 15px;
+    }
+
+
+    .sc-marketplace-field.field-wide {
+        grid-column: 1 / -1;
+    }
+
+
+    .sc-marketplace-field label {
+        display: block;
+        margin-bottom: 7px;
+        color: #173D3D;
+        font-size: .71rem;
+        font-weight: 850;
+    }
+
+
+        .sc-marketplace-field label span {
+            color: #B84A4A;
+        }
+
+
+    .sc-marketplace-field input,
+    .sc-marketplace-field select,
+    .sc-marketplace-field textarea {
+        width: 100%;
+        border: 1px solid #C9D9D5;
+        border-radius: 10px;
+        background: #FFFFFF;
+        color: #172A28;
+        outline: none;
+    }
+
+
+    .sc-marketplace-field input,
+    .sc-marketplace-field select {
+        min-height: 47px;
+        padding: 0 13px;
+    }
+
+
+    .sc-marketplace-field textarea {
+        padding: 12px 13px;
+        resize: vertical;
+    }
+
+
+        .sc-marketplace-field input:focus,
+        .sc-marketplace-field select:focus,
+        .sc-marketplace-field textarea:focus {
+            border-color: #2F9098;
+            box-shadow: 0 0 0 3px rgba(47,144,152,.09);
+        }
+
+
+    .sc-marketplace-price-input {
+        position: relative;
+    }
+
+
+        .sc-marketplace-price-input > span {
+            position: absolute;
+            top: 50%;
+            left: 13px;
+            transform: translateY(-50%);
+            color: #667772;
+            font-size: .8rem;
+            font-weight: 800;
+            pointer-events: none;
+        }
+
+
+        .sc-marketplace-price-input input {
+            padding-left: 31px;
+        }
+
+
+    .sc-marketplace-upload {
+        padding: 16px;
+        border: 1px dashed #BFD3CE;
+        border-radius: 11px;
+        background: #F8FBFA;
+    }
+
+
+        .sc-marketplace-upload small,
+        .sc-marketplace-upload strong {
+            display: block;
+        }
+
+
+        .sc-marketplace-upload small {
+            margin-top: 8px;
+            color: #86938F;
+            font-size: .66rem;
+        }
+
+
+        .sc-marketplace-upload strong {
+            margin-top: 7px;
+            color: #267C83;
+            font-size: .68rem;
+        }
+
+
+    .sc-marketplace-form-actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 9px;
+    }
+
+
+    .sc-marketplace-save,
+    .sc-marketplace-cancel {
+        min-height: 45px;
+        padding: 0 17px;
+        border-radius: 9px;
+        font-size: .75rem;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+
+    .sc-marketplace-save {
+        border: 1px solid #2F9098;
+        background: #2F9098;
+        color: #FFFFFF;
+    }
+
+
+        .sc-marketplace-save:hover {
+            background: #267C83;
+            border-color: #267C83;
+        }
+
+
+    .sc-marketplace-cancel {
+        border: 1px solid #D7E0DD;
+        background: #FFFFFF;
+        color: #5E6D68;
+    }
+
+
+        .sc-marketplace-save:disabled,
+        .sc-marketplace-cancel:disabled {
+            opacity: .6;
+            cursor: wait;
+        }
+
+
+    /* =========================================================
+           MAIN CONTENT
+           ========================================================= */
+
+    .sc-marketplace-content {
+        padding: 34px 0 80px;
+    }
+
+
+    /* =========================================================
+           TABS
+           ========================================================= */
+
+    .sc-marketplace-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+
+
+        .sc-marketplace-tabs button {
+            min-height: 40px;
+            padding: 0 14px;
+            border: 1px solid #DDE7E4;
+            border-radius: 999px;
+            background: #FFFFFF;
+            color: #687772;
+            font-size: .72rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+
+            .sc-marketplace-tabs button.active {
+                border-color: #173D3D;
+                background: #173D3D;
+                color: #FFFFFF;
+            }
+
+
+    /* =========================================================
+           FILTERS
+           ========================================================= */
+
+    .sc-marketplace-filters {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 210px 190px;
+        gap: 10px;
+    }
+
+
+    .sc-marketplace-search {
+        min-height: 47px;
+        padding: 0 13px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        border: 1px solid #D5E0DD;
+        border-radius: 11px;
+        background: #FFFFFF;
+    }
+
+
+        .sc-marketplace-search i {
+            color: #8B9994;
+        }
+
+
+        .sc-marketplace-search input {
+            width: 100%;
+            border: 0;
+            outline: none;
+            background: transparent;
+            color: #172A28;
+        }
+
+
+    .sc-marketplace-filters select {
+        min-height: 47px;
+        padding: 0 12px;
+        border: 1px solid #D5E0DD;
+        border-radius: 11px;
+        background: #FFFFFF;
+        color: #50615B;
+        outline: none;
+    }
+
+
+    /* =========================================================
+           RESULT HEADING
+           ========================================================= */
+
+    .sc-marketplace-result-head {
+        margin: 34px 0 17px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+
+        .sc-marketplace-result-head h2 {
+            margin: 5px 0 0;
+            color: #173D3D;
+            font-size: 1.55rem;
+            font-weight: 900;
+            letter-spacing: -.025em;
+        }
+
+
+    .sc-marketplace-count {
+        color: #889691;
+        font-size: .72rem;
+    }
+
+
+    /* =========================================================
+           LISTING GRID
+           ========================================================= */
+
+    .sc-marketplace-grid {
+        display: grid;
+        grid-template-columns: repeat( 4, minmax(0, 1fr) );
+        gap: 14px;
+    }
+
+
+    .sc-marketplace-card {
+        overflow: hidden;
+        border: 1px solid #DDE7E4;
+        border-radius: 17px;
+        background: #FFFFFF;
+        box-shadow: 0 10px 26px rgba(23,61,61,.055);
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+
+        .sc-marketplace-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 17px 35px rgba(23,61,61,.09);
+        }
+
+
+    /* =========================================================
+           LISTING IMAGE
+           ========================================================= */
+
+    .sc-marketplace-card-image {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
+        background: #EFF3F1;
+    }
+
+
+        .sc-marketplace-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+
+    .sc-marketplace-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 7px;
+        color: #9AA6A2;
+    }
+
+
+        .sc-marketplace-image-placeholder i {
+            font-size: 1.5rem;
+        }
+
+
+        .sc-marketplace-image-placeholder span {
+            font-size: .67rem;
+        }
+
+
+    /* =========================================================
+           STATUS
+           ========================================================= */
+
+    .sc-marketplace-status,
+    .sc-marketplace-status-reserved,
+    .sc-marketplace-status-sold {
+        position: absolute;
+        top: 11px;
+        right: 11px;
+        padding: 6px 8px;
+        border-radius: 999px;
+        font-size: .6rem;
+        font-weight: 900;
+    }
+
+
+    .sc-marketplace-status {
+        background: #E8F6F1;
+        color: #28664D;
+    }
+
+
+    .sc-marketplace-status-reserved {
+        background: #FFF4CF;
+        color: #806212;
+    }
+
+
+    .sc-marketplace-status-sold {
+        background: #EDF0EF;
+        color: #6D7975;
+    }
+
+
+    /* =========================================================
+           CARD CONTENT
+           ========================================================= */
+
+    .sc-marketplace-card-body {
+        padding: 16px;
+    }
+
+
+    .sc-marketplace-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+
+        .sc-marketplace-card-meta span {
+            padding: 5px 7px;
+            border-radius: 999px;
+            background: #EEF4F1;
+            color: #63746E;
+            font-size: .59rem;
+            font-weight: 800;
+        }
+
+
+    .sc-marketplace-card h3 {
+        margin: 11px 0 0;
+        color: #173D3D;
+        font-size: .96rem;
+        font-weight: 900;
+        line-height: 1.25;
+    }
+
+
+    .sc-marketplace-price {
+        margin-top: 7px;
+        color: #267C83;
+        font-size: 1.08rem;
+        font-weight: 900;
+    }
+
+
+    .sc-marketplace-location {
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: #85928E;
+        font-size: .67rem;
+    }
+
+
+    .sc-marketplace-description {
+        margin: 11px 0 0;
+        color: #6E7E79;
+        font-size: .7rem;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+
+    /* =========================================================
+           SELLER
+           ========================================================= */
+
+    .sc-marketplace-seller {
+        margin-top: 15px;
+        padding-top: 13px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        border-top: 1px solid #EEF1F0;
+    }
+
+
+    .sc-marketplace-seller-avatar {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #173D3D;
+        color: #FFFFFF;
+        font-size: .62rem;
+        font-weight: 900;
+    }
+
+
+    .sc-marketplace-seller span,
+    .sc-marketplace-seller strong {
+        display: block;
+    }
+
+
+    .sc-marketplace-seller span {
+        color: #96A19E;
+        font-size: .58rem;
+    }
+
+
+    .sc-marketplace-seller strong {
+        margin-top: 2px;
+        color: #4C5B56;
+        font-size: .68rem;
+    }
+
+
+    /* =========================================================
+           OWNER ACTIONS
+           ========================================================= */
+
+    .sc-marketplace-owner-label {
+        margin-top: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #267C83;
+        font-size: .63rem;
+        font-weight: 850;
+    }
+
+
+    .sc-marketplace-owner-actions {
+        margin-top: 9px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+
+        .sc-marketplace-owner-actions button {
+            min-height: 35px;
+            padding: 0 9px;
+            border: 1px solid #D7E1DE;
+            border-radius: 8px;
+            background: #FFFFFF;
+            color: #53635E;
+            font-size: .62rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: background .18s ease, border-color .18s ease;
+        }
+
+
+            .sc-marketplace-owner-actions button:hover {
+                border-color: #BFD3CE;
+                background: #F2F8F6;
+            }
+
+
+            .sc-marketplace-owner-actions button.danger {
+                border-color: #F0C4C4;
+                color: #A04343;
+            }
+
+
+                .sc-marketplace-owner-actions button.danger:hover {
+                    background: #FFF4F4;
+                }
+
+
+    /* =========================================================
+           CONTACT SELLER
+           ========================================================= */
+
+    .sc-marketplace-contact {
+        width: 100%;
+        min-height: 42px;
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        border: 1px solid #2F9098;
+        border-radius: 9px;
+        background: #2F9098;
+        color: #FFFFFF;
+        font-size: .7rem;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+
+        .sc-marketplace-contact:hover:not(:disabled) {
+            background: #267C83;
+            border-color: #267C83;
+        }
+
+
+        .sc-marketplace-contact.locked {
+            border-color: #D5DEDB;
+            background: #EFF2F1;
+            color: #6D7A76;
+        }
+
+
+        .sc-marketplace-contact:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+
+    .sc-marketplace-contact-box {
+        margin-top: 8px;
+        padding: 11px;
+        border-radius: 9px;
+        background: #F2F8F6;
+    }
+
+
+        .sc-marketplace-contact-box span,
+        .sc-marketplace-contact-box a,
+        .sc-marketplace-contact-box strong,
+        .sc-marketplace-contact-box small {
+            display: block;
+        }
+
+
+        .sc-marketplace-contact-box span {
+            color: #83918C;
+            font-size: .58rem;
+        }
+
+
+        .sc-marketplace-contact-box a,
+        .sc-marketplace-contact-box strong {
+            margin-top: 3px;
+            color: #267C83;
+            font-size: .68rem;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+
+        .sc-marketplace-contact-box small {
+            margin-top: 8px;
+            color: #879691;
+            font-size: .6rem;
+            line-height: 1.45;
+        }
+
+
+    /* =========================================================
+           EMPTY STATE
+           ========================================================= */
+
+    .sc-marketplace-empty {
+        padding: 70px 25px;
+        text-align: center;
+        border: 1px dashed #D6E0DD;
+        border-radius: 17px;
+        background: rgba( 255, 255, 255, .68 );
+    }
+
+
+    .sc-marketplace-empty-icon {
+        width: 54px;
+        height: 54px;
+        margin: 0 auto;
+        display: grid;
+        place-items: center;
+        border-radius: 15px;
+        background: #EAF5F5;
+        color: #2F9098;
+        font-size: 1.25rem;
+    }
+
+
+    .sc-marketplace-empty h3 {
+        margin: 15px 0 0;
+        color: #173D3D;
+        font-size: 1rem;
+    }
+
+
+    .sc-marketplace-empty p {
+        margin: 6px auto 0;
+        max-width: 500px;
+        color: #85928E;
+        font-size: .72rem;
+        line-height: 1.5;
+    }
+
+
+    .sc-marketplace-empty-button {
+        min-height: 42px;
+        margin-top: 16px;
+        padding: 0 15px;
+        border: 0;
+        border-radius: 9px;
+        background: #2F9098;
+        color: #FFFFFF;
+        font-size: .72rem;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+
+    /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+    @@media (max-width: 1080px) {
+
+        .sc-marketplace-grid {
+            grid-template-columns: repeat( 3, minmax(0, 1fr) );
+        }
+    }
+
+
+    @@media (max-width: 820px) {
+
+        .sc-marketplace-hero-inner {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+
+        .sc-marketplace-filters {
+            grid-template-columns: 1fr;
+        }
+
+
+        .sc-marketplace-grid {
+            grid-template-columns: repeat( 2, minmax(0, 1fr) );
+        }
+
+
+        .sc-marketplace-guest-card {
+            grid-template-columns: auto minmax(0, 1fr);
+        }
+
+
+            .sc-marketplace-guest-card > a {
+                grid-column: 2;
+            }
+    }
+
+
+    @@media (max-width: 560px) {
+
+        .sc-marketplace-shell {
+            width: calc(100% - 24px);
+        }
+
+
+        .sc-marketplace-hero {
+            padding: 48px 0;
+        }
+
+
+            .sc-marketplace-hero h1 {
+                font-size: 2.6rem;
+            }
+
+
+        .sc-marketplace-form-card {
+            padding: 20px;
+        }
+
+
+        .sc-marketplace-form-grid {
+            grid-template-columns: 1fr;
+        }
+
+
+        .sc-marketplace-field.field-wide {
+            grid-column: auto;
+        }
+
+
+        .sc-marketplace-form-actions {
+            flex-direction: column;
+        }
+
+
+        .sc-marketplace-grid {
+            grid-template-columns: 1fr;
+        }
+
+
+        .sc-marketplace-result-head {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+
+</style>
+
+
+@code {
+
+    // =========================================================
+    // MARKETPLACE DATA
+    // =========================================================
+
+    private List<MarketplaceListing> listings = new();
+
+
+    private readonly string[] categories =
+    {
+        "Accessories",
+        "Beds & Furniture",
+        "Carriers & Crates",
+        "Clothing",
+        "Feeding",
+        "Grooming",
+        "Toys",
+        "Training",
+        "Other"
+    };
+
+
+    // =========================================================
+    // FILTERS
+    // =========================================================
+
+    private string searchText = string.Empty;
+
+    private string categoryFilter = string.Empty;
+
+    private string conditionFilter = string.Empty;
+
+    private bool showMyListings;
+
+
+    // =========================================================
+    // CREATE / EDIT FORM
+    // =========================================================
+
+    private bool showForm;
+
+    private bool isSaving;
+
+    private int? editingId;
+
+
+    private string formTitle = string.Empty;
+
+    private string formCategory = string.Empty;
+
+    private string formCondition = string.Empty;
+
+    private decimal formPrice;
+
+    private string formDescription = string.Empty;
+
+    private string formLocation = string.Empty;
+
+
+    private IBrowserFile? selectedImage;
+
+
+    // =========================================================
+    // UI STATE
+    // =========================================================
+
+    private string statusMessage = string.Empty;
+
+    private bool isError;
+
+    private int? contactListingId;
+
+
+    // =========================================================
+    // FILTERED LISTINGS
+    // =========================================================
+
+    private List<MarketplaceListing> FilteredListings
+    {
+        get
+        {
+            IEnumerable<MarketplaceListing> result =
+                listings;
+
+
+            // -----------------------------------------------------
+            // MY LISTINGS
+            // -----------------------------------------------------
+
+            if (showMyListings)
+            {
+                if (Auth.CurrentUser is null)
+                {
+                    return new List<MarketplaceListing>();
+                }
+
+
+                result =
+                    result.Where(
+                        listing =>
+                            listing.SellerUserId ==
+                            Auth.CurrentUser.Id);
+            }
+            else
+            {
+                // Sold items remain visible under My Listings,
+                // but are hidden from the public marketplace feed.
+
+                result =
+                    result.Where(
+                        listing =>
+                            !string.Equals(
+                                listing.Status,
+                                "Sold",
+                                StringComparison.OrdinalIgnoreCase));
+            }
+
+
+            // -----------------------------------------------------
+            // SEARCH
+            // -----------------------------------------------------
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                var search =
+                    searchText.Trim();
+
+
+                result =
+                    result.Where(
+                        listing =>
+                            ContainsIgnoreCase(
+                                listing.Title,
+                                search)
+                            ||
+                            ContainsIgnoreCase(
+                                listing.Description,
+                                search)
+                            ||
+                            ContainsIgnoreCase(
+                                listing.Location,
+                                search)
+                            ||
+                            ContainsIgnoreCase(
+                                listing.SellerName,
+                                search));
+            }
+
+
+            // -----------------------------------------------------
+            // CATEGORY
+            // -----------------------------------------------------
+
+            if (!string.IsNullOrWhiteSpace(categoryFilter))
+            {
+                result =
+                    result.Where(
+                        listing =>
+                            string.Equals(
+                                listing.Category,
+                                categoryFilter,
+                                StringComparison.OrdinalIgnoreCase));
+            }
+
+
+            // -----------------------------------------------------
+            // CONDITION
+            // -----------------------------------------------------
+
+            if (!string.IsNullOrWhiteSpace(conditionFilter))
+            {
+                result =
+                    result.Where(
+                        listing =>
+                            string.Equals(
+                                listing.ItemCondition,
+                                conditionFilter,
+                                StringComparison.OrdinalIgnoreCase));
+            }
+
+
+            return result.ToList();
+        }
+    }
+
+
+    // =========================================================
+    // COMPONENT INITIALIZATION
+    // =========================================================
+
+    protected override void OnInitialized()
+    {
+        Auth.RegisterListener(
+            OnAuthStateChanged);
+
+
+        LoadListings();
+    }
+
+
+    protected override async Task OnAfterRenderAsync(
+        bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+
+        await Auth.InitializeAsync();
+
+
+        await InvokeAsync(
+            StateHasChanged);
+    }
+
+
+    private void OnAuthStateChanged()
+    {
+        _ =
+            InvokeAsync(
+                StateHasChanged);
+    }
+
+
+    // =========================================================
+    // LOAD LISTINGS
+    // =========================================================
+
+    private void LoadListings()
+    {
+        try
+        {
+            listings =
+                ListingService
+                    .GetAllListings();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Marketplace] Load failed: {ex}");
+
+
+            ShowError(
+                "Marketplace listings could not be loaded.");
+        }
+    }
+
+
+    // =========================================================
+    // START CREATE
+    // =========================================================
+
+    private void StartCreating()
+    {
+        if (!Auth.IsLoggedIn ||
+            !Auth.IsPetOwner)
+        {
+            GoToRegister();
+
+            return;
+        }
+
+
+        ResetForm();
+
+
+        showForm = true;
+
+        showMyListings = true;
+
+        statusMessage = string.Empty;
+    }
+
+
+    // =========================================================
+    // EDIT LISTING
+    // =========================================================
+
+    private void EditListing(
+        MarketplaceListing listing)
+    {
+        if (!IsOwnListing(listing))
+            return;
+
+
+        editingId =
+            listing.Id;
+
+
+        formTitle =
+            listing.Title;
+
+
+        formCategory =
+            listing.Category;
+
+
+        formCondition =
+            listing.ItemCondition;
+
+
+        formPrice =
+            listing.Price;
+
+
+        formDescription =
+            listing.Description;
+
+
+        formLocation =
+            listing.Location;
+
+
+        selectedImage =
+            null;
+
+
+        showForm =
+            true;
+
+
+        showMyListings =
+            true;
+
+
+        statusMessage =
+            string.Empty;
+    }
+
+
+    // =========================================================
+    // IMAGE
+    // =========================================================
+
+    private void HandleImageSelected(
+        InputFileChangeEventArgs args)
+    {
+        var file =
+            args.File;
+
+
+        if (file.Size > 5 * 1024 * 1024)
+        {
+            selectedImage = null;
+
+
+            ShowError(
+                "Please choose an image smaller than 5 MB.");
+
+
+            return;
+        }
+
+
+        selectedImage =
+            file;
+
+
+        statusMessage =
+            string.Empty;
+    }
+
+
+    // =========================================================
+    // SAVE LISTING
+    // =========================================================
+
+    private async Task SaveListingAsync()
+    {
+        statusMessage =
+            string.Empty;
+
+
+        isError =
+            false;
+
+
+        if (Auth.CurrentUser is null ||
+            !Auth.IsPetOwner)
+        {
+            ShowError(
+                "Please sign in with a pet owner account before creating a listing.");
+
+
+            return;
+        }
+
+
+        // -----------------------------------------------------
+        // CLEAN VALUES
+        // -----------------------------------------------------
+
+        formTitle =
+            formTitle.Trim();
+
+
+        formCategory =
+            formCategory.Trim();
+
+
+        formCondition =
+            formCondition.Trim();
+
+
+        formDescription =
+            formDescription.Trim();
+
+
+        formLocation =
+            formLocation.Trim();
+
+
+        // -----------------------------------------------------
+        // VALIDATION
+        // -----------------------------------------------------
+
+        if (string.IsNullOrWhiteSpace(formTitle))
+        {
+            ShowError(
+                "Please enter an item title.");
+
+
+            return;
+        }
+
+
+        if (formTitle.Length > 150)
+        {
+            ShowError(
+                "Item title cannot exceed 150 characters.");
+
+
+            return;
+        }
+
+
+        if (string.IsNullOrWhiteSpace(formCategory))
+        {
+            ShowError(
+                "Please select a category.");
+
+
+            return;
+        }
+
+
+        if (string.IsNullOrWhiteSpace(formCondition))
+        {
+            ShowError(
+                "Please select the item's condition.");
+
+
+            return;
+        }
+
+
+        if (formPrice < 0)
+        {
+            ShowError(
+                "Price cannot be negative.");
+
+
+            return;
+        }
+
+
+        isSaving =
+            true;
+
+
+        try
+        {
+            // =================================================
+            // EDIT EXISTING
+            // =================================================
+
+            if (editingId.HasValue)
+            {
+                var listing =
+                    new MarketplaceListing
+                    {
+                        Id =
+                            editingId.Value,
+
+                        SellerUserId =
+                            Auth.CurrentUser.Id,
+
+                        Title =
+                            formTitle,
+
+                        Category =
+                            formCategory,
+
+                        ItemCondition =
+                            formCondition,
+
+                        Price =
+                            formPrice,
+
+                        Description =
+                            formDescription,
+
+                        Location =
+                            formLocation
+                    };
+
+
+                var updated =
+                    ListingService
+                        .UpdateListing(
+                            listing);
+
+
+                if (!updated)
+                {
+                    ShowError(
+                        "The listing could not be updated.");
+
+
+                    return;
+                }
+
+
+                // ---------------------------------------------
+                // OPTIONAL NEW IMAGE
+                // ---------------------------------------------
+
+                if (selectedImage is not null)
+                {
+                    var imageUrl =
+                        await FileStorage
+                            .SaveImageAsync(
+                                "marketplace",
+                                listing.Id,
+                                selectedImage);
+
+
+                    ListingService
+                        .UpdateListingImage(
+                            listing.Id,
+                            Auth.CurrentUser.Id,
+                            imageUrl);
+                }
+
+
+                statusMessage =
+                    "Your listing was updated.";
+            }
+
+            // =================================================
+            // CREATE NEW
+            // =================================================
+
+            else
+            {
+                var listing =
+                    new MarketplaceListing
+                    {
+                        SellerUserId =
+                            Auth.CurrentUser.Id,
+
+                        Title =
+                            formTitle,
+
+                        Category =
+                            formCategory,
+
+                        ItemCondition =
+                            formCondition,
+
+                        Price =
+                            formPrice,
+
+                        Description =
+                            formDescription,
+
+                        Location =
+                            formLocation,
+
+                        Status =
+                            "Available"
+                    };
+
+
+                var listingId =
+                    ListingService
+                        .CreateListing(
+                            listing);
+
+
+                // ---------------------------------------------
+                // OPTIONAL IMAGE
+                // ---------------------------------------------
+
+                if (selectedImage is not null)
+                {
+                    var imageUrl =
+                        await FileStorage
+                            .SaveImageAsync(
+                                "marketplace",
+                                listingId,
+                                selectedImage);
+
+
+                    ListingService
+                        .UpdateListingImage(
+                            listingId,
+                            Auth.CurrentUser.Id,
+                            imageUrl);
+                }
+
+
+                statusMessage =
+                    "Your pre-loved item is now listed.";
+            }
+
+
+            isError =
+                false;
+
+
+            showForm =
+                false;
+
+
+            ResetForm();
+
+
+            LoadListings();
+
+
+            showMyListings =
+                true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Marketplace] Save failed: {ex}");
+
+
+            ShowError(
+                "The listing could not be saved. Please try again.");
+        }
+        finally
+        {
+            isSaving =
+                false;
+        }
+    }
+
+
+    // =========================================================
+    // STATUS UPDATE
+    // =========================================================
+
+    private void ChangeStatus(
+        MarketplaceListing listing,
+        string status)
+    {
+        if (!IsOwnListing(listing) ||
+            Auth.CurrentUser is null)
+        {
+            return;
+        }
+
+
+        try
+        {
+            var updated =
+                ListingService
+                    .UpdateListingStatus(
+                        listing.Id,
+                        Auth.CurrentUser.Id,
+                        status);
+
+
+            if (!updated)
+            {
+                ShowError(
+                    "The listing status could not be updated.");
+
+
+                return;
+            }
+
+
+            statusMessage =
+                $"Listing marked as {status}.";
+
+
+            isError =
+                false;
+
+
+            LoadListings();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Marketplace] Status update failed: {ex}");
+
+
+            ShowError(
+                "The listing status could not be updated.");
+        }
+    }
+
+
+    private void ReserveListing(
+        MarketplaceListing listing)
+    {
+        ChangeStatus(
+            listing,
+            "Reserved");
+    }
+
+
+    private void MarkSold(
+        MarketplaceListing listing)
+    {
+        ChangeStatus(
+            listing,
+            "Sold");
+    }
+
+
+    private void MakeAvailable(
+        MarketplaceListing listing)
+    {
+        ChangeStatus(
+            listing,
+            "Available");
+    }
+
+
+    // =========================================================
+    // DELETE
+    // =========================================================
+
+    private void DeleteListing(
+        MarketplaceListing listing)
+    {
+        if (!IsOwnListing(listing) ||
+            Auth.CurrentUser is null)
+        {
+            return;
+        }
+
+
+        try
+        {
+            var deleted =
+                ListingService
+                    .DeleteListing(
+                        listing.Id,
+                        Auth.CurrentUser.Id);
+
+
+            if (!deleted)
+            {
+                ShowError(
+                    "The listing could not be deleted.");
+
+
+                return;
+            }
+
+
+            try
+            {
+                FileStorage.DeleteImage(
+                    "marketplace",
+                    listing.Id);
+            }
+            catch
+            {
+                // Listing deletion should still succeed even if
+                // the image file was already missing.
+            }
+
+
+            statusMessage =
+                "Listing deleted.";
+
+
+            isError =
+                false;
+
+
+            contactListingId =
+                null;
+
+
+            LoadListings();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Marketplace] Delete failed: {ex}");
+
+
+            ShowError(
+                "The listing could not be deleted.");
+        }
+    }
+
+
+    // =========================================================
+    // CONTACT SELLER
+    // =========================================================
+
+    private void ToggleContact(
+        int listingId)
+    {
+        if (!Auth.IsLoggedIn)
+        {
+            GoToLogin();
+
+            return;
+        }
+
+
+        contactListingId =
+            contactListingId == listingId
+                ? null
+                : listingId;
+    }
+
+
+    // =========================================================
+    // TAB SWITCHING
+    // =========================================================
+
+    private void ShowBrowse()
+    {
+        showMyListings =
+            false;
+
+
+        contactListingId =
+            null;
+
+
+        statusMessage =
+            string.Empty;
+    }
+
+
+    private void ShowMine()
+    {
+        showMyListings =
+            true;
+
+
+        contactListingId =
+            null;
+
+
+        statusMessage =
+            string.Empty;
+    }
+
+
+    // =========================================================
+    // OWNERSHIP
+    // =========================================================
+
+    private bool IsOwnListing(
+        MarketplaceListing listing)
+    {
+        return
+            Auth.CurrentUser is not null
+            &&
+            listing.SellerUserId ==
+            Auth.CurrentUser.Id;
+    }
+
+
+    // =========================================================
+    // STATUS HELPERS
+    // =========================================================
+
+    private bool IsAvailable(
+        MarketplaceListing listing)
+    {
+        return
+            string.Equals(
+                listing.Status,
+                "Available",
+                StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private bool IsReserved(
+        MarketplaceListing listing)
+    {
+        return
+            string.Equals(
+                listing.Status,
+                "Reserved",
+                StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private bool IsSold(
+        MarketplaceListing listing)
+    {
+        return
+            string.Equals(
+                listing.Status,
+                "Sold",
+                StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private string GetStatusClass(
+        string status)
+    {
+        if (string.Equals(
+            status,
+            "Sold",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return
+                "sc-marketplace-status-sold";
+        }
+
+
+        if (string.Equals(
+            status,
+            "Reserved",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return
+                "sc-marketplace-status-reserved";
+        }
+
+
+        return
+            "sc-marketplace-status";
+    }
+
+
+    // =========================================================
+    // SEARCH HELPER
+    // =========================================================
+
+    private static bool ContainsIgnoreCase(
+        string? value,
+        string search)
+    {
+        return
+            !string.IsNullOrWhiteSpace(value)
+            &&
+            value.Contains(
+                search,
+                StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    // =========================================================
+    // INITIALS
+    // =========================================================
+
+    private string GetInitials(
+        string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return "U";
+        }
+
+
+        var parts =
+            name.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+
+        if (parts.Length == 0)
+        {
+            return "U";
+        }
+
+
+        if (parts.Length == 1)
+        {
+            return
+                parts[0]
+                    .Substring(
+                        0,
+                        Math.Min(
+                            2,
+                            parts[0].Length))
+                    .ToUpperInvariant();
+        }
+
+
+        return
+            (
+                parts[0].Substring(0, 1)
+                +
+                parts[^1].Substring(0, 1)
+            )
+            .ToUpperInvariant();
+    }
+
+
+    // =========================================================
+    // ERROR MESSAGE
+    // =========================================================
+
+    private void ShowError(
+        string message)
+    {
+        statusMessage =
+            message;
+
+
+        isError =
+            true;
+    }
+
+
+    // =========================================================
+    // FORM RESET
+    // =========================================================
+
+    private void CancelForm()
+    {
+        showForm =
+            false;
+
+
+        ResetForm();
+
+
+        statusMessage =
+            string.Empty;
+    }
+
+
+    private void ResetForm()
+    {
+        editingId =
+            null;
+
+
+        formTitle =
+            string.Empty;
+
+
+        formCategory =
+            string.Empty;
+
+
+        formCondition =
+            string.Empty;
+
+
+        formPrice =
+            0;
+
+
+        formDescription =
+            string.Empty;
+
+
+        formLocation =
+            string.Empty;
+
+
+        selectedImage =
+            null;
+    }
+
+
+    // =========================================================
+    // NAVIGATION
+    // =========================================================
+
+    private void GoToLogin()
+    {
+        Nav.NavigateTo(
+            "/login");
+    }
+
+
+    private void GoToRegister()
+    {
+        Nav.NavigateTo(
+            "/register");
+    }
+
+
+    // =========================================================
+    // CLEANUP
+    // =========================================================
+
+    public void Dispose()
+    {
+        Auth.UnregisterListener(
+            OnAuthStateChanged);
+    }
+
+}

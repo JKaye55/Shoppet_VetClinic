@@ -920,7 +920,7 @@ namespace Shoppet_VetClinic.Services
                     int count = r.GetInt32(1);
                     r.Close();
 
-                    if (!premium && count >= 2)
+                    if (!premium && count >= 1)
                         throw new InvalidOperationException(
                             "Free accounts support 1 pet. Upgrade to the " +
                             "Pet ID Virtual Card Premium (₱49) to add more.");
@@ -1165,6 +1165,139 @@ namespace Shoppet_VetClinic.Services
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
+        public bool UpdateHealthRecord(
+    PetHealthRecord rec,
+    int userId)
+        {
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
+            conn.Open();
+
+
+            using var cmd =
+                new SqlCommand(@"
+            UPDATE r
+
+            SET
+                RecordType = @RecordType,
+                Title = @Title,
+                Notes = @Notes,
+                RecordDate = @RecordDate,
+                NextDueDate = @NextDueDate,
+                VetName = @VetName
+
+            FROM PetHealthRecords r
+
+            INNER JOIN PetProfiles p
+                ON p.Id = r.PetId
+
+            WHERE
+                r.Id = @Id
+                AND r.PetId = @PetId
+                AND p.UserId = @UserId;",
+                    conn);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Id",
+                rec.Id);
+
+
+            cmd.Parameters.AddWithValue(
+                "@PetId",
+                rec.PetId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@UserId",
+                userId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@RecordType",
+                rec.RecordType ?? "Checkup");
+
+
+            cmd.Parameters.AddWithValue(
+                "@Title",
+                rec.Title ?? string.Empty);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Notes",
+                rec.Notes ?? string.Empty);
+
+
+            cmd.Parameters.AddWithValue(
+                "@RecordDate",
+                rec.RecordDate);
+
+
+            cmd.Parameters.AddWithValue(
+                "@NextDueDate",
+                rec.NextDueDate.HasValue
+                    ? rec.NextDueDate.Value
+                    : DBNull.Value);
+
+
+            cmd.Parameters.AddWithValue(
+                "@VetName",
+                rec.VetName ?? string.Empty);
+
+
+            return
+                cmd.ExecuteNonQuery() > 0;
+        }
+
+
+        public bool DeleteHealthRecordForOwner(
+            int recordId,
+            int petId,
+            int userId)
+        {
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
+            conn.Open();
+
+
+            using var cmd =
+                new SqlCommand(@"
+            DELETE r
+
+            FROM PetHealthRecords r
+
+            INNER JOIN PetProfiles p
+                ON p.Id = r.PetId
+
+            WHERE
+                r.Id = @RecordId
+                AND r.PetId = @PetId
+                AND p.UserId = @UserId;",
+                    conn);
+
+
+            cmd.Parameters.AddWithValue(
+                "@RecordId",
+                recordId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@PetId",
+                petId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@UserId",
+                userId);
+
+
+            return
+                cmd.ExecuteNonQuery() > 0;
+        }
 
         public bool DeleteHealthRecord(int recordId, int petId)
         {
@@ -2272,6 +2405,107 @@ namespace Shoppet_VetClinic.Services
                 string.IsNullOrWhiteSpace(imageUrl) ? "" : imageUrl);
 
             return cmd.ExecuteNonQuery() > 0;
+        }
+        public int CreateCommunityPostWithId(
+    int userId,
+    int? petId,
+    string caption)
+        {
+            using var conn =
+                new Microsoft.Data.SqlClient.SqlConnection(
+                    _connectionString);
+
+            conn.Open();
+
+
+            using var cmd =
+                new Microsoft.Data.SqlClient.SqlCommand(@"
+            INSERT INTO CommunityPosts
+            (
+                UserId,
+                PetId,
+                Caption,
+                ImageUrl,
+                PostedAt
+            )
+
+            OUTPUT INSERTED.Id
+
+            VALUES
+            (
+                @UserId,
+                @PetId,
+                @Caption,
+                '',
+                SYSDATETIME()
+            );",
+                    conn);
+
+
+            cmd.Parameters.AddWithValue(
+                "@UserId",
+                userId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@PetId",
+                petId.HasValue
+                    ? petId.Value
+                    : DBNull.Value);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Caption",
+                caption);
+
+
+            return Convert.ToInt32(
+                cmd.ExecuteScalar());
+        }
+
+
+        public bool UpdateCommunityPostImage(
+            int postId,
+            int userId,
+            string imageUrl)
+        {
+            using var conn =
+                new Microsoft.Data.SqlClient.SqlConnection(
+                    _connectionString);
+
+            conn.Open();
+
+
+            using var cmd =
+                new Microsoft.Data.SqlClient.SqlCommand(@"
+            UPDATE CommunityPosts
+
+            SET ImageUrl = @ImageUrl
+
+            WHERE
+                Id = @PostId
+                AND
+                UserId = @UserId;",
+                    conn);
+
+
+            cmd.Parameters.AddWithValue(
+                "@PostId",
+                postId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@UserId",
+                userId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@ImageUrl",
+                imageUrl);
+
+
+            return
+                cmd.ExecuteNonQuery() > 0;
         }
     }
 }

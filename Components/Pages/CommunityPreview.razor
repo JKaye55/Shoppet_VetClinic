@@ -1,284 +1,2301 @@
 ﻿@page "/community"
+@rendermode InteractiveServer
+@implements IDisposable
+
+@inject CommunityService Community
 @inject DatabaseService Db
-@inject CardService Cards
-@inject AuthService Auth
 @inject FileStorageService FileStorage
+@inject AuthService Auth
 @inject NavigationManager Nav
 
-<PageTitle>ShoppetCare Community</PageTitle>
+<PageTitle>Community | ShoppetCare</PageTitle>
 
-<div class="container mt-4" style="max-width: 720px;">
 
-    <div class="text-center mb-4">
-        <h1>🐾 ShoppetCare Community</h1>
-        <p class="text-muted">Share moments with your pets and see what others are posting.</p>
-    </div>
+<div class="sc-community-page">
 
-    @* =============== POST FORM =============== *@
-    @if (Auth.IsLoggedIn)
+    <!-- =========================================================
+         HERO
+         ========================================================= -->
+
+    <section class="sc-community-hero">
+
+        <div class="sc-community-shell sc-community-hero-inner">
+
+            <div>
+
+                <span class="sc-community-kicker light">
+                    SHOPPETCARE COMMUNITY
+                </span>
+
+                <h1>
+                    Pet stories feel better
+                    <em>when they're shared.</em>
+                </h1>
+
+                <p>
+                    Share everyday moments, tag your pets,
+                    and discover stories from fellow pet owners
+                    in the ShoppetCare community.
+                </p>
+
+            </div>
+
+
+            @if (!Auth.IsLoggedIn)
+            {
+                <div class="sc-community-hero-actions">
+
+                    <a href="/register"
+                       class="sc-community-primary">
+                        Join the Community
+                    </a>
+
+                    <a href="/login"
+                       class="sc-community-secondary light">
+                        Sign In
+                    </a>
+
+                </div>
+            }
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         GUEST MODE
+         ========================================================= -->
+    @if (Auth.IsGuest)
     {
-        <div class="card mb-4 border-0 shadow-sm">
-            <div class="card-body">
+        <section class="sc-community-guest">
 
-                @if (!string.IsNullOrEmpty(postMessage))
-                {
-                    <div class="alert @(postError ? "alert-danger" : "alert-success") small py-2 mb-3">
-                        @postMessage
-                    </div>
-                }
+            <div class="sc-community-shell">
 
-                <div class="d-flex gap-3 align-items-start">
+                <div class="sc-community-guest-card">
 
-                    <div class="avatar-circle">
-                        @GetUserInitial()
-                    </div>
+                    <div class="sc-community-guest-icon">
 
-                    <div class="flex-grow-1">
-
-                        <textarea class="form-control mb-2"
-                                  rows="3"
-                                  placeholder="What's your pet up to today?"
-                                  @bind="newCaption"
-                                  maxlength="500"></textarea>
-
-                        <div class="row g-2 mb-2">
-                            <div class="col-md-6">
-                                <select class="form-select form-select-sm" @bind="newPetId">
-                                    <option value="0">— Tag a pet (optional) —</option>
-                                    @foreach (var p in myPets)
-                                    {
-                                        <option value="@p.Id">@p.PetName</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <input type="text"
-                                       class="form-control form-control-sm"
-                                       placeholder="Image URL (optional)"
-                                       @bind="newImageUrl" />
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">
-                                @(500 - newCaption.Length) characters left
-                            </small>
-
-                            <button class="btn btn-success btn-sm px-4"
-                                    @onclick="SubmitPost"
-                                    disabled="@isPosting">
-                                @(isPosting ? "Posting..." : "Post")
-                            </button>
-                        </div>
+                        <i class="bi bi-eye-fill"
+                           aria-hidden="true"></i>
 
                     </div>
+
+                    <div>
+
+                        <strong>
+                            Browsing Community Feed in Guest Mode
+                        </strong>
+
+                        <span>
+                            You can read community posts freely.
+                            Create an account to share your own
+                            pet stories.
+                        </span>
+
+                    </div>
+
+                    <a href="/register">
+                        Create Account
+                    </a>
 
                 </div>
 
             </div>
-        </div>
-    }
-    else
-    {
-        <div class="alert alert-info text-center">
-            <a href="/login">Log in</a> to share your own posts.
-        </div>
+
+        </section>
     }
 
-    @* =============== FEED =============== *@
-    @if (posts.Count == 0)
-    {
-        <div class="alert alert-light border text-center">
-            No community posts yet. Be the first to share!
-        </div>
-    }
-    else
-    {
-        @foreach (var p in posts)
-        {
-            <div class="card mb-3 border-0 shadow-sm">
-                <div class="card-body">
 
-                    <div class="d-flex gap-3 align-items-start mb-3">
-                        <div class="avatar-circle small">
-                            @GetPostAuthorInitial(p.AuthorName)
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="fw-bold">@p.AuthorName</div>
-                            <div class="text-muted small">
-                                @Relative(p.PostedAt)
-                                @if (!string.IsNullOrEmpty(p.PetName))
-                                {
-                                    <span> · with @p.PetName</span>
-                                }
-                            </div>
-                        </div>
-                    </div>
+    <!-- =========================================================
+         MAIN
+         ========================================================= -->
 
-                    @if (!string.IsNullOrEmpty(p.ImageUrl))
+    <section class="sc-community-content">
+
+        <div class="sc-community-shell">
+
+            <div class="sc-community-layout">
+
+
+                <!-- =================================================
+                     LEFT COLUMN
+                     ================================================= -->
+
+                <div class="sc-community-main">
+
+
+                    <!-- =============================================
+                         MESSAGE
+                         ============================================= -->
+                    @if (!string.IsNullOrWhiteSpace(statusMessage))
                     {
-                        <img src="@p.ImageUrl"
-                             class="img-fluid rounded-3 mb-3"
-                             alt="@p.Caption"
-                             style="max-height: 400px; object-fit: cover; width: 100%;" />
+                        <div class="@(isError
+                                                        ? "sc-community-alert error"
+                                                        : "sc-community-alert success")">
+
+                            @statusMessage
+
+                        </div>
                     }
 
-                    <p class="mb-0" style="white-space: pre-wrap;">@p.Caption</p>
+
+                    <!-- =============================================
+                         POST COMPOSER
+                         ============================================= -->
+                    @if (Auth.IsLoggedIn && Auth.IsPetOwner)
+                    {
+                        <section class="sc-community-composer">
+
+                            <div class="sc-community-composer-head">
+
+                                <div class="sc-community-avatar">
+                                    @GetUserInitials()
+                                </div>
+
+                                <div>
+
+                                    <strong>
+                                        @(isEditing
+                                            ? "Edit your post"
+                                            : $"Share something, {GetFirstName()}")
+                                    </strong>
+
+                                    <span>
+                                        @(isEditing
+                                            ? "Update your story below."
+                                            : "What's your pet up to today?")
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <textarea rows="4"
+                                      maxlength="500"
+                                      @bind="caption"
+                                      placeholder="Share a moment with your pet...">
+                            </textarea>
+
+
+                            <div class="sc-community-composer-options">
+
+                                <div class="sc-community-field">
+
+                                    <label>
+                                        Tag a Pet
+                                    </label>
+
+                                    <select @bind="selectedPetId">
+
+                                        <option value="0">
+                                            No pet tagged
+                                        </option>
+
+                                        @foreach (var pet in myPets)
+                                        {
+                                            <option value="@pet.Id">
+                                                @pet.PetName
+                                            </option>
+                                        }
+
+                                    </select>
+
+                                </div>
+
+
+                                <div class="sc-community-field">
+
+                                    <label>
+                                        Add Photo
+                                    </label>
+
+                                    <div class="sc-community-upload">
+
+                                        <InputFile OnChange="HandleImageSelected"
+                                                   accept=".jpg,.jpeg,.png,.webp" />
+
+                                        <small>
+                                            JPG, PNG or WEBP · Max 5 MB
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            @if (selectedImage is not null)
+                            {
+                                <div class="sc-community-selected-image">
+
+                                    <i class="bi bi-image"
+                                       aria-hidden="true"></i>
+
+                                    <span>
+                                        @selectedImage.Name
+                                    </span>
+
+                                    <button type="button"
+                                            @onclick="ClearSelectedImage">
+                                        Remove
+                                    </button>
+
+                                </div>
+                            }
+
+
+                            @if (isEditing &&
+                                 !string.IsNullOrWhiteSpace(existingImageUrl))
+                            {
+                                <div class="sc-community-existing-image">
+
+                                    <img src="@existingImageUrl"
+                                         alt="Current post image" />
+
+                                    <div>
+
+                                        <strong>
+                                            Current photo
+                                        </strong>
+
+                                        <span>
+                                            Upload another photo to replace it.
+                                        </span>
+
+                                        <button type="button"
+                                                @onclick="RemoveExistingImage">
+                                            Remove Current Photo
+                                        </button>
+
+                                    </div>
+
+                                </div>
+                            }
+
+
+                            <div class="sc-community-composer-footer">
+
+                                <span>
+                                    @CharactersRemaining characters left
+                                </span>
+
+                                <div>
+
+                                    @if (isEditing)
+                                    {
+                                        <button type="button"
+                                                class="sc-community-cancel"
+                                                disabled="@isSaving"
+                                                @onclick="CancelEditing">
+
+                                            Cancel
+
+                                        </button>
+                                    }
+
+                                    <button type="button"
+                                            class="sc-community-post-button"
+                                            disabled="@isSaving"
+                                            @onclick="SavePostAsync">
+
+                                        @(isSaving
+                                            ? "Saving..."
+                                            : isEditing
+                                                ? "Save Changes"
+                                                : "Post Story")
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+                    }
+                    else if (!Auth.IsLoggedIn)
+                    {
+                        <section class="sc-community-signin-card">
+
+                            <div>
+
+                                <span class="sc-community-kicker">
+                                    WANT TO SHARE?
+                                </span>
+
+                                <h2>
+                                    Join the conversation.
+                                </h2>
+
+                                <p>
+                                    Sign in or create a free account
+                                    to post your own pet stories.
+                                </p>
+
+                            </div>
+
+                            <div>
+
+                                <a href="/login"
+                                   class="sc-community-secondary">
+                                    Sign In
+                                </a>
+
+                                <a href="/register"
+                                   class="sc-community-primary">
+                                    Create Account
+                                </a>
+
+                            </div>
+
+                        </section>
+                    }
+
+
+                    <!-- =============================================
+                         FEED HEADER
+                         ============================================= -->
+
+                    <div class="sc-community-feed-head">
+
+                        <div>
+
+                            <span class="sc-community-kicker">
+                                COMMUNITY FEED
+                            </span>
+
+                            <h2>
+                                Latest pet stories
+                            </h2>
+
+                        </div>
+
+
+                        @if (Auth.IsLoggedIn &&
+                             Auth.IsPetOwner)
+                        {
+                            <div class="sc-community-tabs">
+
+                                <button type="button"
+                                        class="@(!showMyPosts ? "active" : "")"
+                                        @onclick="ShowAllPosts">
+
+                                    All Posts
+
+                                </button>
+
+                                <button type="button"
+                                        class="@(showMyPosts ? "active" : "")"
+                                        @onclick="ShowMyPosts">
+
+                                    My Posts
+
+                                </button>
+
+                            </div>
+                        }
+
+                    </div>
+
+
+                    <!-- =============================================
+                         EMPTY FEED
+                         ============================================= -->
+                    @if (VisiblePosts.Count == 0)
+                    {
+                        <div class="sc-community-empty">
+
+                            <div>
+                                <i class="bi bi-chat-heart"
+                                   aria-hidden="true"></i>
+                            </div>
+
+                            <h3>
+                                @(showMyPosts
+                                    ? "You haven't posted yet."
+                                    : "No community posts yet.")
+                            </h3>
+
+                            <p>
+                                @(showMyPosts
+                                    ? "Share your first pet story with the ShoppetCare community."
+                                    : "The first story can start right here.")
+                            </p>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- =========================================
+                             FEED
+                             ========================================= -->
+
+                        <div class="sc-community-feed">
+
+                            @foreach (var post in VisiblePosts)
+                            {
+                                <article class="sc-community-post">
+
+                                    <!-- AUTHOR -->
+
+                                    <header class="sc-community-post-header">
+
+                                        <div class="sc-community-avatar small">
+                                            @GetInitials(post.AuthorName)
+                                        </div>
+
+                                        <div class="sc-community-post-author">
+
+                                            <strong>
+                                                @post.AuthorName
+                                            </strong>
+
+                                            <span>
+
+                                                @Relative(post.PostedAt)
+
+                                                @if (!string.IsNullOrWhiteSpace(
+                                                    post.PetName))
+                                                {
+                                                    <span>
+                                                        · with
+                                                        <b>@post.PetName</b>
+                                                    </span>
+                                                }
+
+                                            </span>
+
+                                        </div>
+
+
+                                        @if (IsOwnPost(post))
+                                        {
+                                            <div class="sc-community-post-actions">
+
+                                                <button type="button"
+                                                        title="Edit post"
+                                                        @onclick="() => StartEditing(post)">
+
+                                                    <i class="bi bi-pencil"
+                                                       aria-hidden="true"></i>
+
+                                                </button>
+
+                                                <button type="button"
+                                                        class="danger"
+                                                        title="Delete post"
+                                                        @onclick="() => DeletePost(post)">
+
+                                                    <i class="bi bi-trash3"
+                                                       aria-hidden="true"></i>
+
+                                                </button>
+
+                                            </div>
+                                        }
+
+                                    </header>
+
+
+                                    <!-- CAPTION -->
+
+                                    <p class="sc-community-caption">
+                                        @post.Caption
+                                    </p>
+
+
+                                    <!-- IMAGE -->
+                                    @if (!string.IsNullOrWhiteSpace(
+                                                                            post.ImageUrl))
+                                    {
+                                        <div class="sc-community-post-image">
+
+                                            <img src="@post.ImageUrl"
+                                                 alt="Photo shared by @post.AuthorName" />
+
+                                        </div>
+                                    }
+
+
+                                    <!-- META -->
+
+                                    <footer class="sc-community-post-footer">
+
+                                        <span>
+
+                                            <i class="bi bi-heart"
+                                               aria-hidden="true"></i>
+
+                                            @post.LikeCount
+                                            @(post.LikeCount == 1
+                                                ? "like"
+                                                : "likes")
+
+                                        </span>
+
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                            post.PetName))
+                                        {
+                                            <span>
+
+                                                <i class="bi bi-heart-pulse"
+                                                   aria-hidden="true"></i>
+
+                                                @post.PetName
+
+                                            </span>
+                                        }
+
+                                    </footer>
+
+                                </article>
+                            }
+
+                        </div>
+                    }
 
                 </div>
-            </div>
-        }
-    }
 
-    @* =============== MOBILE CTA =============== *@
-    <div class="card bg-light mt-4 text-center border-0">
-        <div class="card-body py-4">
-            <h5 class="mb-2">📱 Like, comment, and connect</h5>
-            <p class="text-muted mb-3">Get the full ShoppetCare community on mobile.</p>
-            <div class="d-inline-block">
-                <img src="@qrToDownload"
-                     alt="Scan to download"
-                     style="width: 140px; height: 140px;" />
-                <p class="mt-2 mb-0 text-muted small">Scan to download</p>
+
+                <!-- =================================================
+                     RIGHT SIDEBAR
+                     ================================================= -->
+
+                <aside class="sc-community-sidebar">
+
+                    <section class="sc-community-side-card">
+
+                        <span class="sc-community-kicker">
+                            COMMUNITY
+                        </span>
+
+                        <h3>
+                            A space for pet owners.
+                        </h3>
+
+                        <p>
+                            Share pet moments, helpful experiences,
+                            milestones, and everyday stories with
+                            the local ShoppetCare community.
+                        </p>
+
+                    </section>
+
+
+                    <section class="sc-community-side-card">
+
+                        <span class="sc-community-kicker">
+                            KEEP IT HELPFUL
+                        </span>
+
+                        <ul>
+
+                            <li>
+                                Share respectful pet-related content.
+                            </li>
+
+                            <li>
+                                Avoid posting private or sensitive information.
+                            </li>
+
+                            <li>
+                                Keep marketplace selling inside Marketplace.
+                            </li>
+
+                            <li>
+                                Veterinary concerns should still be discussed
+                                with a qualified clinic.
+                            </li>
+
+                        </ul>
+
+                    </section>
+
+
+                    <section class="sc-community-side-card mobile-note">
+
+                        <i class="bi bi-phone"
+                           aria-hidden="true"></i>
+
+                        <div>
+
+                            <strong>
+                                Web + Mobile
+                            </strong>
+
+                            <span>
+                                Community content can use the same
+                                centralized ShoppetCare data across
+                                both platforms.
+                            </span>
+
+                        </div>
+
+                    </section>
+
+                </aside>
+
             </div>
+
         </div>
-    </div>
+
+    </section>
 
 </div>
 
+
 <style>
-    .avatar-circle {
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #5C766D, #1E2D27);
-        color: #fff;
+
+    .sc-community-page {
+        min-height: 100vh;
+        background: #FAF9F6;
+        color: #172A28;
+    }
+
+
+    .sc-community-shell {
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+    }
+
+
+    /* =========================================================
+           HERO
+           ========================================================= */
+
+    .sc-community-hero {
+        padding: 65px 0 56px;
+        background: radial-gradient( circle at 86% 18%, rgba(243,210,122,.20), transparent 27% ), linear-gradient( 135deg, #173D3D, #102E2D );
+        color: #FFFFFF;
+    }
+
+
+    .sc-community-hero-inner {
         display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 35px;
+    }
+
+
+    .sc-community-kicker {
+        display: inline-block;
+        color: #2F9098;
+        font-size: .64rem;
+        font-weight: 900;
+        letter-spacing: .11em;
+    }
+
+
+        .sc-community-kicker.light {
+            color: #9ADBDD;
+        }
+
+
+    .sc-community-hero h1 {
+        max-width: 700px;
+        margin: 9px 0 0;
+        font-size: clamp(2.7rem, 5vw, 4.8rem);
+        line-height: .95;
+        letter-spacing: -.055em;
+        font-weight: 900;
+    }
+
+
+        .sc-community-hero h1 em {
+            display: block;
+            color: #F3D27A;
+            font-family: Georgia, "Times New Roman", serif;
+            font-weight: 500;
+        }
+
+
+    .sc-community-hero p {
+        max-width: 620px;
+        margin: 19px 0 0;
+        color: rgba(255,255,255,.66);
+        line-height: 1.65;
+    }
+
+
+    .sc-community-hero-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+
+    .sc-community-primary,
+    .sc-community-secondary {
+        min-height: 44px;
+        padding: 0 16px;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-weight: 700;
-        font-size: 0.9rem;
-        flex-shrink: 0;
+        border-radius: 9px;
+        font-size: .73rem;
+        font-weight: 850;
+        text-decoration: none;
     }
 
-        .avatar-circle.small {
+
+    .sc-community-primary {
+        border: 1px solid #2F9098;
+        background: #2F9098;
+        color: #FFFFFF;
+    }
+
+
+    .sc-community-secondary {
+        border: 1px solid #CCDAD6;
+        background: #FFFFFF;
+        color: #173D3D;
+    }
+
+
+        .sc-community-secondary.light {
+            border-color: rgba(255,255,255,.24);
+            background: rgba(255,255,255,.08);
+            color: #FFFFFF;
+        }
+
+
+    /* =========================================================
+           GUEST
+           ========================================================= */
+
+    .sc-community-guest {
+        padding-top: 20px;
+    }
+
+
+    .sc-community-guest-card {
+        padding: 15px 17px;
+        display: grid;
+        grid-template-columns: auto minmax(0,1fr) auto;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid #D6E5E1;
+        border-radius: 14px;
+        background: #EEF7F5;
+    }
+
+
+    .sc-community-guest-icon {
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border-radius: 11px;
+        background: #FFFFFF;
+        color: #2F9098;
+    }
+
+
+    .sc-community-guest-card strong,
+    .sc-community-guest-card span {
+        display: block;
+    }
+
+
+    .sc-community-guest-card strong {
+        color: #173D3D;
+        font-size: .76rem;
+    }
+
+
+    .sc-community-guest-card span {
+        margin-top: 3px;
+        color: #71807B;
+        font-size: .68rem;
+        line-height: 1.45;
+    }
+
+
+    .sc-community-guest-card a {
+        color: #267C83;
+        font-size: .71rem;
+        font-weight: 850;
+        text-decoration: none;
+    }
+
+
+    /* =========================================================
+           CONTENT
+           ========================================================= */
+
+    .sc-community-content {
+        padding: 30px 0 80px;
+    }
+
+
+    .sc-community-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 285px;
+        align-items: start;
+        gap: 18px;
+    }
+
+
+    .sc-community-main {
+        min-width: 0;
+    }
+
+
+    /* =========================================================
+           ALERT
+           ========================================================= */
+
+    .sc-community-alert {
+        margin-bottom: 13px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: .73rem;
+    }
+
+
+        .sc-community-alert.success {
+            border: 1px solid #B8DDCF;
+            background: #EFFAF5;
+            color: #28664D;
+        }
+
+
+        .sc-community-alert.error {
+            border: 1px solid #F2B8B8;
+            background: #FFF3F3;
+            color: #9B2C2C;
+        }
+
+
+    /* =========================================================
+           COMPOSER
+           ========================================================= */
+
+    .sc-community-composer {
+        padding: 20px;
+        border: 1px solid #DDE7E4;
+        border-radius: 17px;
+        background: #FFFFFF;
+        box-shadow: 0 10px 26px rgba(23,61,61,.055);
+    }
+
+
+    .sc-community-composer-head {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+    }
+
+
+        .sc-community-composer-head strong,
+        .sc-community-composer-head span {
+            display: block;
+        }
+
+
+        .sc-community-composer-head strong {
+            color: #173D3D;
+            font-size: .82rem;
+        }
+
+
+        .sc-community-composer-head span {
+            margin-top: 2px;
+            color: #85928E;
+            font-size: .65rem;
+        }
+
+
+    .sc-community-avatar {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #173D3D;
+        color: #FFFFFF;
+        font-size: .72rem;
+        font-weight: 900;
+    }
+
+
+        .sc-community-avatar.small {
             width: 38px;
             height: 38px;
-            font-size: 0.82rem;
+            flex-basis: 38px;
+            font-size: .65rem;
         }
+
+
+    .sc-community-composer > textarea {
+        width: 100%;
+        margin-top: 15px;
+        padding: 13px 14px;
+        border: 1px solid #D5E0DD;
+        border-radius: 11px;
+        background: #FBFCFB;
+        color: #172A28;
+        resize: vertical;
+        outline: none;
+    }
+
+
+        .sc-community-composer > textarea:focus {
+            border-color: #2F9098;
+            box-shadow: 0 0 0 3px rgba(47,144,152,.08);
+        }
+
+
+    .sc-community-composer-options {
+        margin-top: 11px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+
+    .sc-community-field label {
+        display: block;
+        margin-bottom: 6px;
+        color: #53635E;
+        font-size: .65rem;
+        font-weight: 800;
+    }
+
+
+    .sc-community-field select {
+        width: 100%;
+        min-height: 42px;
+        padding: 0 10px;
+        border: 1px solid #D7E0DD;
+        border-radius: 9px;
+        background: #FFFFFF;
+        color: #53635E;
+        font-size: .7rem;
+    }
+
+
+    .sc-community-upload {
+        min-height: 42px;
+        padding: 8px 10px;
+        border: 1px dashed #C8D8D4;
+        border-radius: 9px;
+        background: #F8FBFA;
+    }
+
+
+        .sc-community-upload small {
+            display: block;
+            margin-top: 5px;
+            color: #909C98;
+            font-size: .57rem;
+        }
+
+
+    .sc-community-selected-image {
+        margin-top: 10px;
+        padding: 9px 11px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 9px;
+        background: #EEF7F5;
+        color: #667772;
+        font-size: .66rem;
+    }
+
+
+        .sc-community-selected-image span {
+            min-width: 0;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+
+        .sc-community-selected-image button {
+            border: 0;
+            background: transparent;
+            color: #A04343;
+            font-size: .62rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+
+    .sc-community-existing-image {
+        margin-top: 11px;
+        padding: 10px;
+        display: grid;
+        grid-template-columns: 80px minmax(0,1fr);
+        align-items: center;
+        gap: 12px;
+        border: 1px solid #E0E8E5;
+        border-radius: 11px;
+        background: #FAFBFA;
+    }
+
+
+        .sc-community-existing-image img {
+            width: 80px;
+            height: 62px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+
+        .sc-community-existing-image strong,
+        .sc-community-existing-image span {
+            display: block;
+        }
+
+
+        .sc-community-existing-image strong {
+            color: #173D3D;
+            font-size: .68rem;
+        }
+
+
+        .sc-community-existing-image span {
+            margin-top: 2px;
+            color: #85928E;
+            font-size: .6rem;
+        }
+
+
+        .sc-community-existing-image button {
+            margin-top: 6px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #A04343;
+            font-size: .61rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+
+    .sc-community-composer-footer {
+        margin-top: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+
+        .sc-community-composer-footer > span {
+            color: #909C98;
+            font-size: .61rem;
+        }
+
+
+        .sc-community-composer-footer > div {
+            display: flex;
+            gap: 7px;
+        }
+
+
+    .sc-community-post-button,
+    .sc-community-cancel {
+        min-height: 40px;
+        padding: 0 14px;
+        border-radius: 9px;
+        font-size: .69rem;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+
+    .sc-community-post-button {
+        border: 1px solid #2F9098;
+        background: #2F9098;
+        color: #FFFFFF;
+    }
+
+
+    .sc-community-cancel {
+        border: 1px solid #D7E0DD;
+        background: #FFFFFF;
+        color: #66746F;
+    }
+
+
+    /* =========================================================
+           SIGN IN CARD
+           ========================================================= */
+
+    .sc-community-signin-card {
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 25px;
+        border: 1px solid #DDE7E4;
+        border-radius: 16px;
+        background: #FFFFFF;
+    }
+
+
+        .sc-community-signin-card h2 {
+            margin: 4px 0 0;
+            color: #173D3D;
+            font-size: 1rem;
+        }
+
+
+        .sc-community-signin-card p {
+            margin: 5px 0 0;
+            color: #85928E;
+            font-size: .69rem;
+        }
+
+
+        .sc-community-signin-card > div:last-child {
+            display: flex;
+            gap: 7px;
+            flex-shrink: 0;
+        }
+
+
+    /* =========================================================
+           FEED HEADER
+           ========================================================= */
+
+    .sc-community-feed-head {
+        margin: 30px 0 14px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+
+        .sc-community-feed-head h2 {
+            margin: 5px 0 0;
+            color: #173D3D;
+            font-size: 1.4rem;
+            font-weight: 900;
+        }
+
+
+    .sc-community-tabs {
+        display: flex;
+        gap: 5px;
+    }
+
+
+        .sc-community-tabs button {
+            min-height: 36px;
+            padding: 0 11px;
+            border: 1px solid #DDE7E4;
+            border-radius: 999px;
+            background: #FFFFFF;
+            color: #73817C;
+            font-size: .63rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+
+            .sc-community-tabs button.active {
+                border-color: #173D3D;
+                background: #173D3D;
+                color: #FFFFFF;
+            }
+
+
+    /* =========================================================
+           POSTS
+           ========================================================= */
+
+    .sc-community-feed {
+        display: grid;
+        gap: 12px;
+    }
+
+
+    .sc-community-post {
+        overflow: hidden;
+        border: 1px solid #DDE7E4;
+        border-radius: 17px;
+        background: #FFFFFF;
+        box-shadow: 0 8px 22px rgba(23,61,61,.045);
+    }
+
+
+    .sc-community-post-header {
+        padding: 17px 18px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+
+    .sc-community-post-author {
+        min-width: 0;
+        flex: 1;
+    }
+
+
+        .sc-community-post-author strong,
+        .sc-community-post-author > span {
+            display: block;
+        }
+
+
+        .sc-community-post-author strong {
+            color: #173D3D;
+            font-size: .76rem;
+        }
+
+
+        .sc-community-post-author > span {
+            margin-top: 2px;
+            color: #909C98;
+            font-size: .61rem;
+        }
+
+
+        .sc-community-post-author b {
+            color: #267C83;
+            font-weight: 800;
+        }
+
+
+    .sc-community-post-actions {
+        display: flex;
+        gap: 5px;
+    }
+
+
+        .sc-community-post-actions button {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border: 1px solid #E0E7E4;
+            border-radius: 8px;
+            background: #FFFFFF;
+            color: #6F7C77;
+            cursor: pointer;
+        }
+
+
+            .sc-community-post-actions button.danger {
+                color: #A04343;
+            }
+
+
+    .sc-community-caption {
+        margin: 0;
+        padding: 15px 18px;
+        color: #485853;
+        font-size: .78rem;
+        line-height: 1.62;
+        white-space: pre-wrap;
+    }
+
+
+    .sc-community-post-image {
+        width: 100%;
+        background: #EFF3F1;
+    }
+
+
+        .sc-community-post-image img {
+            width: 100%;
+            max-height: 580px;
+            display: block;
+            object-fit: cover;
+        }
+
+
+    .sc-community-post-footer {
+        padding: 12px 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border-top: 1px solid #EDF1EF;
+        color: #84918D;
+        font-size: .62rem;
+    }
+
+
+        .sc-community-post-footer span {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+
+    /* =========================================================
+           EMPTY
+           ========================================================= */
+
+    .sc-community-empty {
+        padding: 60px 24px;
+        text-align: center;
+        border: 1px dashed #D6E0DD;
+        border-radius: 16px;
+        background: rgba(255,255,255,.7);
+    }
+
+
+        .sc-community-empty > div {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            background: #EAF5F5;
+            color: #2F9098;
+            font-size: 1.15rem;
+        }
+
+
+        .sc-community-empty h3 {
+            margin: 13px 0 0;
+            color: #173D3D;
+            font-size: .9rem;
+        }
+
+
+        .sc-community-empty p {
+            margin: 5px 0 0;
+            color: #899691;
+            font-size: .67rem;
+        }
+
+
+    /* =========================================================
+           SIDEBAR
+           ========================================================= */
+
+    .sc-community-sidebar {
+        display: grid;
+        gap: 11px;
+        position: sticky;
+        top: 130px;
+    }
+
+
+    .sc-community-side-card {
+        padding: 18px;
+        border: 1px solid #DDE7E4;
+        border-radius: 15px;
+        background: #FFFFFF;
+    }
+
+
+        .sc-community-side-card h3 {
+            margin: 6px 0 0;
+            color: #173D3D;
+            font-size: .91rem;
+            font-weight: 900;
+        }
+
+
+        .sc-community-side-card p {
+            margin: 8px 0 0;
+            color: #788782;
+            font-size: .68rem;
+            line-height: 1.55;
+        }
+
+
+        .sc-community-side-card ul {
+            margin: 9px 0 0;
+            padding-left: 17px;
+            color: #788782;
+            font-size: .65rem;
+            line-height: 1.55;
+        }
+
+
+        .sc-community-side-card li + li {
+            margin-top: 6px;
+        }
+
+
+        .sc-community-side-card.mobile-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: #EEF7F5;
+        }
+
+
+            .sc-community-side-card.mobile-note > i {
+                color: #2F9098;
+                font-size: 1rem;
+            }
+
+
+            .sc-community-side-card.mobile-note strong,
+            .sc-community-side-card.mobile-note span {
+                display: block;
+            }
+
+
+            .sc-community-side-card.mobile-note strong {
+                color: #173D3D;
+                font-size: .69rem;
+            }
+
+
+            .sc-community-side-card.mobile-note span {
+                margin-top: 3px;
+                color: #74837E;
+                font-size: .61rem;
+                line-height: 1.45;
+            }
+
+
+    /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+    @@media (max-width: 900px) {
+
+        .sc-community-hero-inner {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+
+        .sc-community-layout {
+            grid-template-columns: 1fr;
+        }
+
+
+        .sc-community-sidebar {
+            position: static;
+        }
+    }
+
+
+    @@media (max-width: 650px) {
+
+        .sc-community-shell {
+            width: calc(100% - 24px);
+        }
+
+
+        .sc-community-hero {
+            padding: 48px 0;
+        }
+
+
+            .sc-community-hero h1 {
+                font-size: 2.55rem;
+            }
+
+
+        .sc-community-composer-options {
+            grid-template-columns: 1fr;
+        }
+
+
+        .sc-community-feed-head,
+        .sc-community-signin-card {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+
+        .sc-community-composer-footer {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+
+            .sc-community-composer-footer > div {
+                width: 100%;
+            }
+
+
+        .sc-community-post-button,
+        .sc-community-cancel {
+            flex: 1;
+        }
+
+
+        .sc-community-guest-card {
+            grid-template-columns: auto minmax(0,1fr);
+        }
+
+
+            .sc-community-guest-card > a {
+                grid-column: 2;
+            }
+    }
+
 </style>
 
+
 @code {
-    List<Shoppet_VetClinic.Models.CommunityPost> posts = new();
-    List<Shoppet_VetClinic.Models.PetProfile> myPets = new();
 
-    string newCaption = "";
-    string newImageUrl = "";
-    int newPetId = 0;
+    // =========================================================
+    // DATA
+    // =========================================================
 
-    bool isPosting = false;
-    string postMessage = "";
-    bool postError = false;
+    private List<CommunityPost> posts = new();
 
-    string qrToDownload = "";
+    private List<PetProfile> myPets = new();
 
-    protected override async Task OnParametersSetAsync()
+
+    // =========================================================
+    // COMPOSER
+    // =========================================================
+
+    private string caption = string.Empty;
+
+    private int selectedPetId;
+
+    private IBrowserFile? selectedImage;
+
+
+    private bool isSaving;
+
+    private bool isEditing;
+
+    private int? editingPostId;
+
+
+    private string existingImageUrl = string.Empty;
+
+    private bool removeExistingImage;
+
+
+    // =========================================================
+    // UI
+    // =========================================================
+
+    private bool showMyPosts;
+
+    private string statusMessage = string.Empty;
+
+    private bool isError;
+
+
+    // =========================================================
+    // COMPUTED
+    // =========================================================
+
+    private int CharactersRemaining =>
+        Math.Max(
+            0,
+            500 - caption.Length);
+
+
+    private List<CommunityPost> VisiblePosts
     {
-        await Auth.InitializeAsync();
+        get
+        {
+            if (!showMyPosts)
+            {
+                return posts;
+            }
+
+
+            if (Auth.CurrentUser is null)
+            {
+                return new List<CommunityPost>();
+            }
+
+
+            return posts
+                .Where(
+                    post =>
+                        post.UserId ==
+                        Auth.CurrentUser.Id)
+                .ToList();
+        }
+    }
+
+
+    // =========================================================
+    // INITIALIZE
+    // =========================================================
+
+    protected override void OnInitialized()
+    {
+        Auth.RegisterListener(
+            OnAuthStateChanged);
+
 
         LoadPosts();
-
-        if (Auth.IsLoggedIn)
-        {
-            myPets = Db.GetPetsByUser(Auth.CurrentUser!.Id);
-        }
-
-        qrToDownload = Cards.GenerateQrDataUri(
-            "download-the-app",
-            "https://shoppetcare.app/mobile");
     }
 
-    void LoadPosts()
+
+    protected override async Task OnAfterRenderAsync(
+        bool firstRender)
     {
-        posts = Db.GetRecentCommunityPosts(20);
+        if (!firstRender)
+            return;
+
+
+        await Auth.InitializeAsync();
+
+
+        LoadCurrentUserPets();
+
+
+        await InvokeAsync(
+            StateHasChanged);
     }
 
-    async Task SubmitPost()
+
+    private void OnAuthStateChanged()
     {
-        postMessage = "";
-        postError = false;
+        _ =
+            InvokeAsync(
+                () =>
+                {
+                    LoadCurrentUserPets();
 
-        if (!Auth.IsLoggedIn)
-        {
-            postError = true;
-            postMessage = "Please log in to post.";
-            return;
-        }
+                    StateHasChanged();
+                });
+    }
 
-        if (string.IsNullOrWhiteSpace(newCaption))
-        {
-            postError = true;
-            postMessage = "Please write something before posting.";
-            return;
-        }
 
-        isPosting = true;
+    // =========================================================
+    // LOAD
+    // =========================================================
 
+    private void LoadPosts()
+    {
         try
         {
-            var ok = Db.CreateCommunityPost(
-                Auth.CurrentUser!.Id,
-                newPetId > 0 ? newPetId : (int?)null,
-                newCaption.Trim(),
-                newImageUrl?.Trim() ?? "");
-
-            if (ok)
-            {
-                postMessage = "Posted! 🎉";
-                newCaption = "";
-                newImageUrl = "";
-                newPetId = 0;
-                LoadPosts();
-            }
-            else
-            {
-                postError = true;
-                postMessage = "Could not post. Please try again.";
-            }
+            posts =
+                Community
+                    .GetRecentPosts(50);
         }
         catch (Exception ex)
         {
-            postError = true;
-            postMessage = "Error: " + ex.Message;
+            Console.WriteLine(
+                $"[Community] Load failed: {ex}");
+
+
+            ShowError(
+                "Community posts could not be loaded.");
+        }
+    }
+
+
+    private void LoadCurrentUserPets()
+    {
+        if (Auth.CurrentUser is null ||
+            !Auth.IsPetOwner)
+        {
+            myPets =
+                new List<PetProfile>();
+
+
+            return;
+        }
+
+
+        try
+        {
+            myPets =
+                Db.GetPetsByUser(
+                    Auth.CurrentUser.Id);
+        }
+        catch
+        {
+            myPets =
+                new List<PetProfile>();
+        }
+    }
+
+
+    // =========================================================
+    // IMAGE
+    // =========================================================
+
+    private void HandleImageSelected(
+        InputFileChangeEventArgs args)
+    {
+        var file =
+            args.File;
+
+
+        if (file.Size >
+            5 * 1024 * 1024)
+        {
+            selectedImage =
+                null;
+
+
+            ShowError(
+                "Please choose an image smaller than 5 MB.");
+
+
+            return;
+        }
+
+
+        selectedImage =
+            file;
+
+
+        removeExistingImage =
+            false;
+
+
+        statusMessage =
+            string.Empty;
+    }
+
+
+    private void ClearSelectedImage()
+    {
+        selectedImage =
+            null;
+    }
+
+
+    private void RemoveExistingImage()
+    {
+        removeExistingImage =
+            true;
+
+
+        existingImageUrl =
+            string.Empty;
+    }
+
+
+    // =========================================================
+    // CREATE / UPDATE POST
+    // =========================================================
+
+    private async Task SavePostAsync()
+    {
+        statusMessage =
+            string.Empty;
+
+
+        isError =
+            false;
+
+
+        if (Auth.CurrentUser is null ||
+            !Auth.IsPetOwner)
+        {
+            ShowError(
+                "Please sign in with a pet owner account to post.");
+
+
+            return;
+        }
+
+
+        caption =
+            caption.Trim();
+
+
+        if (string.IsNullOrWhiteSpace(caption))
+        {
+            ShowError(
+                "Write something before posting.");
+
+
+            return;
+        }
+
+
+        if (caption.Length > 500)
+        {
+            ShowError(
+                "Community posts are limited to 500 characters.");
+
+
+            return;
+        }
+
+
+        isSaving =
+            true;
+
+
+        try
+        {
+            var petId =
+                selectedPetId > 0
+                    ? selectedPetId
+                    : (int?)null;
+
+
+            // =================================================
+            // EDIT
+            // =================================================
+
+            if (isEditing &&
+                editingPostId.HasValue)
+            {
+                var postId =
+                    editingPostId.Value;
+
+
+                var updated =
+                    Community.UpdatePost(
+                        postId,
+                        Auth.CurrentUser.Id,
+                        petId,
+                        caption);
+
+
+                if (!updated)
+                {
+                    ShowError(
+                        "The post could not be updated.");
+
+
+                    return;
+                }
+
+
+                if (removeExistingImage)
+                {
+                    Community.ClearPostImage(
+                        postId,
+                        Auth.CurrentUser.Id);
+
+
+                    FileStorage.DeleteImage(
+                        "community",
+                        postId);
+                }
+
+
+                if (selectedImage is not null)
+                {
+                    var imageUrl =
+                        await FileStorage
+                            .SaveImageAsync(
+                                "community",
+                                postId,
+                                selectedImage);
+
+
+                    Community.UpdatePostImage(
+                        postId,
+                        Auth.CurrentUser.Id,
+                        imageUrl);
+                }
+
+
+                statusMessage =
+                    "Your post was updated.";
+            }
+
+            // =================================================
+            // CREATE
+            // =================================================
+
+            else
+            {
+                var postId =
+                    Community.CreatePost(
+                        Auth.CurrentUser.Id,
+                        petId,
+                        caption);
+
+
+                if (selectedImage is not null)
+                {
+                    var imageUrl =
+                        await FileStorage
+                            .SaveImageAsync(
+                                "community",
+                                postId,
+                                selectedImage);
+
+
+                    Community.UpdatePostImage(
+                        postId,
+                        Auth.CurrentUser.Id,
+                        imageUrl);
+                }
+
+
+                statusMessage =
+                    "Your story is now part of the community.";
+            }
+
+
+            isError =
+                false;
+
+
+            ResetComposer();
+
+
+            LoadPosts();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Community] Save failed: {ex}");
+
+
+            ShowError(
+                "Your post could not be saved. Please try again.");
         }
         finally
         {
-            isPosting = false;
+            isSaving =
+                false;
+        }
+    }
+
+
+    // =========================================================
+    // EDIT
+    // =========================================================
+
+    private void StartEditing(
+        CommunityPost post)
+    {
+        if (!IsOwnPost(post))
+            return;
+
+
+        isEditing =
+            true;
+
+
+        editingPostId =
+            post.Id;
+
+
+        caption =
+            post.Caption;
+
+
+        selectedPetId =
+            post.PetId ?? 0;
+
+
+        existingImageUrl =
+            post.ImageUrl;
+
+
+        removeExistingImage =
+            false;
+
+
+        selectedImage =
+            null;
+
+
+        statusMessage =
+            string.Empty;
+    }
+
+
+    private void CancelEditing()
+    {
+        ResetComposer();
+
+
+        statusMessage =
+            string.Empty;
+    }
+
+
+    // =========================================================
+    // DELETE
+    // =========================================================
+
+    private void DeletePost(
+        CommunityPost post)
+    {
+        if (!IsOwnPost(post) ||
+            Auth.CurrentUser is null)
+        {
+            return;
         }
 
-        await Task.CompletedTask;
+
+        try
+        {
+            var deleted =
+                Community.DeletePost(
+                    post.Id,
+                    Auth.CurrentUser.Id);
+
+
+            if (!deleted)
+            {
+                ShowError(
+                    "The post could not be deleted.");
+
+
+                return;
+            }
+
+
+            try
+            {
+                FileStorage.DeleteImage(
+                    "community",
+                    post.Id);
+            }
+            catch
+            {
+            }
+
+
+            if (editingPostId ==
+                post.Id)
+            {
+                ResetComposer();
+            }
+
+
+            statusMessage =
+                "Post deleted.";
+
+
+            isError =
+                false;
+
+
+            LoadPosts();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Community] Delete failed: {ex}");
+
+
+            ShowError(
+                "The post could not be deleted.");
+        }
     }
 
-    string GetUserInitial()
+
+    // =========================================================
+    // FEED TABS
+    // =========================================================
+
+    private void ShowAllPosts()
     {
-        var name = Auth.CurrentUser?.FullName;
-        if (string.IsNullOrWhiteSpace(name)) return "U";
-        return name.Substring(0, 1).ToUpperInvariant();
+        showMyPosts =
+            false;
     }
 
-    string GetPostAuthorInitial(string author)
+
+    private void ShowMyPosts()
     {
-        if (string.IsNullOrWhiteSpace(author)) return "?";
-        return author.Substring(0, 1).ToUpperInvariant();
+        showMyPosts =
+            true;
     }
 
-    string Relative(DateTime dt)
+
+    // =========================================================
+    // OWNERSHIP
+    // =========================================================
+
+    private bool IsOwnPost(
+        CommunityPost post)
     {
-        var span = DateTime.Now - dt;
-        if (span.TotalMinutes < 1) return "just now";
-        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
-        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
-        if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
-        return dt.ToString("MMM d");
+        return
+            Auth.CurrentUser is not null
+            &&
+            post.UserId ==
+            Auth.CurrentUser.Id;
+    }
+
+
+    // =========================================================
+    // NAME
+    // =========================================================
+
+    private string GetFirstName()
+    {
+        var name =
+            Auth.CurrentUser?
+                .FullName?
+                .Trim();
+
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return "there";
+        }
+
+
+        return
+            name.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault()
+            ??
+            "there";
+    }
+
+
+    private string GetUserInitials()
+    {
+        return
+            GetInitials(
+                Auth.CurrentUser?.FullName
+                ?? string.Empty);
+    }
+
+
+    private string GetInitials(
+        string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return "U";
+        }
+
+
+        var parts =
+            name.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+
+        if (parts.Length == 1)
+        {
+            return
+                parts[0]
+                    .Substring(
+                        0,
+                        Math.Min(
+                            2,
+                            parts[0].Length))
+                    .ToUpperInvariant();
+        }
+
+
+        return
+            (
+                parts[0].Substring(0, 1)
+                +
+                parts[^1].Substring(0, 1)
+            )
+            .ToUpperInvariant();
+    }
+
+
+    // =========================================================
+    // TIME
+    // =========================================================
+
+    private string Relative(
+        DateTime date)
+    {
+        var span =
+            DateTime.Now - date;
+
+
+        if (span.TotalSeconds < 60)
+        {
+            return "just now";
+        }
+
+
+        if (span.TotalMinutes < 60)
+        {
+            return
+                $"{(int)span.TotalMinutes}m ago";
+        }
+
+
+        if (span.TotalHours < 24)
+        {
+            return
+                $"{(int)span.TotalHours}h ago";
+        }
+
+
+        if (span.TotalDays < 7)
+        {
+            return
+                $"{(int)span.TotalDays}d ago";
+        }
+
+
+        return
+            date.ToString(
+                "MMM d, yyyy");
+    }
+
+
+    // =========================================================
+    // ERROR
+    // =========================================================
+
+    private void ShowError(
+        string message)
+    {
+        statusMessage =
+            message;
+
+
+        isError =
+            true;
+    }
+
+
+    // =========================================================
+    // RESET
+    // =========================================================
+
+    private void ResetComposer()
+    {
+        caption =
+            string.Empty;
+
+
+        selectedPetId =
+            0;
+
+
+        selectedImage =
+            null;
+
+
+        isEditing =
+            false;
+
+
+        editingPostId =
+            null;
+
+
+        existingImageUrl =
+            string.Empty;
+
+
+        removeExistingImage =
+            false;
+    }
+
+
+    // =========================================================
+    // CLEANUP
+    // =========================================================
+
+    public void Dispose()
+    {
+        Auth.UnregisterListener(
+            OnAuthStateChanged);
     }
 }

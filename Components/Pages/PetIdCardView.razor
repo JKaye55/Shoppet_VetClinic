@@ -1,0 +1,1017 @@
+﻿@inject CardService Cards
+
+
+<article class="@CardClass">
+
+    <!-- =========================================================
+         BRAND
+         ========================================================= -->
+
+    <header class="sc-idcard-top">
+
+        <div class="sc-idcard-brand">
+
+            <div class="sc-idcard-logo">
+
+                <img src="/shoppetlogo.png"
+                     alt="ShoppetCare" />
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    ShoppetCare
+                </strong>
+
+                <span>
+                    CONNECTED PET CARE
+                </span>
+
+            </div>
+
+        </div>
+
+
+        @if (IsPremium)
+        {
+            <div class="sc-idcard-tier premium">
+
+                <svg aria-hidden="true">
+                    <use href="/icons/bootstrap-icons.svg#star-fill"></use>
+                </svg>
+
+                Premium Pet ID
+
+            </div>
+        }
+        else
+        {
+            <div class="sc-idcard-tier basic">
+                Basic Pet ID
+            </div>
+        }
+
+    </header>
+
+
+    <!-- =========================================================
+         MAIN
+         ========================================================= -->
+
+    <div class="sc-idcard-main">
+
+
+        <!-- PHOTO -->
+
+        <div class="sc-idcard-photo">
+
+            @if (!string.IsNullOrWhiteSpace(
+                PhotoUrl))
+            {
+                <img src="@PhotoUrl"
+                     alt="@Pet.PetName" />
+            }
+            else
+            {
+                <div>
+                    @Initial
+                </div>
+            }
+
+        </div>
+
+
+        <!-- INFORMATION -->
+
+        <div class="sc-idcard-info">
+
+            <div class="sc-idcard-row">
+
+                <span class="sc-idcard-row-icon">
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#heart-fill"></use>
+                    </svg>
+
+                </span>
+
+
+                <span>
+
+                    <small>
+                        Pet Name
+                    </small>
+
+                    <strong class="name">
+                        @Pet.PetName
+                    </strong>
+
+                </span>
+
+            </div>
+
+
+            <div class="sc-idcard-row">
+
+                <span class="sc-idcard-row-icon">
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#tag-fill"></use>
+                    </svg>
+
+                </span>
+
+
+                <span>
+
+                    <small>
+                        Type
+                    </small>
+
+                    <strong>
+                        @Pet.Species
+                    </strong>
+
+                </span>
+
+            </div>
+
+
+            <div class="sc-idcard-row">
+
+                <span class="sc-idcard-row-icon">
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#stars"></use>
+                    </svg>
+
+                </span>
+
+
+                <span>
+
+                    <small>
+                        Breed
+                    </small>
+
+                    <strong>
+                        @(string.IsNullOrWhiteSpace(
+                            Pet.Breed)
+                            ? "Not specified"
+                            : Pet.Breed)
+                    </strong>
+
+                </span>
+
+            </div>
+
+
+            <div class="sc-idcard-stats">
+
+                <div>
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#calendar3"></use>
+                    </svg>
+
+                    <span>
+
+                        <small>
+                            Age
+                        </small>
+
+                        <strong>
+                            @(string.IsNullOrWhiteSpace(
+                                Pet.Age)
+                                ? "Not set"
+                                : Pet.Age)
+                        </strong>
+
+                    </span>
+
+                </div>
+
+
+                <div>
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#speedometer2"></use>
+                    </svg>
+
+                    <span>
+
+                        <small>
+                            Weight
+                        </small>
+
+                        <strong>
+                            @(Pet.WeightKg.HasValue
+                                ? $"{Pet.WeightKg.Value:0.##} kg"
+                                : "Not set")
+                        </strong>
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- QR -->
+
+        <div class="sc-idcard-qr">
+
+            @if (!string.IsNullOrWhiteSpace(
+                QrDataUri))
+            {
+                <img src="@QrDataUri"
+                     alt="@Pet.PetName Pet ID QR code" />
+            }
+
+            <span>
+                Scan Pet ID
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         OWNER / PET ID
+         ========================================================= -->
+
+    <div class="sc-idcard-identity">
+
+        <div>
+
+            <span class="sc-idcard-row-icon">
+
+                <svg aria-hidden="true">
+                    <use href="/icons/bootstrap-icons.svg#person-fill"></use>
+                </svg>
+
+            </span>
+
+
+            <span>
+
+                <small>
+                    @(PublicMode
+                        ? "Owner Information"
+                        : "Owner")
+                </small>
+
+                <strong>
+                    @(PublicMode
+                        ? "Protected"
+                        : OwnerName)
+                </strong>
+
+            </span>
+
+        </div>
+
+
+        <div>
+
+            <span class="sc-idcard-row-icon">
+
+                <svg aria-hidden="true">
+                    <use href="/icons/bootstrap-icons.svg#person-vcard"></use>
+                </svg>
+
+            </span>
+
+
+            <span>
+
+                <small>
+                    Pet ID
+                </small>
+
+                <strong class="id">
+                    @Pet.CardId
+                </strong>
+
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         SUMMARY
+         ========================================================= -->
+
+    <div class="sc-idcard-summary">
+
+        @if (PublicMode)
+        {
+            <div>
+
+                <svg aria-hidden="true">
+                    <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
+                </svg>
+
+                <span>
+
+                    <small>
+                        Digital Identity
+                    </small>
+
+                    <strong>
+                        Active
+                    </strong>
+
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <svg aria-hidden="true">
+                    <use href="/icons/bootstrap-icons.svg#qr-code-scan"></use>
+                </svg>
+
+                <span>
+
+                    <small>
+                        QR Profile
+                    </small>
+
+                    <strong>
+                        Verified
+                    </strong>
+
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <svg aria-hidden="true">
+                    <use href="/icons/bootstrap-icons.svg#shield-lock-fill"></use>
+                </svg>
+
+                <span>
+
+                    <small>
+                        Privacy
+                    </small>
+
+                    <strong>
+                        Basic Info Only
+                    </strong>
+
+                </span>
+
+            </div>
+        }
+        else
+        {
+            <div>
+
+                <svg aria-hidden="true">
+                    <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
+                </svg>
+
+                <span>
+
+                    <small>
+                        Digital Identity
+                    </small>
+
+                    <strong>
+                        Active
+                    </strong>
+
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <svg aria-hidden="true">
+                    <use href="/icons/bootstrap-icons.svg#shield-check"></use>
+                </svg>
+
+                <span>
+
+                    <small>
+                        Vaccination
+                    </small>
+
+                    <strong>
+                        @VaccinationStatus
+                    </strong>
+
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <svg aria-hidden="true">
+                    <use href="/icons/bootstrap-icons.svg#clipboard2-pulse-fill"></use>
+                </svg>
+
+                <span>
+
+                    <small>
+                        Health Records
+                    </small>
+
+                    <strong>
+                        @HealthRecordCount
+                        @(HealthRecordCount == 1
+                            ? "Record"
+                            : "Records")
+                    </strong>
+
+                </span>
+
+            </div>
+        }
+
+    </div>
+
+
+    <!-- =========================================================
+         FOOTER
+         ========================================================= -->
+
+    <footer class="sc-idcard-footer">
+
+        <span>
+            Issued
+            @(Pet.CardIssuedAt?.ToString("MMM yyyy")
+                ?? "—")
+        </span>
+
+
+        <span>
+            ShoppetCare Digital Pet Identity
+        </span>
+
+    </footer>
+
+</article>
+
+
+<style>
+
+    .sc-idcard {
+        --id-bg-a: #F8FFFF;
+        --id-bg-b: #EAF8F6;
+        --id-text: #173D3D;
+        --id-muted: #6D807A;
+        --id-accent: #2F9098;
+        --id-soft: #DDF3F1;
+        --id-border: #BFDCD7;
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1.586 / 1;
+        padding: 4%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--id-border);
+        border-radius: 27px;
+        background: radial-gradient( circle at 92% 16%, rgba(47,144,152,.10), transparent 24% ), radial-gradient( circle at 85% 88%, rgba(47,144,152,.065), transparent 25% ), linear-gradient( 140deg, var(--id-bg-a), var(--id-bg-b) );
+        color: var(--id-text);
+        box-shadow: 0 24px 58px rgba(23,61,61,.13);
+    }
+
+
+        .sc-idcard.is-premium {
+            --id-bg-a: #FFFDF8;
+            --id-bg-b: #FFF8E9;
+            --id-border: #E4C468;
+            border-width: 2px;
+        }
+
+
+        .sc-idcard.theme-ocean {
+            --id-bg-a: #F0FCFE;
+            --id-bg-b: #D7F1F5;
+            --id-accent: #237F90;
+            --id-soft: #D2EDF1;
+            --id-border: #87C8D0;
+        }
+
+
+        .sc-idcard.theme-sunset {
+            --id-bg-a: #FFF8F3;
+            --id-bg-b: #FFE4D5;
+            --id-accent: #B9614D;
+            --id-soft: #F7DFD5;
+            --id-border: #E2A58B;
+        }
+
+
+        .sc-idcard.theme-mint {
+            --id-bg-a: #F4FCF6;
+            --id-bg-b: #DDEFE2;
+            --id-accent: #4B886E;
+            --id-soft: #D9EEE1;
+            --id-border: #9FC5AE;
+        }
+
+
+        .sc-idcard.theme-royal {
+            --id-bg-a: #F8F5FF;
+            --id-bg-b: #E8E0FC;
+            --id-accent: #5C4B95;
+            --id-soft: #E4DDF7;
+            --id-border: #B5A4DF;
+        }
+
+
+        .sc-idcard svg {
+            width: 1em;
+            height: 1em;
+            fill: currentColor;
+        }
+
+
+    /* TOP */
+
+    .sc-idcard-top {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+    }
+
+
+    .sc-idcard-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+
+    .sc-idcard-logo {
+        width: clamp(36px,5vw,46px);
+        height: clamp(36px,5vw,46px);
+        padding: 4px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: rgba(255,255,255,.82);
+        box-shadow: 0 3px 10px rgba(23,61,61,.07);
+    }
+
+
+        .sc-idcard-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+
+    .sc-idcard-brand strong,
+    .sc-idcard-brand span {
+        display: block;
+    }
+
+
+    .sc-idcard-brand strong {
+        font-size: clamp(.72rem,1.4vw,.95rem);
+        font-weight: 950;
+        letter-spacing: -.03em;
+    }
+
+
+    .sc-idcard-brand span {
+        margin-top: 1px;
+        color: var(--id-muted);
+        font-size: clamp(.32rem,.6vw,.43rem);
+        font-weight: 850;
+        letter-spacing: .08em;
+    }
+
+
+    .sc-idcard-tier {
+        padding: clamp(5px,.75vw,8px) clamp(8px,1vw,11px);
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border-radius: 999px;
+        font-size: clamp(.4rem,.7vw,.55rem);
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+
+        .sc-idcard-tier.basic {
+            background: var(--id-soft);
+            color: var(--id-accent);
+        }
+
+
+        .sc-idcard-tier.premium {
+            border: 1px solid #E5C66E;
+            background: linear-gradient( 180deg, #FFF3CD, #FFE19A );
+            color: #75540E;
+        }
+
+
+    /* MAIN */
+
+    .sc-idcard-main {
+        position: relative;
+        z-index: 2;
+        flex: 1;
+        margin-top: 3.2%;
+        display: grid;
+        grid-template-columns: 22% minmax(0,1fr) 18%;
+        align-items: center;
+        gap: 3.5%;
+    }
+
+
+    .sc-idcard-photo {
+        width: 100%;
+        aspect-ratio: 1;
+        overflow: hidden;
+        border: clamp(3px,.45vw,5px) solid #FFFFFF;
+        border-radius: 50%;
+        background: #DCEDEA;
+        box-shadow: 0 8px 20px rgba(23,61,61,.15);
+    }
+
+
+        .sc-idcard-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+
+        .sc-idcard-photo > div {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            place-items: center;
+            background: linear-gradient( 135deg, var(--id-accent), #173D3D );
+            color: #FFFFFF;
+            font-size: clamp(1.1rem,4vw,2rem);
+            font-weight: 950;
+        }
+
+
+    .sc-idcard-info {
+        min-width: 0;
+    }
+
+
+    .sc-idcard-row {
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+
+    .sc-idcard-row-icon {
+        width: clamp(22px,2.8vw,29px);
+        height: clamp(22px,2.8vw,29px);
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--id-soft);
+        color: var(--id-accent);
+        font-size: clamp(.55rem,.95vw,.72rem);
+    }
+
+
+    .sc-idcard-row > span:last-child,
+    .sc-idcard-identity > div > span:last-child {
+        min-width: 0;
+    }
+
+
+    .sc-idcard-row small,
+    .sc-idcard-row strong,
+    .sc-idcard-identity small,
+    .sc-idcard-identity strong {
+        display: block;
+    }
+
+
+    .sc-idcard-row small,
+    .sc-idcard-identity small {
+        color: var(--id-muted);
+        font-size: clamp(.36rem,.6vw,.46rem);
+    }
+
+
+    .sc-idcard-row strong,
+    .sc-idcard-identity strong {
+        margin-top: 1px;
+        overflow: hidden;
+        color: var(--id-text);
+        font-size: clamp(.52rem,.9vw,.7rem);
+        font-weight: 900;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+
+        .sc-idcard-row strong.name {
+            font-size: clamp(.72rem,1.4vw,1rem);
+        }
+
+
+    .sc-idcard-stats {
+        margin-top: 7px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: clamp(11px,2.2vw,23px);
+    }
+
+
+        .sc-idcard-stats > div {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+
+            .sc-idcard-stats > div > svg {
+                color: var(--id-accent);
+                font-size: clamp(.55rem,.9vw,.7rem);
+            }
+
+
+        .sc-idcard-stats small,
+        .sc-idcard-stats strong {
+            display: block;
+        }
+
+
+        .sc-idcard-stats small {
+            color: var(--id-muted);
+            font-size: clamp(.33rem,.52vw,.41rem);
+        }
+
+
+        .sc-idcard-stats strong {
+            color: var(--id-text);
+            font-size: clamp(.43rem,.7vw,.55rem);
+        }
+
+
+    .sc-idcard-qr {
+        padding: clamp(5px,.8vw,8px);
+        border: 2px solid var(--id-border);
+        border-radius: clamp(9px,1.2vw,13px);
+        background: #FFFFFF;
+        text-align: center;
+        box-shadow: 0 6px 15px rgba(23,61,61,.08);
+    }
+
+
+        .sc-idcard-qr img {
+            width: 100%;
+            display: block;
+        }
+
+
+        .sc-idcard-qr span {
+            display: block;
+            margin-top: 2px;
+            color: #53635E;
+            font-size: clamp(.3rem,.47vw,.38rem);
+            font-weight: 900;
+        }
+
+
+    /* IDENTITY */
+
+    .sc-idcard-identity {
+        position: relative;
+        z-index: 2;
+        margin-top: 2.6%;
+        padding-top: 2.3%;
+        display: grid;
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 13px;
+        border-top: 1px solid rgba(47,144,152,.16);
+    }
+
+
+        .sc-idcard-identity > div {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+
+        .sc-idcard-identity strong.id {
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        }
+
+
+    /* SUMMARY */
+
+    .sc-idcard-summary {
+        position: relative;
+        z-index: 2;
+        margin-top: 2.1%;
+        padding: 1.9% 2.3%;
+        display: grid;
+        grid-template-columns: repeat(3,minmax(0,1fr));
+        gap: 8px;
+        border: 1px solid rgba(47,144,152,.09);
+        border-radius: 11px;
+        background: rgba(255,255,255,.64);
+    }
+
+
+        .sc-idcard-summary > div {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+
+            .sc-idcard-summary > div > svg {
+                flex: 0 0 auto;
+                color: var(--id-accent);
+                font-size: clamp(.52rem,.85vw,.68rem);
+            }
+
+
+        .sc-idcard-summary small,
+        .sc-idcard-summary strong {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+
+        .sc-idcard-summary small {
+            color: var(--id-muted);
+            font-size: clamp(.3rem,.47vw,.38rem);
+        }
+
+
+        .sc-idcard-summary strong {
+            color: var(--id-text);
+            font-size: clamp(.38rem,.6vw,.49rem);
+        }
+
+
+    /* FOOTER */
+
+    .sc-idcard-footer {
+        position: relative;
+        z-index: 2;
+        margin-top: auto;
+        padding-top: 1.7%;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--id-muted);
+        font-size: clamp(.29rem,.46vw,.37rem);
+        font-weight: 750;
+    }
+
+
+    @@media (max-width: 570px) {
+
+        .sc-idcard {
+            aspect-ratio: auto;
+            min-height: 430px;
+            padding: 20px;
+            border-radius: 21px;
+        }
+
+
+        .sc-idcard-main {
+            margin-top: 20px;
+            grid-template-columns: 92px minmax(0,1fr);
+        }
+
+
+        .sc-idcard-qr {
+            width: 105px;
+            grid-column: 1 / -1;
+        }
+
+
+        .sc-idcard-identity {
+            margin-top: 18px;
+            padding-top: 14px;
+            grid-template-columns: 1fr;
+        }
+
+
+        .sc-idcard-summary {
+            margin-top: 12px;
+            grid-template-columns: 1fr;
+        }
+
+
+        .sc-idcard-footer {
+            margin-top: 14px;
+        }
+    }
+
+</style>
+
+
+@code {
+
+    [Parameter]
+    public PetProfile Pet { get; set; }
+        = new();
+
+
+    [Parameter]
+    public string OwnerName { get; set; }
+        = "Pet Owner";
+
+
+    [Parameter]
+    public string PhotoUrl { get; set; }
+        = string.Empty;
+
+
+    [Parameter]
+    public string QrDataUri { get; set; }
+        = string.Empty;
+
+
+    [Parameter]
+    public bool IsPremium { get; set; }
+
+
+    [Parameter]
+    public string VaccinationStatus { get; set; }
+        = "No Record";
+
+
+    [Parameter]
+    public int HealthRecordCount { get; set; }
+
+
+    [Parameter]
+    public bool PublicMode { get; set; }
+
+
+    private string Initial =>
+        string.IsNullOrWhiteSpace(
+            Pet.PetName)
+            ? "P"
+            : Pet.PetName
+                .Substring(0, 1)
+                .ToUpperInvariant();
+
+
+    private string CardClass
+    {
+        get
+        {
+            var theme =
+                IsPremium
+                    ? Pet.CardTheme
+                    : "Classic";
+
+
+            var css =
+                "sc-idcard " +
+                Cards.GetThemeCssClass(
+                    theme);
+
+
+            if (IsPremium)
+            {
+                css +=
+                    " is-premium";
+            }
+
+
+            return css;
+        }
+    }
+
+}

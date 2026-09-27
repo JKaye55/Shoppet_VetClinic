@@ -2,121 +2,758 @@
 @rendermode InteractiveServer
 
 @layout Shoppet_VetClinic.Components.Layout.LandingLayout
+
 @using Shoppet_VetClinic.Services
+
 @inject DatabaseService DbService
 @inject NavigationManager Nav
 @inject AuthService Auth
 @inject NotificationService Notify
 
-<div class="shoppet-viewport">
-    <main class="container-xl py-5 flex-grow-1">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
-                    <div class="text-center mb-4">
-                        <span class="badge rounded-pill px-3 py-1 mb-2 small fw-bold"
-                              style="background: #EEF4F1; color: #1E2D27;">
-                            Pilot Testing Portal
-                        </span>
-                        <h3 class="fw-bold" style="color: #1E2824;">Create Your Account</h3>
-                        <p class="text-muted small">
-                            Register to access your full pet care management dashboard and history records.
-                        </p>
-                    </div>
+<PageTitle>Create Account | ShoppetCare</PageTitle>
 
-                    @if (!string.IsNullOrEmpty(errorMessage))
-                    {
-                        <div class="alert alert-danger small py-2 rounded-3 mb-3">
-                            @errorMessage
-                        </div>
-                    }
+<div class="sc-register-page">
 
-                    <div class="vstack gap-3">
-                        <div>
-                            <label class="form-label small fw-bold text-muted mb-1">Full Name *</label>
-                            <input class="form-control rounded-3"
-                                   placeholder="Juan Dela Cruz"
-                                   @bind="fullName" />
-                        </div>
+    <div class="sc-register-shell">
 
-                        <div>
-                            <label class="form-label small fw-bold text-muted mb-1">Email Address *</label>
-                            <input type="email" class="form-control rounded-3"
-                                   placeholder="juandelacruz@gmail.com"
-                                   @bind="email" />
-                        </div>
+        <!-- =====================================================
+             LEFT SIDE
+             ===================================================== -->
 
-                        <div>
-                            <label class="form-label small fw-bold text-muted mb-1">Password *</label>
-                            <input type="password" class="form-control rounded-3"
-                                   placeholder="••••••••"
-                                   @bind="password" />
-                        </div>
+        <section class="sc-register-copy">
 
-                        <div class="pt-3">
-                            <button class="btn w-100 py-3 fw-bold shadow-sm rounded-pill"
-                                    style="background-color: #F7DD7D; color: #2F423B;"
-                                    @onclick="HandleRegistration">
-                                Complete Registration &amp; Login
-                            </button>
-                        </div>
+            <a href="/"
+               class="sc-register-brand">
 
-                        <div class="text-center mt-3">
-                            <small class="text-muted">
-                                Already participating in the pilot?
-                                <a href="/login" class="text-decoration-none fw-bold" style="color: #5C766D;">
-                                    Sign In here
-                                </a>
-                            </small>
-                        </div>
-                    </div>
-                </div>
+                <img src="/shoppetlogo.png"
+                     alt="ShoppetCare" />
+
+                <span>
+
+                    <strong>
+                        ShoppetCare
+                    </strong>
+
+                    <small>
+                        Connected pet care
+                    </small>
+
+                </span>
+
+            </a>
+
+
+            <div>
+
+                <span class="sc-register-eyebrow">
+                    CREATE YOUR ACCOUNT
+                </span>
+
+                <h1>
+                    Start with your pet.
+
+                    <em>
+                        Keep everything connected.
+                    </em>
+                </h1>
+
+                <p>
+                    A free account unlocks personal pet tools
+                    while public clinic discovery and browsing
+                    remain easy to explore.
+                </p>
+
             </div>
-        </div>
-    </main>
+
+
+            <div class="sc-register-preview">
+
+                <article>
+
+                    <strong>
+                        Pet Profiles
+                    </strong>
+
+                    <small>
+                        Create and manage your pet information.
+                    </small>
+
+                </article>
+
+
+                <article>
+
+                    <strong>
+                        Digital Pet ID
+                    </strong>
+
+                    <small>
+                        Keep an accessible QR-enabled
+                        pet identity.
+                    </small>
+
+                </article>
+
+
+                <article>
+
+                    <strong>
+                        Health Records
+                    </strong>
+
+                    <small>
+                        Organize important vaccination
+                        and health details.
+                    </small>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             REGISTER FORM
+             ===================================================== -->
+
+        <section class="sc-register-panel">
+
+            <div class="sc-register-card">
+
+                <div class="sc-register-card-head">
+
+                    <span class="sc-register-eyebrow">
+                        FREE PET OWNER ACCOUNT
+                    </span>
+
+                    <h2>
+                        Create account
+                    </h2>
+
+                    <p>
+                        You can explore public ShoppetCare
+                        features without an account.
+                        Register when you're ready to use
+                        personal tools.
+                    </p>
+
+                </div>
+
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="sc-register-alert"
+                         role="alert">
+
+                        @errorMessage
+
+                    </div>
+                }
+
+
+                <div class="sc-register-form">
+
+                    <div class="sc-register-field">
+
+                        <label for="register-name">
+                            Full Name
+                            <span>*</span>
+                        </label>
+
+                        <input id="register-name"
+                               placeholder="Juan Dela Cruz"
+                               @bind="fullName"
+                               autocomplete="name"
+                               disabled="@isRegistering" />
+
+                    </div>
+
+
+                    <div class="sc-register-field">
+
+                        <label for="register-email">
+                            Email Address
+                            <span>*</span>
+                        </label>
+
+                        <input id="register-email"
+                               type="email"
+                               placeholder="you@example.com"
+                               @bind="email"
+                               autocomplete="email"
+                               disabled="@isRegistering" />
+
+                    </div>
+
+
+                    <div class="sc-register-field">
+
+                        <label for="register-password">
+                            Password
+                            <span>*</span>
+                        </label>
+
+                        <input id="register-password"
+                               type="password"
+                               placeholder="At least 8 characters"
+                               @bind="password"
+                               autocomplete="new-password"
+                               disabled="@isRegistering" />
+
+                    </div>
+
+
+                    <div class="sc-register-field">
+
+                        <label for="register-confirm">
+                            Confirm Password
+                            <span>*</span>
+                        </label>
+
+                        <input id="register-confirm"
+                               type="password"
+                               placeholder="Enter your password again"
+                               @bind="confirmPassword"
+                               autocomplete="new-password"
+                               disabled="@isRegistering" />
+
+                    </div>
+
+
+                    <button type="button"
+                            class="sc-register-primary"
+                            @onclick="HandleRegistrationAsync"
+                            disabled="@isRegistering">
+
+                        @(isRegistering
+                            ? "Creating account..."
+                            : "Create Free Account")
+
+                    </button>
+
+
+                    <div class="sc-register-divider">
+
+                        <span>
+                            or
+                        </span>
+
+                    </div>
+
+
+                    <button type="button"
+                            class="sc-register-guest"
+                            @onclick="ContinueAsGuestAsync"
+                            disabled="@isRegistering">
+
+                        Explore as Guest
+
+                    </button>
+
+
+                    <p class="sc-register-switch">
+
+                        Already have an account?
+
+                        <a href="/login">
+                            Sign in
+                        </a>
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
 </div>
 
-@code {
-    private string fullName = string.Empty;
-    private string email = string.Empty;
-    private string password = string.Empty;
-    private string errorMessage = string.Empty;
 
-    private void HandleRegistration()
+<style>
+
+    .sc-register-page {
+        min-height: calc(100vh - 74px);
+        padding: 34px;
+        display: grid;
+        place-items: center;
+        background: radial-gradient( circle at 8% 12%, rgba(47,144,152,.12), transparent 28% ), radial-gradient( circle at 92% 88%, rgba(243,210,122,.16), transparent 25% ), #FBF8F2;
+        color: #172A28;
+    }
+
+
+    .sc-register-shell {
+        width: min(1180px, 100%);
+        min-height: 690px;
+        display: grid;
+        grid-template-columns: minmax(0, .92fr) minmax(460px, 1.08fr);
+        overflow: hidden;
+        border: 1px solid #DDE7E4;
+        border-radius: 28px;
+        background: #FFFFFF;
+        box-shadow: 0 30px 80px rgba(23,61,61,.13);
+    }
+
+
+    .sc-register-copy {
+        padding: 42px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background: radial-gradient( circle at 75% 20%, rgba(243,210,122,.19), transparent 27% ), linear-gradient( 145deg, #173D3D 0%, #102E2D 100% );
+        color: #FFFFFF;
+    }
+
+
+    .sc-register-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 11px;
+        color: #FFFFFF;
+        text-decoration: none;
+    }
+
+
+        .sc-register-brand img {
+            width: 52px;
+            height: 52px;
+            padding: 5px;
+            object-fit: contain;
+            border-radius: 14px;
+            background: #FFFFFF;
+        }
+
+
+        .sc-register-brand span,
+        .sc-register-brand strong,
+        .sc-register-brand small {
+            display: block;
+        }
+
+
+        .sc-register-brand strong {
+            font-size: 1.05rem;
+        }
+
+
+        .sc-register-brand small {
+            margin-top: 3px;
+            color: rgba(255,255,255,.55);
+            font-size: .68rem;
+        }
+
+
+    .sc-register-eyebrow {
+        display: inline-block;
+        margin-bottom: 12px;
+        color: #2F9098;
+        font-size: .67rem;
+        font-weight: 900;
+        letter-spacing: .11em;
+    }
+
+
+    .sc-register-copy
+    .sc-register-eyebrow {
+        color: #9ADBDD;
+    }
+
+
+    .sc-register-copy h1 {
+        max-width: 510px;
+        margin: 0;
+        font-size: clamp( 2.8rem, 4.4vw, 4.7rem );
+        font-weight: 900;
+        line-height: .96;
+        letter-spacing: -.055em;
+    }
+
+
+        .sc-register-copy h1 em {
+            display: block;
+            margin-top: 5px;
+            color: #F3D27A;
+            font-family: Georgia, "Times New Roman", serif;
+            font-weight: 500;
+            font-size: .91em;
+        }
+
+
+    .sc-register-copy > div > p {
+        max-width: 460px;
+        margin: 21px 0 0;
+        color: rgba(255,255,255,.68);
+        font-size: .91rem;
+        line-height: 1.68;
+    }
+
+
+    .sc-register-preview {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+
+        .sc-register-preview article {
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,.11);
+            border-radius: 13px;
+            background: rgba(255,255,255,.06);
+        }
+
+
+        .sc-register-preview strong,
+        .sc-register-preview small {
+            display: block;
+        }
+
+
+        .sc-register-preview strong {
+            color: #FFFFFF;
+            font-size: .72rem;
+        }
+
+
+        .sc-register-preview small {
+            margin-top: 4px;
+            color: rgba(255,255,255,.50);
+            font-size: .61rem;
+            line-height: 1.45;
+        }
+
+
+    /* =========================================================
+           FORM SIDE
+           ========================================================= */
+
+    .sc-register-panel {
+        padding: 42px 48px;
+        display: grid;
+        place-items: center;
+    }
+
+
+    .sc-register-card {
+        width: min(450px, 100%);
+    }
+
+
+    .sc-register-card-head h2 {
+        margin: 0;
+        color: #173D3D;
+        font-size: 2.35rem;
+        font-weight: 900;
+        letter-spacing: -.045em;
+    }
+
+
+    .sc-register-card-head p {
+        margin: 9px 0 0;
+        color: #7C8C87;
+        font-size: .8rem;
+        line-height: 1.5;
+    }
+
+
+    .sc-register-alert {
+        margin-top: 19px;
+        padding: 12px 14px;
+        border: 1px solid #F5B8B8;
+        border-radius: 11px;
+        background: #FFF2F2;
+        color: #9B2C2C;
+        font-size: .77rem;
+        line-height: 1.45;
+    }
+
+
+    .sc-register-form {
+        margin-top: 22px;
+        display: grid;
+        gap: 13px;
+    }
+
+
+    .sc-register-field label {
+        display: block;
+        margin-bottom: 6px;
+        color: #173D3D;
+        font-size: .74rem;
+        font-weight: 800;
+    }
+
+
+        .sc-register-field label span {
+            color: #B34545;
+        }
+
+
+    .sc-register-field input {
+        width: 100%;
+        min-height: 48px;
+        padding: 0 14px;
+        border: 1px solid #C9D9D5;
+        border-radius: 11px;
+        outline: none;
+    }
+
+
+        .sc-register-field input:focus {
+            border-color: #2F9098;
+            box-shadow: 0 0 0 3px rgba(47,144,152,.10);
+        }
+
+
+    .sc-register-primary,
+    .sc-register-guest {
+        min-height: 50px;
+        border-radius: 11px;
+        font-weight: 850;
+        cursor: pointer;
+        transition: transform .18s ease, background .18s ease, border-color .18s ease;
+    }
+
+
+    .sc-register-primary {
+        border: 1px solid #2F9098;
+        background: #2F9098;
+        color: #FFFFFF;
+    }
+
+
+        .sc-register-primary:hover {
+            transform: translateY(-2px);
+            background: #267C83;
+            border-color: #267C83;
+        }
+
+
+    .sc-register-guest {
+        border: 1px solid #C9D9D5;
+        background: #FFFFFF;
+        color: #173D3D;
+    }
+
+
+        .sc-register-guest:hover {
+            transform: translateY(-2px);
+            background: #EAF5F5;
+            border-color: #AFCBC7;
+        }
+
+
+    .sc-register-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #9AA6A2;
+        font-size: .68rem;
+    }
+
+
+        .sc-register-divider::before,
+        .sc-register-divider::after {
+            content: "";
+            height: 1px;
+            flex: 1;
+            background: #E1E9E6;
+        }
+
+
+    .sc-register-switch {
+        margin: 2px 0 0;
+        text-align: center;
+        color: #7C8C87;
+        font-size: .76rem;
+    }
+
+
+        .sc-register-switch a {
+            color: #267C83;
+            font-weight: 850;
+            text-decoration: none;
+        }
+
+
+    @@media (max-width: 900px) {
+
+        .sc-register-page {
+            padding: 18px;
+        }
+
+
+        .sc-register-shell {
+            grid-template-columns: 1fr;
+        }
+
+
+        .sc-register-copy {
+            min-height: 390px;
+            padding: 30px;
+        }
+
+
+        .sc-register-preview {
+            margin-top: 30px;
+        }
+
+
+        .sc-register-panel {
+            padding: 34px 24px;
+        }
+    }
+
+
+    @@media (max-width: 560px) {
+
+        .sc-register-preview {
+            grid-template-columns: 1fr;
+        }
+    }
+
+</style>
+
+
+@code {
+
+    private string fullName =
+        string.Empty;
+
+    private string email =
+        string.Empty;
+
+    private string password =
+        string.Empty;
+
+    private string confirmPassword =
+        string.Empty;
+
+    private string errorMessage =
+        string.Empty;
+
+    private bool isRegistering;
+
+
+    private async Task HandleRegistrationAsync()
     {
-        if (string.IsNullOrWhiteSpace(fullName) ||
-            string.IsNullOrWhiteSpace(email) ||
-            string.IsNullOrWhiteSpace(password))
+        if (isRegistering)
+            return;
+
+
+        errorMessage =
+            string.Empty;
+
+
+        fullName =
+            fullName.Trim();
+
+
+        email =
+            email
+                .Trim()
+                .ToLowerInvariant();
+
+
+        if (
+            string.IsNullOrWhiteSpace(fullName)
+            ||
+            string.IsNullOrWhiteSpace(email)
+            ||
+            string.IsNullOrWhiteSpace(password)
+            ||
+            string.IsNullOrWhiteSpace(confirmPassword)
+        )
         {
-            errorMessage = "Please fill out all required fields to register.";
+            errorMessage =
+                "Please complete all required fields.";
+
             return;
         }
 
-        email = email.Trim().ToLowerInvariant();
+
+        if (password.Length < 8)
+        {
+            errorMessage =
+                "Please use a password with at least 8 characters.";
+
+            return;
+        }
+
+
+        if (!string.Equals(
+                password,
+                confirmPassword,
+                StringComparison.Ordinal))
+        {
+            errorMessage =
+                "The passwords do not match.";
+
+            return;
+        }
+
+
+        isRegistering = true;
+
 
         try
         {
-            var user = DbService.RegisterUser(
-                fullName.Trim(),
-                email,
-                password,
-                "Pet Owner");
+            var user =
+                DbService.RegisterUser(
+                    fullName,
+                    email,
+                    password,
+                    "Pet Owner");
+
 
             if (user is null)
             {
-                errorMessage = "That email address is already registered.";
+                errorMessage =
+                    "That email address is already registered.";
+
                 return;
             }
 
-            // 🔔 Send welcome notification
-            Notify.WelcomeUser(user.Id, user.FullName);
 
-            Auth.Login(user);
+            Notify.WelcomeUser(
+                user.Id,
+                user.FullName);
+
+
+            await Auth.LoginAsync(user);
+
+
             Nav.NavigateTo("/home");
         }
         catch (Exception ex)
         {
-            errorMessage = $"Registration failed: {ex.Message}";
+            Console.WriteLine(
+                $"[Registration Error] {ex}");
+
+
+            errorMessage =
+                "Registration could not be completed right now. Please try again.";
+        }
+        finally
+        {
+            isRegistering = false;
         }
     }
+
+
+    private async Task ContinueAsGuestAsync()
+    {
+        if (isRegistering)
+            return;
+
+
+        await Auth.EnterGuestModeAsync();
+
+
+        Nav.NavigateTo("/home");
+    }
+
 }

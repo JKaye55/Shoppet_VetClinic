@@ -1,0 +1,418 @@
+﻿@inject NavigationManager Nav
+
+<section class="sp-guest-preview"
+         aria-label="Guest mode account feature preview">
+
+    <div class="sp-guest-preview-inner">
+
+        <!-- =====================================================
+             HEADING
+             ===================================================== -->
+
+        <div class="sp-guest-preview-head">
+
+            <div>
+
+                <span class="sp-guest-preview-kicker">
+                    GUEST MODE
+                </span>
+
+
+                <h2>
+                    Explore freely.
+                    Create an account when you
+                    need personal pet tools.
+                </h2>
+
+
+                <p>
+                    Clinic discovery, public information,
+                    and browsing stay available.
+
+                    Personal features are shown below
+                    so you can see what an account unlocks.
+                </p>
+
+            </div>
+
+
+            <div class="sp-guest-preview-actions">
+
+                <a href="/register"
+                   class="sp-guest-create">
+
+                    Create Free Account
+
+                </a>
+
+
+                <a href="/login"
+                   class="sp-guest-signin">
+
+                    Sign In
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             LOCKED FEATURES
+             ===================================================== -->
+
+        <div class="sp-guest-feature-grid">
+
+            <!-- PET PROFILE -->
+
+            <article class="sp-guest-feature-card">
+
+                <span class="sp-guest-lock">
+
+                    <i class="bi bi-lock-fill"
+                       aria-hidden="true">
+                    </i>
+
+                    Account required
+
+                </span>
+
+
+                <div class="sp-guest-feature-icon">
+
+                    <i class="bi bi-heart-fill"
+                       aria-hidden="true">
+                    </i>
+
+                </div>
+
+
+                <h3>
+                    Pet Profiles
+                </h3>
+
+
+                <p>
+                    Create and manage personal
+                    profiles for your pets.
+                </p>
+
+
+                <span class="sp-guest-feature-link">
+                    Create an account to unlock
+                </span>
+
+            </article>
+
+
+            <!-- DIGITAL PET ID -->
+
+            <article class="sp-guest-feature-card">
+
+                <span class="sp-guest-lock">
+
+                    <i class="bi bi-lock-fill"
+                       aria-hidden="true">
+                    </i>
+
+                    Account required
+
+                </span>
+
+
+                <div class="sp-guest-feature-icon">
+
+                    <i class="bi bi-qr-code"
+                       aria-hidden="true">
+                    </i>
+
+                </div>
+
+
+                <h3>
+                    Digital Pet ID
+                </h3>
+
+
+                <p>
+                    Create a QR-enabled identity
+                    connected to your pet.
+                </p>
+
+
+                <span class="sp-guest-feature-link">
+                    Create an account to unlock
+                </span>
+
+            </article>
+
+
+            <!-- HEALTH RECORDS -->
+
+            <article class="sp-guest-feature-card">
+
+                <span class="sp-guest-lock">
+
+                    <i class="bi bi-lock-fill"
+                       aria-hidden="true">
+                    </i>
+
+                    Account required
+
+                </span>
+
+
+                <div class="sp-guest-feature-icon">
+
+                    <i class="bi bi-clipboard2-pulse-fill"
+                       aria-hidden="true">
+                    </i>
+
+                </div>
+
+
+                <h3>
+                    Health Records
+                </h3>
+
+
+                <p>
+                    Keep vaccination and important
+                    pet health information organized.
+                </p>
+
+
+                <span class="sp-guest-feature-link">
+                    Create an account to unlock
+                </span>
+
+            </article>
+
+        </div>
+
+
+        <p class="sp-guest-preview-note">
+
+            Guest Mode is a preview.
+            Your browsing does not create a pet profile
+            or save personal records.
+
+        </p>
+
+    </div>
+
+</section>
+
+
+<style>
+
+    .sp-guest-preview {
+        padding: 24px 0 4px;
+        background: #FAF9F6;
+    }
+
+
+    .sp-guest-preview-inner {
+        width: min( 1320px, calc(100% - 40px) );
+        margin: 0 auto;
+        padding: 24px;
+        border: 1px solid #DDE7E4;
+        border-radius: 20px;
+        background: linear-gradient( 120deg, rgba(234,245,245,.82), rgba(255,255,255,.92) );
+        box-shadow: 0 12px 30px rgba(23,61,61,.06);
+    }
+
+
+    .sp-guest-preview-head {
+        display: grid;
+        grid-template-columns: minmax(0,1fr) auto;
+        align-items: end;
+        gap: 28px;
+    }
+
+
+    .sp-guest-preview-kicker {
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 8px;
+        color: #267C83;
+        font-size: .64rem;
+        font-weight: 900;
+        letter-spacing: .10em;
+    }
+
+
+    .sp-guest-preview-head h2 {
+        max-width: 820px;
+        margin: 0;
+        color: #173D3D;
+        font-size: clamp( 1.45rem, 2.3vw, 2.2rem );
+        line-height: 1.08;
+        letter-spacing: -.035em;
+        font-weight: 900;
+    }
+
+
+    .sp-guest-preview-head p {
+        max-width: 760px;
+        margin: 10px 0 0;
+        color: #6A7B76;
+        font-size: .82rem;
+        line-height: 1.58;
+    }
+
+
+    .sp-guest-preview-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+
+    .sp-guest-create,
+    .sp-guest-signin {
+        min-height: 44px;
+        padding: 0 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        text-decoration: none;
+        font-size: .76rem;
+        font-weight: 850;
+    }
+
+
+    .sp-guest-create {
+        background: #2F9098;
+        border: 1px solid #2F9098;
+        color: #FFFFFF;
+    }
+
+
+    .sp-guest-signin {
+        background: #FFFFFF;
+        border: 1px solid #C9D9D5;
+        color: #173D3D;
+    }
+
+
+    /* =========================================================
+           LOCKED CARDS
+           ========================================================= */
+
+    .sp-guest-feature-grid {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: repeat( 3, minmax(0,1fr) );
+        gap: 10px;
+    }
+
+
+    .sp-guest-feature-card {
+        position: relative;
+        min-height: 170px;
+        padding: 18px;
+        overflow: hidden;
+        border: 1px solid #DDE7E4;
+        border-radius: 15px;
+        background: rgba(247,248,247,.94);
+        color: #173D3D;
+    }
+
+
+        .sp-guest-feature-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(238,242,240,.18);
+            pointer-events: none;
+        }
+
+
+    .sp-guest-lock {
+        position: relative;
+        z-index: 2;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 8px;
+        border-radius: 999px;
+        background: #EEF1F0;
+        color: #6E7B77;
+        font-size: .61rem;
+        font-weight: 800;
+    }
+
+
+    .sp-guest-feature-icon {
+        position: relative;
+        z-index: 2;
+        width: 40px;
+        height: 40px;
+        margin-top: 17px;
+        display: grid;
+        place-items: center;
+        border-radius: 11px;
+        background: #E7ECEA;
+        color: #667772;
+        font-size: 1rem;
+        filter: grayscale(.3);
+    }
+
+
+    .sp-guest-feature-card h3,
+    .sp-guest-feature-card p,
+    .sp-guest-feature-link {
+        position: relative;
+        z-index: 2;
+    }
+
+
+    .sp-guest-feature-card h3 {
+        margin: 12px 0 5px;
+        color: #56645F;
+        font-size: .91rem;
+        font-weight: 850;
+    }
+
+
+    .sp-guest-feature-card p {
+        margin: 0;
+        color: #8A9692;
+        font-size: .72rem;
+        line-height: 1.45;
+    }
+
+
+    .sp-guest-feature-link {
+        display: block;
+        margin-top: 11px;
+        color: #267C83;
+        font-size: .67rem;
+        font-weight: 850;
+    }
+
+
+    .sp-guest-preview-note {
+        margin: 14px 0 0;
+        color: #879691;
+        font-size: .68rem;
+    }
+
+
+    @@media (max-width: 900px) {
+
+        .sp-guest-preview-head {
+            grid-template-columns: 1fr;
+            align-items: start;
+        }
+
+
+        .sp-guest-feature-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+</style>

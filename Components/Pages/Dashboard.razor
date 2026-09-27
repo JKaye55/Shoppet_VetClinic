@@ -609,6 +609,20 @@
 
                                         <div class="pet-row-actions">
 
+                                            <a href="/pet/@pet.Id/card"
+                                               class="pet-id-button">
+
+                                                Pet ID
+
+                                            </a>
+
+                                            <a href="/pet/@pet.Id/records"
+                                               class="records-button">
+
+                                                Records
+
+                                            </a>
+
                                             <button type="button"
                                                     class="edit-pet-button"
                                                     @onclick="() => OpenEditPetForm(pet)"
@@ -767,6 +781,41 @@
 
 
 <style>
+    .pet-id-button,
+    .records-button {
+        min-height: 32px;
+        padding: 0 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        font-size: .58rem;
+        font-weight: 850;
+        text-decoration: none;
+    }
+
+    .pet-id-button {
+        border: 1px solid #2F9098;
+        background: #2F9098;
+        color: #FFFFFF;
+    }
+
+        .pet-id-button:hover {
+            background: #267C83;
+            color: #FFFFFF;
+        }
+
+    .records-button {
+        border: 1px solid #CFE0DC;
+        background: #F3F8F6;
+        color: #267C83;
+    }
+
+        .records-button:hover {
+            border-color: #2F9098;
+            background: #EAF5F5;
+            color: #267C83;
+        }
 
     .dashboard-page {
         min-height: 100vh;

@@ -1,0 +1,443 @@
+﻿@implements IDisposable
+
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+
+@if (ShouldShow)
+{
+    <section class="sc-account-nav">
+
+        <div class="sc-account-nav-inner">
+
+            <div class="sc-account-nav-brand">
+
+                <span class="sc-account-nav-icon">
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#person-heart"></use>
+                    </svg>
+
+                </span>
+
+                <span class="sc-account-nav-copy">
+
+                    <strong>
+                        My ShoppetCare
+                    </strong>
+
+                    <small>
+                        Your pets, records, ID cards, and account
+                    </small>
+
+                </span>
+
+            </div>
+
+
+            <nav class="sc-account-nav-links"
+                 aria-label="My ShoppetCare">
+
+                <a href="/dashboard"
+                   class="@GetLinkClass("overview")">
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#grid"></use>
+                    </svg>
+
+                    Overview
+
+                </a>
+
+
+                <a href="/my-pets"
+                   class="@GetLinkClass("pets")">
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#heart-fill"></use>
+                    </svg>
+
+                    My Pets
+
+                </a>
+
+
+                <a href="/account"
+                   class="@GetLinkClass("account")">
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#person-circle"></use>
+                    </svg>
+
+                    Account &amp; Premium
+
+                </a>
+
+            </nav>
+
+
+            <div class="sc-account-plan">
+
+                @if (Auth.IsPremium)
+                {
+                    <span class="premium">
+
+                        <svg aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#star-fill"></use>
+                        </svg>
+
+                        Premium
+
+                    </span>
+                }
+                else
+                {
+                    <a href="/premium">
+
+                        <svg aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#star"></use>
+                        </svg>
+
+                        Upgrade
+
+                    </a>
+                }
+
+            </div>
+
+        </div>
+
+    </section>
+}
+
+
+<style>
+
+    .sc-account-nav {
+        position: relative;
+        z-index: 40;
+        border-bottom: 1px solid #DDE7E4;
+        background: rgba(250,249,246,.98);
+        box-shadow: 0 3px 12px rgba(23,61,61,.035);
+    }
+
+
+    .sc-account-nav-inner {
+        width: min(1380px,100%);
+        min-height: 59px;
+        margin: 0 auto;
+        padding: 0 28px;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+    }
+
+
+    .sc-account-nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        flex-shrink: 0;
+    }
+
+
+    .sc-account-nav-icon {
+        width: 32px;
+        height: 32px;
+        display: grid;
+        place-items: center;
+        border-radius: 9px;
+        background: #EAF5F5;
+        color: #2F9098;
+    }
+
+
+        .sc-account-nav-icon svg {
+            width: 15px;
+            height: 15px;
+            fill: currentColor;
+        }
+
+
+    .sc-account-nav-copy strong,
+    .sc-account-nav-copy small {
+        display: block;
+    }
+
+
+    .sc-account-nav-copy strong {
+        color: #173D3D;
+        font-size: .7rem;
+        font-weight: 900;
+    }
+
+
+    .sc-account-nav-copy small {
+        margin-top: 1px;
+        color: #85928E;
+        font-size: .52rem;
+    }
+
+
+    .sc-account-nav-links {
+        flex: 1;
+        display: flex;
+        align-items: stretch;
+        align-self: stretch;
+        gap: 3px;
+    }
+
+
+        .sc-account-nav-links a {
+            position: relative;
+            padding: 0 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #687772;
+            font-size: .64rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+
+            .sc-account-nav-links a::after {
+                content: "";
+                position: absolute;
+                left: 11px;
+                right: 11px;
+                bottom: 0;
+                height: 2px;
+                border-radius: 999px;
+                background: transparent;
+            }
+
+
+            .sc-account-nav-links a:hover {
+                color: #173D3D;
+                background: rgba(47,144,152,.035);
+            }
+
+
+            .sc-account-nav-links a.active {
+                color: #267C83;
+            }
+
+
+                .sc-account-nav-links a.active::after {
+                    background: #2F9098;
+                }
+
+
+        .sc-account-nav-links svg,
+        .sc-account-plan svg {
+            width: 13px;
+            height: 13px;
+            fill: currentColor;
+        }
+
+
+    .sc-account-plan {
+        flex-shrink: 0;
+    }
+
+
+        .sc-account-plan > span,
+        .sc-account-plan > a {
+            min-height: 32px;
+            padding: 0 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            border-radius: 999px;
+            font-size: .57rem;
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+
+        .sc-account-plan .premium {
+            border: 1px solid #E7D386;
+            background: #FFF4CF;
+            color: #806212;
+        }
+
+
+        .sc-account-plan > a {
+            border: 1px solid #D9E4E0;
+            background: #FFFFFF;
+            color: #267C83;
+        }
+
+
+    @@media (max-width: 850px) {
+
+        .sc-account-nav-inner {
+            padding: 0 14px;
+            overflow-x: auto;
+        }
+
+
+        .sc-account-nav-copy {
+            display: none;
+        }
+
+
+        .sc-account-nav-links {
+            min-width: max-content;
+        }
+    }
+
+    @@media (max-width: 560px) {
+
+        .sc-account-plan {
+            display: none;
+        }
+
+        .sc-account-nav-links a {
+            padding: 0 9px;
+        }
+    }
+</style>
+
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged +=
+            HandleLocationChanged;
+    }
+
+
+    private bool IsPetOwner =>
+        Auth.CurrentUser is not null
+        &&
+        string.Equals(
+            Auth.CurrentUser.Role,
+            "Pet Owner",
+            StringComparison.OrdinalIgnoreCase);
+
+
+    private string CurrentPath
+    {
+        get
+        {
+            var relative =
+                Nav.ToBaseRelativePath(
+                    Nav.Uri);
+
+
+            relative =
+                relative
+                    .Split('?', '#')[0];
+
+
+            return
+                "/" +
+                relative.TrimStart('/');
+        }
+    }
+
+
+    private bool ShouldShow
+    {
+        get
+        {
+            if (!Auth.IsLoggedIn ||
+                !IsPetOwner)
+            {
+                return false;
+            }
+
+
+            var path =
+                CurrentPath;
+
+
+            return
+                path.StartsWith(
+                    "/dashboard",
+                    StringComparison.OrdinalIgnoreCase)
+                ||
+                path.StartsWith(
+                    "/my-pets",
+                    StringComparison.OrdinalIgnoreCase)
+                ||
+                path.StartsWith(
+                    "/account",
+                    StringComparison.OrdinalIgnoreCase)
+                ||
+                path.StartsWith(
+                    "/premium",
+                    StringComparison.OrdinalIgnoreCase)
+                ||
+                path.StartsWith(
+                    "/pet/",
+                    StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+
+    private string GetLinkClass(
+        string section)
+    {
+        var path =
+            CurrentPath;
+
+
+        var active =
+            section switch
+            {
+                "overview" =>
+                    path.StartsWith(
+                        "/dashboard",
+                        StringComparison.OrdinalIgnoreCase),
+
+                "pets" =>
+                    path.StartsWith(
+                        "/my-pets",
+                        StringComparison.OrdinalIgnoreCase)
+                    ||
+                    path.StartsWith(
+                        "/pet/",
+                        StringComparison.OrdinalIgnoreCase),
+
+                "account" =>
+                    path.StartsWith(
+                        "/account",
+                        StringComparison.OrdinalIgnoreCase)
+                    ||
+                    path.StartsWith(
+                        "/premium",
+                        StringComparison.OrdinalIgnoreCase),
+
+                _ =>
+                    false
+            };
+
+
+        return active
+            ? "active"
+            : string.Empty;
+    }
+
+
+    private void HandleLocationChanged(
+        object? sender,
+        LocationChangedEventArgs args)
+    {
+        _ =
+            InvokeAsync(
+                StateHasChanged);
+    }
+
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -=
+            HandleLocationChanged;
+    }
+
+}

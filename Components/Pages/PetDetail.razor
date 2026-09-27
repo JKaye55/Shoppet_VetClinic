@@ -1,138 +1,753 @@
 ﻿@page "/pet/{PetId:int}"
+@rendermode InteractiveServer
+
 @inject AuthService Auth
 @inject DatabaseService Db
 @inject CardService Cards
+@inject FileStorageService FileStorage
 
-<PageTitle>@(pet?.PetName ?? "Pet")</PageTitle>
+<PageTitle>@(pet?.PetName ?? "Pet") | ShoppetCare</PageTitle>
 
-<div class="container mt-4">
 
-    @if (pet == null)
+<div class="sc-detail-page">
+
+    @if (pet is null)
     {
-        <div class="alert alert-warning">Pet not found.</div>
-        <a href="/my-pets" class="btn btn-secondary">Back to My Pets</a>
+        <div class="sc-detail-shell">
+
+            <div class="sc-detail-error">
+                Pet not found.
+                <a href="/my-pets">Back to My Pets</a>
+            </div>
+
+        </div>
     }
     else
     {
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="mb-0">@pet.PetName</h2>
-            <div>
-                <a href="/pet/@PetId/card" class="btn btn-primary btn-sm">View Pet ID Card</a>
-                <a href="/my-pets" class="btn btn-outline-secondary btn-sm">Back</a>
-            </div>
-        </div>
+        <section class="sc-detail-hero">
 
-        <div class="alert @feedingClass d-flex align-items-center" role="alert">
-            <span class="me-2 fs-4">@feedingEmoji</span>
-            <div>@feedingText</div>
-        </div>
+            <div class="sc-detail-shell sc-detail-hero-inner">
 
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Pet Information</div>
-                    <div class="card-body">
-                        <p><strong>Species:</strong> @pet.Species</p>
-                        <p><strong>Breed:</strong> @(string.IsNullOrEmpty(pet.Breed) ? "—" : pet.Breed)</p>
-                        <p><strong>Age:</strong> @(string.IsNullOrEmpty(pet.Age) ? "—" : pet.Age)</p>
-                        <p><strong>Weight:</strong> @(pet.WeightKg.HasValue ? pet.WeightKg.Value.ToString("0.##") + " kg" : "—")</p>
-                        <p><strong>Diet:</strong> @(string.IsNullOrEmpty(pet.Diet) ? "—" : pet.Diet)</p>
-                    </div>
-                </div>
-            </div>
+                <div class="sc-detail-profile">
 
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        Health Records
-                        <span class="badge bg-secondary ms-2">@records.Count</span>
-                    </div>
-                    <div class="card-body">
-                        @if (records.Count == 0)
+                    <div class="sc-detail-photo">
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            petPhotoUrl))
                         {
-                            <p class="text-muted mb-0">No health records yet. Add them from the mobile app.</p>
+                            <img src="@petPhotoUrl"
+                                 alt="@pet.PetName" />
                         }
                         else
                         {
-                            <ul class="list-unstyled mb-0">
-                                @foreach (var r in records.Take(5))
-                                {
-                                    <li class="border-bottom py-2">
-                                        <div><strong>@r.Title</strong></div>
-                                        <small class="text-muted">
-                                            @r.RecordDate.ToString("MMM d, yyyy") · @r.RecordType
-                                        </small>
-                                    </li>
-                                }
-                            </ul>
-                            @if (records.Count > 5)
-                            {
-                                <small class="text-muted d-block mt-2">
-                                    + @(records.Count - 5) more — view all on mobile
-                                </small>
-                            }
+                            <div>
+                                @Initial
+                            </div>
                         }
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <p class="text-muted mt-3">
-            <small> <i class="bi bi-lightbulb"></i> Health records and feeding logs are managed in the ShoppetCare mobile app.</small>
-        </p>
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            @pet.Species
+                        </span>
+
+                        <h1>
+                            @pet.PetName
+                        </h1>
+
+                        <p>
+                            @(string.IsNullOrWhiteSpace(
+                                pet.Breed)
+                                ? "Breed not specified"
+                                : pet.Breed)
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="sc-detail-actions">
+
+                    <a href="/pet/@PetId/card"
+                       class="primary">
+
+                        <i class="bi bi-person-vcard"></i>
+
+                        Pet ID
+
+                    </a>
+
+                    <a href="/pet/@PetId/records">
+
+                        <i class="bi bi-clipboard2-pulse"></i>
+
+                        Health Records
+
+                    </a>
+
+                    <a href="/my-pets">
+                        My Pets
+                    </a>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <main class="sc-detail-shell sc-detail-content">
+
+            <!-- FEEDING -->
+
+            <section class="sc-feeding-card @feedingClass">
+
+                <div>
+
+                    <i class="@feedingIconClass">
+                    </i>
+
+                </div>
+
+                <div>
+
+                    <strong>
+                        Feeding Status
+                    </strong>
+
+                    <span>
+                        @feedingText
+                    </span>
+
+                </div>
+
+            </section>
+
+
+            <div class="sc-detail-grid">
+
+                <!-- INFO -->
+
+                <section class="sc-detail-card">
+
+                    <span class="section-label">
+                        PET INFORMATION
+                    </span>
+
+                    <h2>
+                        Profile Details
+                    </h2>
+
+
+                    <div class="sc-detail-values">
+
+                        <div>
+
+                            <span>
+                                Species
+                            </span>
+
+                            <strong>
+                                @pet.Species
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                Breed
+                            </span>
+
+                            <strong>
+                                @(string.IsNullOrWhiteSpace(
+                                    pet.Breed)
+                                    ? "Not set"
+                                    : pet.Breed)
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                Age
+                            </span>
+
+                            <strong>
+                                @(string.IsNullOrWhiteSpace(
+                                    pet.Age)
+                                    ? "Not set"
+                                    : pet.Age)
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                Weight
+                            </span>
+
+                            <strong>
+                                @(pet.WeightKg.HasValue
+                                    ? $"{pet.WeightKg.Value:0.##} kg"
+                                    : "Not set")
+                            </strong>
+
+                        </div>
+
+
+                        <div class="wide">
+
+                            <span>
+                                Diet
+                            </span>
+
+                            <strong>
+                                @(string.IsNullOrWhiteSpace(
+                                    pet.Diet)
+                                    ? "Not set"
+                                    : pet.Diet)
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- HEALTH -->
+
+                <section class="sc-detail-card">
+
+                    <div class="sc-detail-card-head">
+
+                        <div>
+
+                            <span class="section-label">
+                                HEALTH
+                            </span>
+
+                            <h2>
+                                Recent Records
+                            </h2>
+
+                        </div>
+
+                        <span class="count">
+                            @records.Count
+                        </span>
+
+                    </div>
+
+
+                    @if (records.Count == 0)
+                    {
+                        <div class="sc-detail-empty">
+
+                            <i class="bi bi-clipboard2-pulse"></i>
+
+                            <strong>
+                                No records yet
+                            </strong>
+
+                            <span>
+                                Add @pet.PetName's first health record.
+                            </span>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="sc-detail-records">
+
+                            @foreach (var record
+                                in records.Take(4))
+                            {
+                                <div>
+
+                                    <strong>
+                                        @record.Title
+                                    </strong>
+
+                                    <span>
+                                        @record.RecordDate.ToString("MMM d, yyyy")
+                                        ·
+                                        @record.RecordType
+                                    </span>
+
+                                </div>
+                            }
+
+                        </div>
+                    }
+
+
+                    <a href="/pet/@PetId/records"
+                       class="sc-detail-record-link">
+
+                        Manage Health Records
+
+                    </a>
+
+                </section>
+
+            </div>
+
+        </main>
     }
 
 </div>
 
-@code {
-    [Parameter] public int PetId { get; set; }
 
-    PetProfile? pet;
-    List<PetHealthRecord> records = new();
-    string feedingClass = "alert-secondary";
-    string feedingEmoji = "bi-cup-hot";
-    string feedingText = "";
+<style>
+
+    .sc-detail-page {
+        min-height: 100vh;
+        background: #FAF9F6;
+        color: #172A28;
+    }
+
+    .sc-detail-shell {
+        width: min(1050px, calc(100% - 40px));
+        margin: 0 auto;
+    }
+
+    .sc-detail-hero {
+        padding: 42px 0;
+        background: #F2F7F5;
+        border-bottom: 1px solid #DFE7E4;
+    }
+
+    .sc-detail-hero-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 25px;
+    }
+
+    .sc-detail-profile {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .sc-detail-photo {
+        width: 85px;
+        height: 85px;
+        overflow: hidden;
+        border-radius: 20px;
+        background: #173D3D;
+    }
+
+        .sc-detail-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .sc-detail-photo > div {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            place-items: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 900;
+        }
+
+    .sc-detail-profile span {
+        color: #2F9098;
+        font-size: .58rem;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+    .sc-detail-profile h1 {
+        margin: 2px 0 0;
+        color: #173D3D;
+        font-size: 2rem;
+        font-weight: 900;
+    }
+
+    .sc-detail-profile p {
+        margin: 3px 0 0;
+        color: #7E8C87;
+        font-size: .68rem;
+    }
+
+    .sc-detail-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+        .sc-detail-actions a {
+            min-height: 39px;
+            padding: 0 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #D4DFDB;
+            border-radius: 8px;
+            background: white;
+            color: #53635E;
+            text-decoration: none;
+            font-size: .63rem;
+            font-weight: 800;
+        }
+
+            .sc-detail-actions a.primary {
+                border-color: #2F9098;
+                background: #2F9098;
+                color: white;
+            }
+
+    .sc-detail-content {
+        padding: 25px 0 80px;
+    }
+
+    .sc-feeding-card {
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        border: 1px solid #DDE7E4;
+        border-radius: 12px;
+        background: white;
+    }
+
+        .sc-feeding-card > div:first-child {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            background: #EEF4F1;
+            color: #2F9098;
+        }
+
+        .sc-feeding-card strong,
+        .sc-feeding-card span {
+            display: block;
+        }
+
+        .sc-feeding-card strong {
+            color: #173D3D;
+            font-size: .7rem;
+        }
+
+        .sc-feeding-card span {
+            margin-top: 2px;
+            color: #75847F;
+            font-size: .64rem;
+        }
+
+        .sc-feeding-card.warning {
+            border-color: #E9D69B;
+            background: #FFF9E8;
+        }
+
+        .sc-feeding-card.danger {
+            border-color: #EFCACA;
+            background: #FFF4F4;
+        }
+
+    .sc-detail-grid {
+        margin-top: 15px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+
+    .sc-detail-card {
+        padding: 20px;
+        border: 1px solid #DDE7E4;
+        border-radius: 15px;
+        background: white;
+    }
+
+    .section-label {
+        color: #2F9098;
+        font-size: .56rem;
+        font-weight: 900;
+        letter-spacing: .08em;
+    }
+
+    .sc-detail-card h2 {
+        margin: 4px 0 0;
+        color: #173D3D;
+        font-size: 1rem;
+        font-weight: 900;
+    }
+
+    .sc-detail-values {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+        .sc-detail-values > div {
+            padding: 10px;
+            border-radius: 8px;
+            background: #F7F9F8;
+        }
+
+        .sc-detail-values .wide {
+            grid-column: 1/-1;
+        }
+
+        .sc-detail-values span,
+        .sc-detail-values strong {
+            display: block;
+        }
+
+        .sc-detail-values span {
+            color: #8B9894;
+            font-size: .54rem;
+            text-transform: uppercase;
+        }
+
+        .sc-detail-values strong {
+            margin-top: 2px;
+            color: #53625D;
+            font-size: .66rem;
+        }
+
+    .sc-detail-card-head {
+        display: flex;
+        justify-content: space-between;
+    }
+
+        .sc-detail-card-head .count {
+            width: 30px;
+            height: 30px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: #EAF5F5;
+            color: #2F9098;
+            font-size: .65rem;
+            font-weight: 900;
+        }
+
+    .sc-detail-empty {
+        margin-top: 13px;
+        padding: 24px;
+        display: grid;
+        text-align: center;
+        border-radius: 10px;
+        background: #F7F9F8;
+    }
+
+        .sc-detail-empty i {
+            color: #2F9098;
+            font-size: 1.1rem;
+        }
+
+        .sc-detail-empty strong {
+            margin-top: 6px;
+            color: #53625D;
+            font-size: .69rem;
+        }
+
+        .sc-detail-empty span {
+            margin-top: 3px;
+            color: #8A9793;
+            font-size: .61rem;
+        }
+
+    .sc-detail-records {
+        margin-top: 12px;
+    }
+
+        .sc-detail-records > div {
+            padding: 9px 0;
+            border-bottom: 1px solid #EDF1EF;
+        }
+
+        .sc-detail-records strong,
+        .sc-detail-records span {
+            display: block;
+        }
+
+        .sc-detail-records strong {
+            color: #53625D;
+            font-size: .67rem;
+        }
+
+        .sc-detail-records span {
+            margin-top: 2px;
+            color: #8A9793;
+            font-size: .58rem;
+        }
+
+    .sc-detail-record-link {
+        margin-top: 13px;
+        display: inline-block;
+        color: #267C83;
+        font-size: .64rem;
+        font-weight: 850;
+    }
+
+    @@media (max-width: 750px) {
+
+        .sc-detail-hero-inner {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .sc-detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+</style>
+
+
+@code {
+
+    [Parameter]
+    public int PetId { get; set; }
+
+
+    private PetProfile? pet;
+
+    private List<PetHealthRecord> records =
+        new();
+
+
+    private string petPhotoUrl =
+        string.Empty;
+
+
+    private string Initial =
+        "?";
+
+
+    private string feedingClass =
+        string.Empty;
+
+
+    private string feedingIconClass =
+        "bi bi-cup-hot";
+
+
+    private string feedingText =
+        string.Empty;
+
 
     protected override async Task OnParametersSetAsync()
     {
         await Auth.InitializeAsync();
 
-        var userId = Auth.CurrentUser?.Id ?? 0;
-        pet = Db.GetPetById(PetId);
 
-        if (pet == null || pet.UserId != userId) { pet = null; return; }
+        var userId =
+            Auth.CurrentUser?.Id ?? 0;
 
-        records = Db.GetHealthRecords(PetId);
 
-        var lastFedAt = Db.GetLastFedAt(PetId);
-        var status = Cards.GetFeedingStatus(lastFedAt);
+        pet =
+            Db.GetPetById(
+                PetId);
 
-        var hoursAgo = lastFedAt.HasValue
-            ? Math.Round((DateTime.Now - lastFedAt.Value).TotalHours, 1)
-            : 0;
 
-        switch (status)
+        if (pet is null ||
+            pet.UserId != userId)
         {
-            case "happy":
-                feedingClass = "alert-success";
-                feedingEmoji = "bi-check-circle-fill";
-                feedingText = $"Fed {hoursAgo} hours ago. Happy and healthy.";
-                break;
-            case "hungry":
-                feedingClass = "alert-warning";
-                feedingEmoji = "bi-exclamation-triangle-fill";
-                feedingText = $"Needs to eat — last fed {hoursAgo} hours ago.";
-                break;
-            case "overdue":
-                feedingClass = "alert-danger";
-                feedingEmoji = "bi-exclamation-octagon-fill";
-                feedingText = $"Overdue for a meal — last fed {hoursAgo} hours ago.";
-                break;
-            default:
-                feedingClass = "alert-secondary";
-                feedingEmoji = "bi-cup-hot";
-                feedingText = "No feeding records yet. Log meals from the mobile app.";
-                break;
+            pet =
+                null;
+
+            return;
+        }
+
+
+        petPhotoUrl =
+            FileStorage.GetImageUrl(
+                "pets",
+                PetId)
+            ??
+            string.Empty;
+
+
+        Initial =
+            string.IsNullOrWhiteSpace(
+                pet.PetName)
+                ? "?"
+                : pet.PetName
+                    .Substring(0, 1)
+                    .ToUpperInvariant();
+
+
+        records =
+            Db.GetHealthRecords(
+                PetId)
+            ??
+            new List<PetHealthRecord>();
+
+
+        var lastFedAt =
+            Db.GetLastFedAt(
+                PetId);
+
+
+        var status =
+            Cards.GetFeedingStatus(
+                lastFedAt);
+
+
+        if (status == "happy")
+        {
+            feedingClass =
+                string.Empty;
+
+            feedingIconClass =
+                "bi bi-check-circle-fill";
+
+            feedingText =
+                "A recent feeding record is available.";
+        }
+        else if (status == "hungry")
+        {
+            feedingClass =
+                "warning";
+
+            feedingIconClass =
+                "bi bi-exclamation-triangle-fill";
+
+            feedingText =
+                "It may be time to check this pet's feeding schedule.";
+        }
+        else if (status == "overdue")
+        {
+            feedingClass =
+                "danger";
+
+            feedingIconClass =
+                "bi bi-exclamation-circle-fill";
+
+            feedingText =
+                "The most recent feeding log is overdue.";
+        }
+        else
+        {
+            feedingClass =
+                string.Empty;
+
+            feedingIconClass =
+                "bi bi-cup-hot";
+
+            feedingText =
+                "No feeding records yet. Feeding logs can be managed from the mobile app.";
         }
     }
 }

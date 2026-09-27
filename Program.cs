@@ -12,6 +12,8 @@ builder.Services.AddScoped<FileStorageService>();
 builder.Services.AddScoped<Shoppet_VetClinic.Services.CardService>();
 builder.Services.AddScoped<Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedSessionStorage>();
 builder.Services.AddScoped<Shoppet_VetClinic.Services.NotificationService>();
+builder.Services.AddScoped<MarketplaceService>();
+builder.Services.AddScoped<CommunityService>();
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

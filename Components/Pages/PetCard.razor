@@ -1,108 +1,1010 @@
 ﻿@page "/pet/{PetId:int}/card"
+@rendermode InteractiveServer
+
 @inject AuthService Auth
 @inject DatabaseService Db
 @inject CardService Cards
+@inject FileStorageService FileStorage
+@inject NavigationManager Nav
 
-<PageTitle>@(pet?.PetName ?? "Pet") — Pet ID Card</PageTitle>
+<PageTitle>@(pet?.PetName ?? "Pet") Pet ID | ShoppetCare</PageTitle>
 
-<div class="container mt-4">
 
-    @if (pet == null)
+<div class="sc-petcard-page">
+
+    @if (pet is null)
     {
-        <div class="alert alert-warning">
-            Pet not found, or you don't have access to it.
+        <div class="sc-petcard-shell">
+
+            <section class="sc-petcard-error">
+
+                <h2>
+                    Pet ID unavailable
+                </h2>
+
+                <p>
+                    This pet could not be found or does not belong
+                    to your account.
+                </p>
+
+                <a href="/my-pets">
+                    Back to My Pets
+                </a>
+
+            </section>
+
         </div>
-        <a href="/my-pets" class="btn btn-secondary">Back to My Pets</a>
     }
     else
     {
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="mb-0">Pet ID Card</h2>
-            <div>
-                <a href="/pet/@PetId" class="btn btn-outline-secondary btn-sm">View Details</a>
-                <a href="/my-pets" class="btn btn-outline-secondary btn-sm">Back to My Pets</a>
-            </div>
-        </div>
+        <section class="sc-petcard-header">
 
-        <div class="pet-card @themeClass">
-            <div class="pet-card-header">
-                <span>SHOPPETCARE · PET ID</span>
-                @if (isPremium)
-                {
-                    <span class="badge-premium"><i class="bi bi-star-fill"></i> PREMIUM</span>
-                }
-            </div>
+            <div class="sc-petcard-shell sc-petcard-header-inner">
 
-            <div class="pet-card-body">
-                <div class="pet-photo-wrap">
-                    <div class="pet-photo-placeholder">@Initial</div>
-                </div>
-
-                <div class="pet-info">
-                    <h3>@pet.PetName</h3>
-                    <p>@pet.Species · @pet.Breed</p>
-                    @if (!string.IsNullOrEmpty(pet.Age))
-                    {
-                        <p>Age: @pet.Age</p>
-                    }
-                    @if (pet.WeightKg.HasValue)
-                    {
-                        <p>Weight: @pet.WeightKg.Value.ToString("0.##") kg</p>
-                    }
-                </div>
-
-                <div class="qr-zone">
-                    <img src="@qrDataUri" alt="QR Code" />
-                </div>
-            </div>
-
-            <div class="pet-card-footer">
                 <div>
-                    <small>Card ID</small>
-                    <div><code>@pet.CardId</code></div>
+
+                    <span>
+                        SHOPPETCARE DIGITAL PET ID
+                    </span>
+
+                    <h1>
+                        @pet.PetName's Pet ID
+                    </h1>
+
+                    <p>
+                        View, personalize, and share this
+                        scannable pet identity.
+                    </p>
+
                 </div>
-                <div class="text-end">
-                    <small>Issued</small>
-                    <div>@pet.CardIssuedAt?.ToString("MMM yyyy")</div>
+
+
+                <div class="sc-petcard-actions">
+
+                    <a href="/pet/@PetId">
+                        Pet Details
+                    </a>
+
+                    <a href="/pet/@PetId/records">
+                        Health Records
+                    </a>
+
+                    <a href="/my-pets">
+                        My Pets
+                    </a>
+
                 </div>
+
             </div>
-        </div>
 
-        <p class="text-muted mt-3 mb-1">
-            <small>Scan this QR code to view the pet's public card. Anyone with the link can see basic info — no login required.</small>
-        </p>
+        </section>
 
-        <a href="/pet/card/@pet.CardId" target="_blank" class="btn btn-link p-0">
-            Open public card in a new tab →
-        </a>
+
+        <main class="sc-petcard-shell sc-petcard-content">
+
+            @if (!string.IsNullOrWhiteSpace(
+                message))
+            {
+                <div class="sc-petcard-message">
+                    @message
+                </div>
+            }
+
+
+            <div class="sc-petcard-layout">
+
+                <div>
+
+                    <PetIdCardView Pet="@pet"
+                                   OwnerName="@ownerName"
+                                   PhotoUrl="@photoUrl"
+                                   QrDataUri="@qrDataUri"
+                                   IsPremium="@isPremium"
+                                   VaccinationStatus="@vaccinationStatus"
+                                   HealthRecordCount="@healthRecords.Count"
+                                   PublicMode="false" />
+
+
+                    <div class="sc-petcard-public">
+
+                        <div>
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#qr-code-scan"></use>
+                            </svg>
+
+
+                            <span>
+
+                                <strong>
+                                    Scannable Public Pet ID
+                                </strong>
+
+                                <small>
+                                    Preview exactly what somebody
+                                    sees after scanning the QR code.
+                                </small>
+
+                            </span>
+
+                        </div>
+
+
+                        <a href="/pet/card/@pet.CardId"
+                           target="_blank">
+
+                            Open Public View
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+
+                <aside class="sc-petcard-side">
+
+                    @if (isPremium)
+                    {
+                        <span class="plan premium">
+                            PREMIUM ACTIVE
+                        </span>
+
+                        <h2>
+                            Premium Pet ID
+                        </h2>
+
+                        <p>
+                            Your Premium access includes card themes,
+                            unlimited health records, and additional
+                            pet profiles.
+                        </p>
+                    }
+                    else
+                    {
+                        <span class="plan">
+                            FREE PET ID
+                        </span>
+
+                        <h2>
+                            Basic Pet ID
+                        </h2>
+
+                        <p>
+                            Your free Pet ID remains fully usable.
+                            Premium adds personalization and expanded
+                            pet-management limits.
+                        </p>
+                    }
+
+
+                    <div class="sc-petcard-side-links">
+
+                        <a href="/pet/@PetId">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#pencil"></use>
+                            </svg>
+
+                            View Pet Details
+
+                        </a>
+
+
+                        <a href="/pet/@PetId/records">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#clipboard2-pulse"></use>
+                            </svg>
+
+                            Manage Health Records
+
+                        </a>
+
+
+                        <a href="/my-pets">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#heart"></use>
+                            </svg>
+
+                            Manage My Pets
+
+                        </a>
+
+                    </div>
+
+
+                    @if (!isPremium)
+                    {
+                        <div class="sc-petcard-upgrade">
+
+                            <span>
+                                LIFETIME PREMIUM
+                            </span>
+
+                            <strong>
+                                ₱49
+                            </strong>
+
+                            <small>
+                                One-time payment
+                            </small>
+
+                            <a href="/premium">
+                                Unlock Premium
+                            </a>
+
+                        </div>
+                    }
+
+                </aside>
+
+            </div>
+
+
+            <section class="sc-petcard-themes">
+
+                <span class="eyebrow">
+                    PET ID APPEARANCE
+                </span>
+
+                <h2>
+                    Choose a card style
+                </h2>
+
+                <p>
+                    Classic is included for free.
+                    Premium members can select additional themes.
+                </p>
+
+
+                <div class="sc-petcard-theme-grid">
+
+                    @foreach (var theme
+                        in CardService.PremiumThemes)
+                    {
+                        var locked =
+                            !Cards.IsThemeAllowed(
+                                theme,
+                                isPremium);
+
+
+                        <button type="button"
+                                class="@GetThemeButtonClass(
+                                                                theme,
+                                                                locked)"
+                                @onclick="() => SelectTheme(theme)">
+
+                            <div class="@GetThemePreviewClass(theme)">
+
+                                <span>
+                                    SHOPPETCARE
+                                </span>
+
+                                <strong>
+                                    @theme
+                                </strong>
+
+                            </div>
+
+
+                            <div class="theme-footer">
+
+                                <span>
+                                    @theme
+                                </span>
+
+
+                                @if (locked)
+                                {
+                                    <small class="locked">
+                                        Premium
+                                    </small>
+                                }
+                                else if (IsCurrentTheme(theme))
+                                {
+                                    <small>
+                                        Selected
+                                    </small>
+                                }
+
+                            </div>
+
+                        </button>
+                    }
+
+                </div>
+
+            </section>
+
+        </main>
     }
 
 </div>
 
-@code {
-    [Parameter] public int PetId { get; set; }
 
-    PetProfile? pet;
-    string qrDataUri = "";
-    string themeClass = "theme-classic";
-    bool isPremium;
-    string Initial = "?";
+<style>
+
+    .sc-petcard-page {
+        min-height: 100vh;
+        background: #FAF9F6;
+        color: #173D3D;
+    }
+
+
+    .sc-petcard-shell {
+        width: min(1180px,calc(100% - 40px));
+        margin: 0 auto;
+    }
+
+
+    .sc-petcard-page svg {
+        width: 1em;
+        height: 1em;
+        fill: currentColor;
+    }
+
+
+    .sc-petcard-header {
+        padding: 37px 0;
+        border-bottom: 1px solid #DDE7E4;
+        background: linear-gradient( 135deg, #F3FAF8, #FFFDF8 );
+    }
+
+
+    .sc-petcard-header-inner {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 25px;
+    }
+
+
+        .sc-petcard-header-inner > div:first-child > span,
+        .sc-petcard-themes .eyebrow {
+            color: #2F9098;
+            font-size: .58rem;
+            font-weight: 900;
+            letter-spacing: .1em;
+        }
+
+
+    .sc-petcard-header h1 {
+        margin: 5px 0 0;
+        color: #173D3D;
+        font-size: 2rem;
+        font-weight: 900;
+        letter-spacing: -.035em;
+    }
+
+
+    .sc-petcard-header p {
+        margin: 5px 0 0;
+        color: #7C8B86;
+        font-size: .68rem;
+    }
+
+
+    .sc-petcard-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+
+        .sc-petcard-actions a {
+            min-height: 38px;
+            padding: 0 11px;
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #D5DFDC;
+            border-radius: 8px;
+            background: #FFFFFF;
+            color: #52625C;
+            font-size: .61rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+
+    .sc-petcard-content {
+        padding: 27px 0 80px;
+    }
+
+
+    .sc-petcard-message {
+        margin-bottom: 13px;
+        padding: 11px 13px;
+        border: 1px solid #B8DDCF;
+        border-radius: 9px;
+        background: #EFFAF5;
+        color: #28664D;
+        font-size: .66rem;
+    }
+
+
+    .sc-petcard-layout {
+        display: grid;
+        grid-template-columns: minmax(0,1fr) 285px;
+        gap: 18px;
+        align-items: start;
+    }
+
+
+    .sc-petcard-public {
+        margin-top: 12px;
+        padding: 13px 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        border: 1px solid #DCE6E3;
+        border-radius: 12px;
+        background: #FFFFFF;
+    }
+
+
+        .sc-petcard-public > div {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+
+            .sc-petcard-public > div > svg {
+                color: #2F9098;
+                font-size: 1rem;
+            }
+
+
+        .sc-petcard-public strong,
+        .sc-petcard-public small {
+            display: block;
+        }
+
+
+        .sc-petcard-public strong {
+            color: #173D3D;
+            font-size: .66rem;
+        }
+
+
+        .sc-petcard-public small {
+            margin-top: 2px;
+            color: #84918D;
+            font-size: .56rem;
+        }
+
+
+        .sc-petcard-public > a {
+            color: #267C83;
+            font-size: .61rem;
+            font-weight: 850;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+
+    .sc-petcard-side {
+        padding: 20px;
+        border: 1px solid #DDE7E4;
+        border-radius: 17px;
+        background: #FFFFFF;
+        box-shadow: 0 9px 27px rgba(23,61,61,.05);
+    }
+
+
+        .sc-petcard-side .plan {
+            color: #2F9098;
+            font-size: .53rem;
+            font-weight: 900;
+            letter-spacing: .09em;
+        }
+
+
+            .sc-petcard-side .plan.premium {
+                color: #9B7417;
+            }
+
+
+        .sc-petcard-side h2 {
+            margin: 5px 0 0;
+            color: #173D3D;
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+
+        .sc-petcard-side > p {
+            margin: 6px 0 0;
+            color: #788782;
+            font-size: .62rem;
+            line-height: 1.5;
+        }
+
+
+    .sc-petcard-side-links {
+        margin-top: 16px;
+        padding-top: 13px;
+        display: grid;
+        gap: 6px;
+        border-top: 1px solid #EDF1EF;
+    }
+
+
+        .sc-petcard-side-links a {
+            min-height: 37px;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            border: 1px solid #E0E7E4;
+            border-radius: 8px;
+            color: #596A64;
+            font-size: .59rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+
+            .sc-petcard-side-links a:hover {
+                border-color: #BED8D3;
+                background: #F5FAF8;
+                color: #267C83;
+            }
+
+
+        .sc-petcard-side-links svg {
+            color: #2F9098;
+        }
+
+
+    .sc-petcard-upgrade {
+        margin-top: 17px;
+        padding: 15px;
+        border-radius: 12px;
+        background: linear-gradient( 135deg, #FFF9E6, #FFF0BD );
+        text-align: center;
+    }
+
+
+        .sc-petcard-upgrade > span,
+        .sc-petcard-upgrade > strong,
+        .sc-petcard-upgrade > small {
+            display: block;
+        }
+
+
+        .sc-petcard-upgrade > span {
+            color: #806212;
+            font-size: .49rem;
+            font-weight: 900;
+            letter-spacing: .08em;
+        }
+
+
+        .sc-petcard-upgrade > strong {
+            margin-top: 3px;
+            color: #173D3D;
+            font-size: 1.75rem;
+            font-weight: 950;
+        }
+
+
+        .sc-petcard-upgrade > small {
+            color: #796733;
+            font-size: .53rem;
+        }
+
+
+        .sc-petcard-upgrade > a {
+            min-height: 38px;
+            margin-top: 10px;
+            padding: 0 13px;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 8px;
+            background: #173D3D;
+            color: #FFFFFF;
+            font-size: .6rem;
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+
+    .sc-petcard-themes {
+        margin-top: 30px;
+    }
+
+
+        .sc-petcard-themes h2 {
+            margin: 4px 0 0;
+            font-size: 1.25rem;
+            font-weight: 900;
+        }
+
+
+        .sc-petcard-themes > p {
+            margin: 5px 0 0;
+            color: #82908B;
+            font-size: .63rem;
+        }
+
+
+    .sc-petcard-theme-grid {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: repeat(5,minmax(0,1fr));
+        gap: 9px;
+    }
+
+
+    .sc-petcard-theme {
+        padding: 8px;
+        border: 1px solid #DCE5E2;
+        border-radius: 11px;
+        background: #FFFFFF;
+        text-align: left;
+        cursor: pointer;
+    }
+
+
+        .sc-petcard-theme.selected {
+            border-color: #2F9098;
+            box-shadow: 0 0 0 2px rgba(47,144,152,.10);
+        }
+
+
+        .sc-petcard-theme.locked {
+            opacity: .6;
+        }
+
+
+    .sc-petcard-theme-preview {
+        height: 72px;
+        padding: 9px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        border-radius: 8px;
+        background: linear-gradient( 135deg, #F7FFFF, #DDF3F1 );
+    }
+
+
+        .sc-petcard-theme-preview.theme-ocean {
+            background: linear-gradient( 135deg, #EFFCFE, #BEE8ED );
+        }
+
+
+        .sc-petcard-theme-preview.theme-sunset {
+            background: linear-gradient( 135deg, #FFF7F2, #FFD7C6 );
+        }
+
+
+        .sc-petcard-theme-preview.theme-mint {
+            background: linear-gradient( 135deg, #F2FBF5, #CBE7D4 );
+        }
+
+
+        .sc-petcard-theme-preview.theme-royal {
+            background: linear-gradient( 135deg, #F7F4FF, #DDD2F8 );
+        }
+
+
+        .sc-petcard-theme-preview span {
+            font-size: .4rem;
+            font-weight: 900;
+        }
+
+
+        .sc-petcard-theme-preview strong {
+            font-size: .66rem;
+        }
+
+
+    .theme-footer {
+        margin-top: 6px;
+        display: flex;
+        justify-content: space-between;
+        gap: 5px;
+    }
+
+
+        .theme-footer > span {
+            color: #53625D;
+            font-size: .59rem;
+            font-weight: 850;
+        }
+
+
+        .theme-footer small {
+            color: #2F9098;
+            font-size: .48rem;
+        }
+
+
+            .theme-footer small.locked {
+                color: #A37817;
+            }
+
+
+    .sc-petcard-error {
+        margin-top: 60px;
+        padding: 30px;
+        border-radius: 15px;
+        background: #FFFFFF;
+    }
+
+
+    @@media (max-width: 900px) {
+
+        .sc-petcard-layout {
+            grid-template-columns: 1fr;
+        }
+
+
+        .sc-petcard-theme-grid {
+            grid-template-columns: repeat(3,minmax(0,1fr));
+        }
+    }
+
+
+    @@media (max-width: 650px) {
+
+        .sc-petcard-shell {
+            width: calc(100% - 24px);
+        }
+
+
+        .sc-petcard-header-inner,
+        .sc-petcard-public {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+
+        .sc-petcard-theme-grid {
+            grid-template-columns: repeat(2,minmax(0,1fr));
+        }
+    }
+
+</style>
+
+
+@code {
+
+    [Parameter]
+    public int PetId { get; set; }
+
+
+    private PetProfile? pet;
+
+
+    private List<PetHealthRecord> healthRecords =
+        new();
+
+
+    private string ownerName =
+        "Pet Owner";
+
+
+    private string photoUrl =
+        string.Empty;
+
+
+    private string qrDataUri =
+        string.Empty;
+
+
+    private string vaccinationStatus =
+        "No Record";
+
+
+    private bool isPremium;
+
+
+    private string message =
+        string.Empty;
+
 
     protected override async Task OnParametersSetAsync()
     {
         await Auth.InitializeAsync();
 
-        var userId = Auth.CurrentUser?.Id ?? 0;
-        pet = Db.GetPetById(PetId);
 
-        if (pet == null || pet.UserId != userId) { pet = null; return; }
+        var userId =
+            Auth.CurrentUser?.Id
+            ??
+            0;
 
-        isPremium = Auth.IsPremium;
-        qrDataUri = Cards.GenerateQrDataUri(pet.CardId);
-        themeClass = Cards.GetThemeCssClass(pet.CardTheme);
 
-        Initial = string.IsNullOrEmpty(pet.PetName)
-            ? "?"
-            : pet.PetName.Substring(0, 1).ToUpperInvariant();
+        pet =
+            Db.GetPetById(
+                PetId);
+
+
+        if (pet is null ||
+            pet.UserId != userId)
+        {
+            pet =
+                null;
+
+            return;
+        }
+
+
+        isPremium =
+            Auth.IsPremium;
+
+
+        ownerName =
+            string.IsNullOrWhiteSpace(
+                Auth.CurrentUser?.FullName)
+                ? "Pet Owner"
+                : Auth.CurrentUser!.FullName;
+
+
+        photoUrl =
+            FileStorage.GetImageUrl(
+                "pets",
+                pet.Id)
+            ??
+            string.Empty;
+
+
+        healthRecords =
+            Db.GetHealthRecords(
+                pet.Id)
+            ??
+            new List<PetHealthRecord>();
+
+
+        vaccinationStatus =
+            GetVaccinationStatus();
+
+
+        qrDataUri =
+            Cards.GenerateQrDataUri(
+                pet.CardId,
+                Nav.BaseUri.TrimEnd('/'));
     }
+
+
+    private string GetVaccinationStatus()
+    {
+        var vaccination =
+            healthRecords
+                .Where(
+                    record =>
+                        string.Equals(
+                            record.RecordType,
+                            "Vaccination",
+                            StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(
+                    record =>
+                        record.RecordDate)
+                .FirstOrDefault();
+
+
+        if (vaccination is null)
+        {
+            return "No Record";
+        }
+
+
+        if (!vaccination.NextDueDate.HasValue)
+        {
+            return "Recorded";
+        }
+
+
+        return
+            vaccination.NextDueDate.Value.Date <
+            DateTime.Today
+                ? "Due"
+                : "Up to Date";
+    }
+
+
+    private void SelectTheme(
+        string theme)
+    {
+        if (pet is null ||
+            Auth.CurrentUser is null)
+        {
+            return;
+        }
+
+
+        if (!Cards.IsThemeAllowed(
+            theme,
+            isPremium))
+        {
+            Nav.NavigateTo(
+                "/premium");
+
+            return;
+        }
+
+
+        var updated =
+            Db.SetCardTheme(
+                pet.Id,
+                Auth.CurrentUser.Id,
+                theme);
+
+
+        if (!updated)
+        {
+            message =
+                "The Pet ID theme could not be changed.";
+
+            return;
+        }
+
+
+        pet.CardTheme =
+            theme;
+
+
+        message =
+            $"{theme} Pet ID theme selected.";
+    }
+
+
+    private bool IsCurrentTheme(
+        string theme)
+    {
+        var current =
+            string.IsNullOrWhiteSpace(
+                pet?.CardTheme)
+                ? "Classic"
+                : pet!.CardTheme!;
+
+
+        return
+            string.Equals(
+                current,
+                theme,
+                StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private string GetThemeButtonClass(
+        string theme,
+        bool locked)
+    {
+        var css =
+            "sc-petcard-theme";
+
+
+        if (IsCurrentTheme(
+            theme))
+        {
+            css +=
+                " selected";
+        }
+
+
+        if (locked)
+        {
+            css +=
+                " locked";
+        }
+
+
+        return css;
+    }
+
+
+    private string GetThemePreviewClass(
+        string theme)
+    {
+        return
+            "sc-petcard-theme-preview " +
+            Cards.GetThemeCssClass(
+                theme);
+    }
+
 }

@@ -1,72 +1,287 @@
 ﻿@page "/pet/card/{CardId}"
+
 @inject DatabaseService Db
+@inject CardService Cards
+@inject FileStorageService FileStorage
+@inject NavigationManager Nav
 
-<PageTitle>@(pet?.PetName ?? "Pet") — Public Card</PageTitle>
+<PageTitle>@(pet?.PetName ?? "Pet") Pet ID | ShoppetCare</PageTitle>
 
-<div class="container mt-4" style="max-width: 520px;">
 
-    @if (pet == null)
-    {
-        <div class="alert alert-warning">
-            This Pet ID card is not valid or has been removed.
-        </div>
-    }
-    else
-    {
-        <div class="pet-card theme-classic">
-            <div class="pet-card-header">
-                <span>SHOPPETCARE · PET ID</span>
-            </div>
+<div class="sc-publicpet-page">
 
-            <div class="pet-card-body">
-                <div class="pet-photo-wrap">
-                    <div class="pet-photo-placeholder">@Initial</div>
-                </div>
+    <main class="sc-publicpet-wrap">
 
-                <div class="pet-info">
-                    <h3>@pet.PetName</h3>
-                    <p>@pet.Species · @pet.Breed</p>
-                    @if (!string.IsNullOrEmpty(pet.Age))
-                    {
-                        <p>Age: @pet.Age</p>
-                    }
-                </div>
-            </div>
+        @if (pet is null)
+        {
+            <section class="sc-publicpet-error">
 
-            <div class="pet-card-footer">
+                <h2>
+                    Pet ID unavailable
+                </h2>
+
+                <p>
+                    This ShoppetCare Pet ID is invalid
+                    or has been removed.
+                </p>
+
+                <a href="/">
+                    Visit ShoppetCare
+                </a>
+
+            </section>
+        }
+        else
+        {
+            <header class="sc-publicpet-heading">
+
+                <img src="/shoppetlogo.png"
+                     alt="ShoppetCare" />
+
+
                 <div>
-                    <small>Card ID</small>
-                    <div><code>@pet.CardId</code></div>
+
+                    <strong>
+                        ShoppetCare
+                    </strong>
+
+                    <span>
+                        Verified Digital Pet Identity
+                    </span>
+
                 </div>
-                <div class="text-end">
-                    <small>Issued</small>
-                    <div>@pet.CardIssuedAt?.ToString("MMM yyyy")</div>
+
+            </header>
+
+
+            <PetIdCardView Pet="@pet"
+                           OwnerName=""
+                           PhotoUrl="@photoUrl"
+                           QrDataUri="@qrDataUri"
+                           IsPremium="@isPremium"
+                           VaccinationStatus="Private"
+                           HealthRecordCount="0"
+                           PublicMode="true" />
+
+
+            <section class="sc-publicpet-notice">
+
+                <span class="icon">
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#shield-check"></use>
+                    </svg>
+
+                </span>
+
+
+                <div>
+
+                    <strong>
+                        Public Pet ID
+                    </strong>
+
+                    <p>
+                        This page confirms a ShoppetCare
+                        Digital Pet Identity. Owner details
+                        and private health information are
+                        intentionally protected.
+                    </p>
+
                 </div>
+
+            </section>
+
+
+            <div class="sc-publicpet-actions">
+
+                <a href="/">
+                    Visit ShoppetCare
+                </a>
+
             </div>
-        </div>
+        }
 
-        <p class="text-muted mt-3">
-            <small>This is a public ShoppetCare card. To manage this pet, log in to your ShoppetCare account.</small>
-        </p>
-
-        <a href="/" class="btn btn-secondary">Go to ShoppetCare</a>
-    }
+    </main>
 
 </div>
 
-@code {
-    [Parameter] public string CardId { get; set; } = "";
 
-    PetProfile? pet;
-    string Initial = "?";
+<style>
+
+    .sc-publicpet-page {
+        min-height: calc(100vh - 120px);
+        padding: 42px 20px 75px;
+        background: radial-gradient( circle at 50% 16%, rgba(47,144,152,.07), transparent 34% ), linear-gradient( 180deg, #F4FAF8, #FAF9F6 );
+    }
+
+
+    .sc-publicpet-wrap {
+        width: min(820px,100%);
+        margin: 0 auto;
+    }
+
+
+    .sc-publicpet-page svg {
+        width: 1em;
+        height: 1em;
+        fill: currentColor;
+    }
+
+
+    .sc-publicpet-heading {
+        margin-bottom: 17px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+    }
+
+
+        .sc-publicpet-heading img {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+        }
+
+
+        .sc-publicpet-heading strong,
+        .sc-publicpet-heading span {
+            display: block;
+        }
+
+
+        .sc-publicpet-heading strong {
+            color: #173D3D;
+            font-size: .9rem;
+            font-weight: 950;
+        }
+
+
+        .sc-publicpet-heading span {
+            margin-top: 2px;
+            color: #7D8C87;
+            font-size: .53rem;
+        }
+
+
+    .sc-publicpet-notice {
+        margin-top: 14px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        border: 1px solid #DCE6E3;
+        border-radius: 12px;
+        background: #FFFFFF;
+        box-shadow: 0 7px 20px rgba(23,61,61,.04);
+    }
+
+
+        .sc-publicpet-notice .icon {
+            width: 37px;
+            height: 37px;
+            flex: 0 0 37px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            background: #EAF5F5;
+            color: #2F9098;
+        }
+
+
+        .sc-publicpet-notice strong {
+            color: #173D3D;
+            font-size: .66rem;
+        }
+
+
+        .sc-publicpet-notice p {
+            max-width: 650px;
+            margin: 3px 0 0;
+            color: #7F8D88;
+            font-size: .58rem;
+            line-height: 1.5;
+        }
+
+
+    .sc-publicpet-actions {
+        margin-top: 14px;
+        text-align: center;
+    }
+
+
+        .sc-publicpet-actions a {
+            color: #267C83;
+            font-size: .62rem;
+            font-weight: 850;
+            text-decoration: none;
+        }
+
+
+    .sc-publicpet-error {
+        margin-top: 50px;
+        padding: 30px;
+        border: 1px solid #DDE7E4;
+        border-radius: 15px;
+        background: #FFFFFF;
+        text-align: center;
+    }
+
+</style>
+
+
+@code {
+
+    [Parameter]
+    public string CardId { get; set; }
+        = string.Empty;
+
+
+    private PetProfile? pet;
+
+
+    private bool isPremium;
+
+
+    private string photoUrl =
+        string.Empty;
+
+
+    private string qrDataUri =
+        string.Empty;
+
 
     protected override void OnParametersSet()
     {
-        pet = Db.GetPetByCardId(CardId);
+        pet =
+            Db.GetPetByCardId(
+                CardId);
 
-        if (pet != null && !string.IsNullOrEmpty(pet.PetName))
+
+        if (pet is null)
         {
-            Initial = pet.PetName.Substring(0, 1).ToUpperInvariant();
+            return;
         }
+
+
+        isPremium =
+            Db.IsUserPremium(
+                pet.UserId);
+
+
+        photoUrl =
+            FileStorage.GetImageUrl(
+                "pets",
+                pet.Id)
+            ??
+            string.Empty;
+
+
+        qrDataUri =
+            Cards.GenerateQrDataUri(
+                pet.CardId,
+                Nav.BaseUri.TrimEnd('/'));
     }
+
 }

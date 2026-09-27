@@ -1,0 +1,1467 @@
+﻿@page "/pet/{PetId:int}/records"
+@rendermode InteractiveServer
+
+@inject AuthService Auth
+@inject DatabaseService Db
+@inject NavigationManager Nav
+
+<PageTitle>@(pet?.PetName ?? "Pet") Health Records | ShoppetCare</PageTitle>
+
+
+<div class="sc-records-page">
+
+    @if (pet is null)
+    {
+        <div class="sc-records-shell">
+
+            <div class="sc-record-error">
+
+                <h2>
+                    Pet not found
+                </h2>
+
+                <p>
+                    This pet does not exist or you do not have
+                    permission to view its records.
+                </p>
+
+                <a href="/my-pets">
+                    Back to My Pets
+                </a>
+
+            </div>
+
+        </div>
+    }
+    else
+    {
+        <!-- =====================================================
+             HERO
+             ===================================================== -->
+
+        <section class="sc-records-hero">
+
+            <div class="sc-records-shell sc-records-hero-inner">
+
+                <div>
+
+                    <span class="sc-records-kicker">
+                        HEALTH RECORDS
+                    </span>
+
+                    <h1>
+                        @pet.PetName's health history
+                    </h1>
+
+                    <p>
+                        Keep vaccinations, checkups, medications,
+                        and other important pet-care records organized.
+                    </p>
+
+                </div>
+
+
+                <div class="sc-records-hero-actions">
+
+                    <a href="/pet/@PetId"
+                       class="secondary">
+
+                        Pet Details
+
+                    </a>
+
+                    <a href="/pet/@PetId/card"
+                       class="secondary">
+
+                        Pet ID
+
+                    </a>
+
+                    <a href="/my-pets"
+                       class="secondary">
+
+                        My Pets
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <main class="sc-records-shell sc-records-content">
+
+            <!-- =================================================
+                 STATUS
+                 ================================================= -->
+            @if (!string.IsNullOrWhiteSpace(message))
+            {
+                <div class="@(isError
+                                        ? "sc-record-message error"
+                                        : "sc-record-message success")">
+
+                    @message
+
+                </div>
+            }
+
+
+            <!-- =================================================
+                 PLAN STATUS
+                 ================================================= -->
+
+            <section class="sc-record-plan">
+
+                <div>
+
+                    @if (isPremium)
+                    {
+                        <span class="premium">
+                            PREMIUM · UNLIMITED
+                        </span>
+
+                        <strong>
+                            Unlimited health history
+                        </strong>
+
+                        <p>
+                            Your Premium plan allows unlimited
+                            health records for this pet.
+                        </p>
+                    }
+                    else
+                    {
+                        <span>
+                            FREE PLAN
+                        </span>
+
+                        <strong>
+                            @records.Count of 5 records used
+                        </strong>
+
+                        <p>
+                            You can add up to five records for this pet.
+                            Existing records can always be edited or deleted.
+                        </p>
+
+                        <div class="sc-record-progress">
+
+                            <div style="@($"width:{FreeUsagePercent}%")">
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+
+
+                @if (CanAddRecord)
+                {
+                    <button type="button"
+                            class="sc-record-add"
+                            @onclick="OpenAddForm">
+
+                        + Add Health Record
+
+                    </button>
+                }
+                else
+                {
+                    <a href="/premium"
+                       class="sc-record-upgrade">
+
+                        Upgrade for Unlimited Records
+
+                    </a>
+                }
+
+            </section>
+
+
+            <!-- =================================================
+                 FORM
+                 ================================================= -->
+            @if (showForm)
+            {
+                <section class="sc-record-form">
+
+                    <div class="sc-record-form-head">
+
+                        <div>
+
+                            <span class="sc-records-kicker dark">
+                                @(editingId.HasValue
+                                    ? "EDIT RECORD"
+                                    : "NEW HEALTH RECORD")
+                            </span>
+
+                            <h2>
+                                @(editingId.HasValue
+                                    ? "Update health record"
+                                    : "Add health record")
+                            </h2>
+
+                        </div>
+
+
+                        <button type="button"
+                                class="close"
+                                @onclick="CloseForm">
+
+                            ×
+
+                        </button>
+
+                    </div>
+
+
+                    <div class="sc-record-form-grid">
+
+                        <div class="field">
+
+                            <label>
+                                Record Type *
+                            </label>
+
+                            <select @bind="formRecordType">
+
+                                <option value="Checkup">
+                                    Checkup
+                                </option>
+
+                                <option value="Vaccination">
+                                    Vaccination
+                                </option>
+
+                                <option value="Deworming">
+                                    Deworming
+                                </option>
+
+                                <option value="Medication">
+                                    Medication
+                                </option>
+
+                                <option value="Surgery">
+                                    Surgery
+                                </option>
+
+                                <option value="Other">
+                                    Other
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label>
+                                Record Date *
+                            </label>
+
+                            <input type="date"
+                                   @bind="formRecordDate" />
+
+                        </div>
+
+
+                        <div class="field wide">
+
+                            <label>
+                                Title *
+                            </label>
+
+                            <input type="text"
+                                   maxlength="150"
+                                   @bind="formTitle"
+                                   placeholder="Example: Annual Anti-Rabies Vaccination" />
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label>
+                                Veterinarian
+                            </label>
+
+                            <input type="text"
+                                   maxlength="100"
+                                   @bind="formVetName"
+                                   placeholder="Example: Dr. Maria Santos" />
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label>
+                                Next Due Date
+                            </label>
+
+                            <input type="date"
+                                   @bind="formNextDueDate" />
+
+                        </div>
+
+
+                        <div class="field wide">
+
+                            <label>
+                                Notes
+                            </label>
+
+                            <textarea rows="4"
+                                      @bind="formNotes"
+                                      placeholder="Optional details about the visit, treatment, vaccine, or medication.">
+                            </textarea>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sc-record-form-actions">
+
+                        <button type="button"
+                                class="save"
+                                @onclick="SaveRecord">
+
+                            @(editingId.HasValue
+                                ? "Save Changes"
+                                : "Add Record")
+
+                        </button>
+
+                        <button type="button"
+                                class="cancel"
+                                @onclick="CloseForm">
+
+                            Cancel
+
+                        </button>
+
+                    </div>
+
+                </section>
+            }
+
+
+            <!-- =================================================
+                 FREE LIMIT CTA
+                 ================================================= -->
+            @if (!isPremium &&
+                             records.Count >= 5)
+            {
+                <section class="sc-record-limit">
+
+                    <div>
+
+                        <span>
+                            RECORD LIMIT REACHED
+                        </span>
+
+                        <h3>
+                            Your five free records are safe.
+                        </h3>
+
+                        <p>
+                            You can continue viewing, editing,
+                            and deleting them. Upgrade if you need
+                            to store additional health history.
+                        </p>
+
+                    </div>
+
+                    <a href="/premium">
+                        Upgrade for ₱49 Lifetime
+                    </a>
+
+                </section>
+            }
+
+
+            <!-- =================================================
+                 RECORD LIST
+                 ================================================= -->
+
+            <div class="sc-record-heading">
+
+                <div>
+
+                    <span class="sc-records-kicker dark">
+                        HISTORY
+                    </span>
+
+                    <h2>
+                        Health Records
+                    </h2>
+
+                </div>
+
+                <span>
+                    @records.Count
+                    @(records.Count == 1
+                        ? "record"
+                        : "records")
+                </span>
+
+            </div>
+
+
+            @if (records.Count == 0)
+            {
+                <div class="sc-record-empty">
+
+                    <div>
+                        <i class="bi bi-clipboard2-pulse"></i>
+                    </div>
+
+                    <h3>
+                        No health records yet.
+                    </h3>
+
+                    <p>
+                        Add @pet.PetName's first checkup,
+                        vaccination, medication, or other
+                        important health record.
+                    </p>
+
+                </div>
+            }
+            else
+            {
+                <div class="sc-record-list">
+
+                    @foreach (var record in records)
+                    {
+                        <article class="sc-record-card">
+
+                            <div class="sc-record-icon">
+
+                                <i class="@GetRecordIcon(record.RecordType)">
+                                </i>
+
+                            </div>
+
+
+                            <div class="sc-record-main">
+
+                                <div class="sc-record-meta">
+
+                                    <span>
+                                        @record.RecordType
+                                    </span>
+
+                                    <time>
+                                        @record.RecordDate.ToString("MMM d, yyyy")
+                                    </time>
+
+                                </div>
+
+
+                                <h3>
+                                    @record.Title
+                                </h3>
+
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                    record.VetName))
+                                {
+                                    <p>
+                                        Veterinarian:
+                                        <strong>
+                                            @record.VetName
+                                        </strong>
+                                    </p>
+                                }
+
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                    record.Notes))
+                                {
+                                    <p>
+                                        @record.Notes
+                                    </p>
+                                }
+
+
+                                @if (record.NextDueDate.HasValue)
+                                {
+                                    <div class="@GetDueClass(record)">
+
+                                        <i class="bi bi-calendar-event"></i>
+
+                                        Next due:
+                                        @record.NextDueDate.Value.ToString("MMM d, yyyy")
+
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div class="sc-record-actions">
+
+                                <button type="button"
+                                        @onclick="() => EditRecord(record)">
+
+                                    Edit
+
+                                </button>
+
+                                <button type="button"
+                                        class="delete"
+                                        @onclick="() => DeleteRecord(record)">
+
+                                    Delete
+
+                                </button>
+
+                            </div>
+
+                        </article>
+                    }
+
+                </div>
+            }
+
+        </main>
+    }
+
+</div>
+
+
+<style>
+
+    .sc-records-page {
+        min-height: 100vh;
+        background: #FAF9F6;
+        color: #172A28;
+    }
+
+    .sc-records-shell {
+        width: min(1100px, calc(100% - 40px));
+        margin: 0 auto;
+    }
+
+    .sc-records-hero {
+        padding: 52px 0;
+        background: radial-gradient( circle at 88% 10%, rgba(243,210,122,.20), transparent 28% ), linear-gradient( 135deg, #173D3D, #102E2D );
+        color: white;
+    }
+
+    .sc-records-hero-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 30px;
+    }
+
+    .sc-records-kicker {
+        color: #9ADBDD;
+        font-size: .63rem;
+        font-weight: 900;
+        letter-spacing: .11em;
+    }
+
+        .sc-records-kicker.dark {
+            color: #2F9098;
+        }
+
+    .sc-records-hero h1 {
+        margin: 7px 0 0;
+        font-size: clamp(2rem,4vw,3.6rem);
+        font-weight: 900;
+        letter-spacing: -.045em;
+    }
+
+    .sc-records-hero p {
+        max-width: 620px;
+        margin: 11px 0 0;
+        color: rgba(255,255,255,.65);
+    }
+
+    .sc-records-hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+    }
+
+        .sc-records-hero-actions .secondary {
+            min-height: 39px;
+            padding: 0 12px;
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,.25);
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            font-size: .66rem;
+            font-weight: 800;
+        }
+
+    .sc-records-content {
+        padding: 25px 0 80px;
+    }
+
+    .sc-record-message {
+        margin-bottom: 15px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: .7rem;
+    }
+
+        .sc-record-message.success {
+            background: #EFFAF5;
+            border: 1px solid #B8DDCF;
+            color: #28664D;
+        }
+
+        .sc-record-message.error {
+            background: #FFF3F3;
+            border: 1px solid #F2B8B8;
+            color: #9B2C2C;
+        }
+
+    .sc-record-plan {
+        padding: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        border: 1px solid #DDE7E4;
+        border-radius: 15px;
+        background: white;
+    }
+
+        .sc-record-plan span {
+            color: #2F9098;
+            font-size: .58rem;
+            font-weight: 900;
+            letter-spacing: .08em;
+        }
+
+            .sc-record-plan span.premium {
+                color: #9B7417;
+            }
+
+        .sc-record-plan strong,
+        .sc-record-plan p {
+            display: block;
+        }
+
+        .sc-record-plan strong {
+            margin-top: 4px;
+            color: #173D3D;
+            font-size: .8rem;
+        }
+
+        .sc-record-plan p {
+            margin: 4px 0 0;
+            color: #7D8B86;
+            font-size: .65rem;
+        }
+
+    .sc-record-progress {
+        width: 230px;
+        max-width: 100%;
+        height: 6px;
+        margin-top: 10px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #E9EEEC;
+    }
+
+        .sc-record-progress div {
+            height: 100%;
+            border-radius: inherit;
+            background: #2F9098;
+        }
+
+    .sc-record-add,
+    .sc-record-upgrade {
+        min-height: 42px;
+        padding: 0 14px;
+        display: inline-flex;
+        align-items: center;
+        border-radius: 9px;
+        text-decoration: none;
+        font-size: .68rem;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+
+    .sc-record-add {
+        border: 1px solid #2F9098;
+        background: #2F9098;
+        color: white;
+    }
+
+    .sc-record-upgrade {
+        border: 1px solid #E4C865;
+        background: #F3D27A;
+        color: #173D3D;
+    }
+
+    .sc-record-form {
+        margin-top: 17px;
+        padding: 22px;
+        border: 1px solid #DDE7E4;
+        border-radius: 16px;
+        background: white;
+    }
+
+    .sc-record-form-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+    }
+
+    .sc-record-form h2 {
+        margin: 4px 0 0;
+        font-size: 1.25rem;
+        color: #173D3D;
+    }
+
+    .sc-record-form-head .close {
+        width: 36px;
+        height: 36px;
+        border: 1px solid #DCE4E2;
+        border-radius: 8px;
+        background: white;
+    }
+
+    .sc-record-form-grid {
+        margin-top: 17px;
+        display: grid;
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 12px;
+    }
+
+        .sc-record-form-grid .field.wide {
+            grid-column: 1/-1;
+        }
+
+        .sc-record-form-grid label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: .65rem;
+            font-weight: 850;
+            color: #485853;
+        }
+
+        .sc-record-form-grid input,
+        .sc-record-form-grid select,
+        .sc-record-form-grid textarea {
+            width: 100%;
+            border: 1px solid #D0DCD8;
+            border-radius: 8px;
+            background: white;
+            color: #172A28;
+        }
+
+        .sc-record-form-grid input,
+        .sc-record-form-grid select {
+            min-height: 43px;
+            padding: 0 11px;
+        }
+
+        .sc-record-form-grid textarea {
+            padding: 11px;
+            resize: vertical;
+        }
+
+    .sc-record-form-actions {
+        margin-top: 16px;
+        display: flex;
+        gap: 7px;
+    }
+
+        .sc-record-form-actions button {
+            min-height: 40px;
+            padding: 0 13px;
+            border-radius: 8px;
+            font-size: .67rem;
+            font-weight: 850;
+        }
+
+        .sc-record-form-actions .save {
+            border: 1px solid #2F9098;
+            background: #2F9098;
+            color: white;
+        }
+
+        .sc-record-form-actions .cancel {
+            border: 1px solid #D9E1DF;
+            background: white;
+            color: #60706A;
+        }
+
+    .sc-record-limit {
+        margin-top: 17px;
+        padding: 19px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
+        border: 1px solid #E8D69B;
+        border-radius: 14px;
+        background: #FFF8DF;
+    }
+
+        .sc-record-limit span {
+            color: #806212;
+            font-size: .56rem;
+            font-weight: 900;
+            letter-spacing: .09em;
+        }
+
+        .sc-record-limit h3 {
+            margin: 4px 0 0;
+            color: #564510;
+            font-size: .88rem;
+        }
+
+        .sc-record-limit p {
+            margin: 5px 0 0;
+            max-width: 570px;
+            color: #796833;
+            font-size: .64rem;
+        }
+
+        .sc-record-limit a {
+            min-height: 40px;
+            padding: 0 13px;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 8px;
+            background: #F3D27A;
+            color: #173D3D;
+            font-size: .65rem;
+            font-weight: 900;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+    .sc-record-heading {
+        margin: 27px 0 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+    }
+
+        .sc-record-heading h2 {
+            margin: 4px 0 0;
+            color: #173D3D;
+            font-size: 1.35rem;
+        }
+
+        .sc-record-heading > span {
+            color: #87948F;
+            font-size: .65rem;
+        }
+
+    .sc-record-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .sc-record-card {
+        padding: 17px;
+        display: grid;
+        grid-template-columns: auto minmax(0,1fr) auto;
+        gap: 14px;
+        align-items: start;
+        border: 1px solid #DDE7E4;
+        border-radius: 14px;
+        background: white;
+    }
+
+    .sc-record-icon {
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 11px;
+        background: #EAF5F5;
+        color: #2F9098;
+    }
+
+    .sc-record-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        color: #899691;
+        font-size: .59rem;
+    }
+
+        .sc-record-meta span {
+            color: #2F9098;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+    .sc-record-main h3 {
+        margin: 5px 0 0;
+        color: #173D3D;
+        font-size: .84rem;
+    }
+
+    .sc-record-main p {
+        margin: 5px 0 0;
+        color: #71807B;
+        font-size: .65rem;
+        line-height: 1.5;
+    }
+
+    .sc-record-due,
+    .sc-record-due.overdue {
+        margin-top: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: .61rem;
+    }
+
+    .sc-record-due {
+        color: #567268;
+    }
+
+        .sc-record-due.overdue {
+            color: #A04343;
+        }
+
+    .sc-record-actions {
+        display: flex;
+        gap: 5px;
+    }
+
+        .sc-record-actions button {
+            min-height: 34px;
+            padding: 0 9px;
+            border: 1px solid #D8E1DE;
+            border-radius: 7px;
+            background: white;
+            color: #586862;
+            font-size: .6rem;
+            font-weight: 800;
+        }
+
+        .sc-record-actions .delete {
+            border-color: #EFCACA;
+            color: #A04343;
+        }
+
+    .sc-record-empty {
+        padding: 60px 20px;
+        text-align: center;
+        border: 1px dashed #D8E1DE;
+        border-radius: 15px;
+        background: white;
+    }
+
+        .sc-record-empty > div {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            background: #EAF5F5;
+            color: #2F9098;
+            font-size: 1.25rem;
+        }
+
+        .sc-record-empty h3 {
+            margin: 13px 0 0;
+            color: #173D3D;
+            font-size: .9rem;
+        }
+
+        .sc-record-empty p {
+            max-width: 470px;
+            margin: 5px auto 0;
+            color: #82908B;
+            font-size: .66rem;
+        }
+
+    .sc-record-error {
+        margin-top: 60px;
+        padding: 30px;
+        border-radius: 15px;
+        background: white;
+    }
+
+    @@media (max-width: 700px) {
+
+        .sc-records-hero-inner,
+        .sc-record-plan,
+        .sc-record-limit {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .sc-record-form-grid {
+            grid-template-columns: 1fr;
+        }
+
+            .sc-record-form-grid .field.wide {
+                grid-column: auto;
+            }
+
+        .sc-record-card {
+            grid-template-columns: auto minmax(0,1fr);
+        }
+
+        .sc-record-actions {
+            grid-column: 2;
+        }
+    }
+
+</style>
+
+
+@code {
+
+    [Parameter]
+    public int PetId { get; set; }
+
+
+    private PetProfile? pet;
+
+    private List<PetHealthRecord> records =
+        new();
+
+
+    private bool isPremium;
+
+    private bool showForm;
+
+    private int? editingId;
+
+
+    private string formRecordType =
+        "Checkup";
+
+    private string formTitle =
+        string.Empty;
+
+    private string formNotes =
+        string.Empty;
+
+    private string formVetName =
+        string.Empty;
+
+  private DateTime formRecordDate =
+    DateTime.Today;
+
+private DateTime? formNextDueDate;
+
+
+    private string message =
+        string.Empty;
+
+    private bool isError;
+
+
+    private bool CanAddRecord =>
+        isPremium ||
+        records.Count < 5;
+
+
+    private int FreeUsagePercent =>
+        Math.Min(
+            100,
+            (int)Math.Round(
+                records.Count / 5.0 * 100));
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Auth.InitializeAsync();
+
+
+        var userId =
+            Auth.CurrentUser?.Id ?? 0;
+
+
+        pet =
+            Db.GetPetById(
+                PetId);
+
+
+        if (pet is null ||
+            pet.UserId != userId)
+        {
+            pet =
+                null;
+
+            return;
+        }
+
+
+        isPremium =
+            Auth.IsPremium;
+
+
+        LoadRecords();
+    }
+
+
+    private void LoadRecords()
+    {
+        records =
+            Db.GetHealthRecords(
+                PetId)
+            ??
+            new List<PetHealthRecord>();
+    }
+
+
+    private void OpenAddForm()
+    {
+        if (!CanAddRecord)
+        {
+            ShowError(
+                "Your Free plan has reached its 5-record limit.");
+
+            return;
+        }
+
+
+        ResetForm();
+
+        showForm =
+            true;
+    }
+
+
+    private void EditRecord(
+        PetHealthRecord record)
+    {
+        editingId =
+            record.Id;
+
+
+        formRecordType =
+            record.RecordType;
+
+
+        formTitle =
+            record.Title;
+
+
+        formNotes =
+            record.Notes;
+
+
+        formVetName =
+            record.VetName;
+
+
+        formRecordDate =
+     record.RecordDate;
+
+
+        formNextDueDate =
+            record.NextDueDate;
+
+        showForm =
+            true;
+
+
+        message =
+            string.Empty;
+    }
+
+
+    private void SaveRecord()
+    {
+        if (pet is null ||
+            Auth.CurrentUser is null)
+        {
+            return;
+        }
+
+
+        formTitle =
+            formTitle.Trim();
+
+
+        if (string.IsNullOrWhiteSpace(
+            formTitle))
+        {
+            ShowError(
+                "Please enter a title for the health record.");
+
+            return;
+        }
+
+
+        try
+        {
+            // =====================================================
+            // UPDATE EXISTING RECORD
+            // =====================================================
+
+            if (editingId.HasValue)
+            {
+                var record =
+                    new PetHealthRecord
+                    {
+                        Id =
+                            editingId.Value,
+
+                        PetId =
+                            pet.Id,
+
+                        RecordType =
+                            formRecordType,
+
+                        Title =
+                            formTitle,
+
+                        Notes =
+                            formNotes.Trim(),
+
+                        RecordDate =
+                            formRecordDate,
+
+                        NextDueDate =
+                            formNextDueDate,
+
+                        VetName =
+                            formVetName.Trim()
+                    };
+
+
+                var updated =
+                    Db.UpdateHealthRecord(
+                        record,
+                        Auth.CurrentUser.Id);
+
+
+                if (!updated)
+                {
+                    ShowError(
+                        "The health record could not be updated.");
+
+                    return;
+                }
+
+
+                ShowSuccess(
+                    "Health record updated.");
+            }
+
+            // =====================================================
+            // CREATE NEW RECORD
+            // =====================================================
+
+            else
+            {
+                if (!CanAddRecord)
+                {
+                    ShowError(
+                        "Your Free plan has reached its 5-record limit.");
+
+                    return;
+                }
+
+
+                var record =
+                    new PetHealthRecord
+                    {
+                        PetId =
+                            pet.Id,
+
+                        RecordType =
+                            formRecordType,
+
+                        Title =
+                            formTitle,
+
+                        Notes =
+                            formNotes.Trim(),
+
+                        RecordDate =
+                            formRecordDate,
+
+                        NextDueDate =
+                            formNextDueDate,
+
+                        VetName =
+                            formVetName.Trim()
+                    };
+
+
+                Db.AddHealthRecord(
+                    record);
+
+
+                ShowSuccess(
+                    "Health record added.");
+            }
+
+
+            showForm =
+                false;
+
+
+            ResetForm();
+
+
+            LoadRecords();
+        }
+        catch (InvalidOperationException ex)
+        {
+            ShowError(
+                ex.Message);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Health Record] {ex}");
+
+
+            ShowError(
+                "The health record could not be saved.");
+        }
+    }
+
+    private void DeleteRecord(
+        PetHealthRecord record)
+    {
+        if (Auth.CurrentUser is null)
+            return;
+
+
+        try
+        {
+            var deleted =
+                Db.DeleteHealthRecordForOwner(
+                    record.Id,
+                    PetId,
+                    Auth.CurrentUser.Id);
+
+
+            if (!deleted)
+            {
+                ShowError(
+                    "The health record could not be deleted.");
+
+                return;
+            }
+
+
+            ShowSuccess(
+                "Health record deleted.");
+
+
+            LoadRecords();
+        }
+        catch
+        {
+            ShowError(
+                "The health record could not be deleted.");
+        }
+    }
+
+
+    private void CloseForm()
+    {
+        showForm =
+            false;
+
+
+        ResetForm();
+    }
+
+
+    private void ResetForm()
+    {
+        editingId =
+            null;
+
+
+        formRecordType =
+            "Checkup";
+
+
+        formTitle =
+            string.Empty;
+
+
+        formNotes =
+            string.Empty;
+
+
+        formVetName =
+            string.Empty;
+
+
+        formRecordDate =
+            DateTime.Today;
+
+
+        formNextDueDate =
+            null;
+    }
+
+    private string GetRecordIcon(
+        string recordType)
+    {
+        return recordType switch
+        {
+            "Vaccination" =>
+                "bi bi-shield-check",
+
+            "Medication" =>
+                "bi bi-capsule",
+
+            "Surgery" =>
+                "bi bi-hospital",
+
+            "Deworming" =>
+                "bi bi-shield-plus",
+
+            _ =>
+                "bi bi-clipboard2-pulse"
+        };
+    }
+
+
+    private string GetDueClass(
+        PetHealthRecord record)
+    {
+        return record.IsOverdue
+            ? "sc-record-due overdue"
+            : "sc-record-due";
+    }
+
+
+    private void ShowSuccess(
+        string text)
+    {
+        message =
+            text;
+
+        isError =
+            false;
+    }
+
+
+    private void ShowError(
+        string text)
+    {
+        message =
+            text;
+
+        isError =
+            true;
+    }
+}

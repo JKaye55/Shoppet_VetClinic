@@ -5,30 +5,46 @@ namespace Shoppet_VetClinic.Services
 {
     public class AuthService
     {
+        private const string UserIdKey = "userId";
+        private const string GuestModeKey = "guestMode";
+
         private readonly ProtectedSessionStorage _sessionStorage;
         private readonly DatabaseService _db;
 
+        private event Action? _stateChanged;
+
+        private bool _initialized;
+        private bool _initializing;
+
         public UserAccount? CurrentUser { get; private set; }
-        public bool IsLoggedIn => CurrentUser != null;
+
+        public bool IsLoggedIn => CurrentUser is not null;
+        public bool IsAuthenticated => CurrentUser is not null;
+        public bool IsGuest { get; private set; }
+        public bool IsSignedOut => !IsLoggedIn && !IsGuest;
 
         public bool IsAdmin =>
-            string.Equals(CurrentUser?.Role, "Admin",
-                StringComparison.OrdinalIgnoreCase);
+            string.Equals(CurrentUser?.Role, "Admin", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(CurrentUser?.Role, "SuperAdmin", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(CurrentUser?.Role, "Super Admin", StringComparison.OrdinalIgnoreCase);
 
         public bool IsClinicStaff =>
-            string.Equals(CurrentUser?.Role, "Clinic Staff",
+            string.Equals(
+                CurrentUser?.Role,
+                "Clinic Staff",
                 StringComparison.OrdinalIgnoreCase);
 
         public bool IsPetOwner =>
-            string.Equals(CurrentUser?.Role, "Pet Owner",
+            string.Equals(
+                CurrentUser?.Role,
+                "Pet Owner",
                 StringComparison.OrdinalIgnoreCase);
 
-        public bool IsPremium => CurrentUser?.IsPremium == true;
+        public bool IsPremium =>
+            CurrentUser?.IsPremium == true;
 
-        public bool CanAddMorePets => !IsPetOwner || IsPremium;
-
-        private Action? _listener;
-        private bool _initialized;
+        public bool CanAddMorePets =>
+            !IsPetOwner || IsPremium;
 
         public AuthService(
             ProtectedSessionStorage sessionStorage,
@@ -38,137 +54,324 @@ namespace Shoppet_VetClinic.Services
             _db = db;
         }
 
-        public void RegisterListener(Action listener) => _listener = listener;
-        public void UnregisterListener(Action listener) => _listener = null;
+        // =========================================================
+        // STATE LISTENERS
+        // =========================================================
+
+        public void RegisterListener(Action listener)
+        {
+            _stateChanged += listener;
+        }
+
+        public void UnregisterListener(Action listener)
+        {
+            _stateChanged -= listener;
+        }
+
+        private void NotifyStateChanged()
+        {
+            _stateChanged?.Invoke();
+        }
 
         // =========================================================
-        // Persistence — call this once on first render
+        // INITIALIZE SESSION
         // =========================================================
 
         public async Task InitializeAsync()
         {
-            if (_initialized)
+            if (_initialized || _initializing)
                 return;
+
+            _initializing = true;
 
             try
             {
-                var stored = await _sessionStorage.GetAsync<int>("userId");
+                var storedUser =
+                    await _sessionStorage.GetAsync<int>(UserIdKey);
 
-                if (stored.Success && stored.Value > 0)
+                if (storedUser.Success &&
+                    storedUser.Value > 0)
                 {
-                    var user = _db.GetUserById(stored.Value);
+                    var user =
+                        _db.GetUserById(storedUser.Value);
 
                     if (user is not null)
                     {
                         CurrentUser = user;
+                        IsGuest = false;
+
+                        _initialized = true;
+
+                        NotifyStateChanged();
+
+                        return;
                     }
                 }
 
-                // Only mark as initialized AFTER a successful read.
+                var storedGuest =
+                    await _sessionStorage.GetAsync<bool>(
+                        GuestModeKey);
+
+                CurrentUser = null;
+
+                IsGuest =
+                    storedGuest.Success &&
+                    storedGuest.Value;
+
                 _initialized = true;
 
-                _listener?.Invoke();
+                NotifyStateChanged();
             }
             catch
             {
-                // Prerender phase — ProtectedSessionStorage not available.
-                // Do NOT set _initialized = true, so we retry on the
-                // next interactive render.
+                // ProtectedSessionStorage is not available
+                // during prerender. Retry when interactive.
                 _initialized = false;
             }
+            finally
+            {
+                _initializing = false;
+            }
         }
-        public async Task LoginAsync(UserAccount user)
+
+        // =========================================================
+        // LOGIN
+        // =========================================================
+
+        public async Task LoginAsync(
+            UserAccount user)
         {
             CurrentUser = user;
 
+            IsGuest = false;
+
+            _initialized = true;
+
             try
             {
-                await _sessionStorage.SetAsync("userId", user.Id);
-            }
-            catch { /* ignore prerender errors */ }
+                await _sessionStorage.SetAsync(
+                    UserIdKey,
+                    user.Id);
 
-            _listener?.Invoke();
+                await _sessionStorage.DeleteAsync(
+                    GuestModeKey);
+            }
+            catch
+            {
+            }
+
+            NotifyStateChanged();
         }
+
+        // =========================================================
+        // GUEST MODE
+        // =========================================================
+
+        public async Task EnterGuestModeAsync()
+        {
+            CurrentUser = null;
+
+            IsGuest = true;
+
+            _initialized = true;
+
+            try
+            {
+                await _sessionStorage.DeleteAsync(
+                    UserIdKey);
+
+                await _sessionStorage.SetAsync(
+                    GuestModeKey,
+                    true);
+            }
+            catch
+            {
+            }
+
+            NotifyStateChanged();
+        }
+
+        public async Task ExitGuestModeAsync()
+        {
+            CurrentUser = null;
+
+            IsGuest = false;
+
+            _initialized = true;
+
+            try
+            {
+                await _sessionStorage.DeleteAsync(
+                    GuestModeKey);
+
+                await _sessionStorage.DeleteAsync(
+                    UserIdKey);
+            }
+            catch
+            {
+            }
+
+            NotifyStateChanged();
+        }
+
+        // =========================================================
+        // LOGOUT
+        // =========================================================
 
         public async Task LogoutAsync()
         {
             CurrentUser = null;
 
+            IsGuest = false;
+
+            _initialized = true;
+
             try
             {
-                await _sessionStorage.DeleteAsync("userId");
-            }
-            catch { /* ignore */ }
+                await _sessionStorage.DeleteAsync(
+                    UserIdKey);
 
-            _listener?.Invoke();
+                await _sessionStorage.DeleteAsync(
+                    GuestModeKey);
+            }
+            catch
+            {
+            }
+
+            NotifyStateChanged();
         }
 
-        /// <summary>
-        /// Legacy sync login — kept for backward compatibility with existing
-        /// code. Prefer LoginAsync for persistence.
-        /// </summary>
-        public void Login(UserAccount user)
+        // =========================================================
+        // OLD METHODS
+        //
+        // Keep these temporarily because some of your older
+        // Admin/Clinic components still use them.
+        // =========================================================
+
+        public void Login(
+            UserAccount user)
         {
             CurrentUser = user;
+
+            IsGuest = false;
+
+            _initialized = true;
+
             _ = PersistUserAsync(user.Id);
-            _listener?.Invoke();
+
+            NotifyStateChanged();
         }
 
         public void Logout()
         {
             CurrentUser = null;
+
+            IsGuest = false;
+
+            _initialized = true;
+
             _ = ClearPersistedAsync();
-            _listener?.Invoke();
+
+            NotifyStateChanged();
         }
 
-        private async Task PersistUserAsync(int userId)
+        private async Task PersistUserAsync(
+            int userId)
         {
-            try { await _sessionStorage.SetAsync("userId", userId); }
-            catch { }
+            try
+            {
+                await _sessionStorage.SetAsync(
+                    UserIdKey,
+                    userId);
+
+                await _sessionStorage.DeleteAsync(
+                    GuestModeKey);
+            }
+            catch
+            {
+            }
         }
 
         private async Task ClearPersistedAsync()
         {
-            try { await _sessionStorage.DeleteAsync("userId"); }
-            catch { }
+            try
+            {
+                await _sessionStorage.DeleteAsync(
+                    UserIdKey);
+
+                await _sessionStorage.DeleteAsync(
+                    GuestModeKey);
+            }
+            catch
+            {
+            }
         }
 
-        public void RefreshUser(UserAccount updated)
+        // =========================================================
+        // REFRESH USER
+        // =========================================================
+
+        public void RefreshUser(
+            UserAccount updated)
         {
             CurrentUser = updated;
-            _listener?.Invoke();
+
+            IsGuest = false;
+
+            NotifyStateChanged();
         }
 
-        public bool CanAccess(string requiredRole)
+        // =========================================================
+        // ROLE ACCESS
+        // =========================================================
+
+        public bool CanAccess(
+            string requiredRole)
         {
-            if (CurrentUser == null)
+            if (CurrentUser is null)
                 return false;
 
-            if (requiredRole == "Pet Owner")
-                return true;
-
-            if (requiredRole == "Clinic Staff" &&
-                (CurrentUser.Role == "Clinic Staff" ||
-                 CurrentUser.Role == "Admin" ||
-                 CurrentUser.Role == "SuperAdmin" ||
-                 CurrentUser.Role == "Super Admin"))
+            if (string.Equals(
+                    requiredRole,
+                    "Pet Owner",
+                    StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
 
-            if (requiredRole == "Admin" &&
-                (CurrentUser.Role == "Admin" ||
-                 CurrentUser.Role == "SuperAdmin" ||
-                 CurrentUser.Role == "Super Admin"))
+            if (string.Equals(
+                    requiredRole,
+                    "Clinic Staff",
+                    StringComparison.OrdinalIgnoreCase))
             {
-                return true;
+                return
+                    IsClinicStaff ||
+                    IsAdmin;
             }
 
-            if (requiredRole == "SuperAdmin" &&
-                (CurrentUser.Role == "SuperAdmin" ||
-                 CurrentUser.Role == "Super Admin"))
+            if (string.Equals(
+                    requiredRole,
+                    "Admin",
+                    StringComparison.OrdinalIgnoreCase))
             {
-                return true;
+                return IsAdmin;
+            }
+
+            if (string.Equals(
+                    requiredRole,
+                    "SuperAdmin",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return
+                    string.Equals(
+                        CurrentUser.Role,
+                        "SuperAdmin",
+                        StringComparison.OrdinalIgnoreCase)
+                    ||
+                    string.Equals(
+                        CurrentUser.Role,
+                        "Super Admin",
+                        StringComparison.OrdinalIgnoreCase);
             }
 
             return false;
