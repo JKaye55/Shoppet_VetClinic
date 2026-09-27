@@ -1,31 +1,73 @@
 ﻿<script type="module" src="@Assets["Components/Layout/ReconnectModal.razor.js"]"></script>
 
-<dialog id="components-reconnect-modal" data-nosnippet>
-    <div class="components-reconnect-container">
-        <div class="components-rejoining-animation" aria-hidden="true">
-            <div></div>
-            <div></div>
+<dialog id="components-reconnect-modal"
+        class="sc-reconnect">
+
+    <div class="sc-reconnect-card">
+
+        <div class="sc-reconnect-spinner"></div>
+
+        <h3>
+            Reconnecting to ShoppetCare
+        </h3>
+
+        <p class="sc-reconnect-message">
+            The connection to the server was interrupted.
+            You can wait for ShoppetCare to reconnect or reload immediately.
+        </p>
+
+        <div class="sc-reconnect-status">
+
+            <span>
+                Retry attempt:
+            </span>
+
+            <strong id="components-reconnect-current-attempt">
+                0
+            </strong>
+
+            <span>
+                /
+            </span>
+
+            <strong id="components-reconnect-max-retries">
+                0
+            </strong>
+
         </div>
-        <p class="components-reconnect-first-attempt-visible">
-            Rejoining the server...
+
+        <p class="sc-reconnect-wait">
+            Trying again in
+            <strong id="components-seconds-to-next-attempt">
+                0
+            </strong>
+            seconds.
         </p>
-        <p class="components-reconnect-repeated-attempt-visible">
-            Rejoin failed... trying again in <span id="components-seconds-to-next-attempt"></span> seconds.
-        </p>
-        <p class="components-reconnect-failed-visible">
-            Failed to rejoin.<br />Please retry or reload the page.
-        </p>
-        <button id="components-reconnect-button" class="components-reconnect-failed-visible">
-            Retry
-        </button>
-        <p class="components-pause-visible">
-            The session has been paused by the server.
-        </p>
-        <p class="components-resume-failed-visible">
-            Failed to resume the session.<br />Please retry or reload the page.
-        </p>
-        <button id="components-resume-button" class="components-pause-visible components-resume-failed-visible">
-            Resume
-        </button>
+
+        <div class="sc-reconnect-actions">
+
+            <button type="button"
+                    class="sc-reconnect-primary"
+                    onclick="window.location.reload();">
+                Reload Now
+            </button>
+
+            <a href="/"
+               data-enhance-nav="false"
+               class="sc-reconnect-secondary">
+                Back to Landing Page
+            </a>
+
+        </div>
+
+        <small class="sc-reconnect-note">
+            During development, this usually appears after the app is rebuilt or restarted.
+        </small>
+
     </div>
+
 </dialog>
+
+<script type="module"
+        src="@Assets["Components/Layout/ReconnectModal.razor.js"]">
+</script>

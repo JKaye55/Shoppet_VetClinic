@@ -141,15 +141,35 @@ namespace Shoppet_VetClinic.Services
 
         public bool CanAccess(string requiredRole)
         {
-            if (CurrentUser == null) return requiredRole == "Pet Owner";
+            if (CurrentUser == null)
+                return false;
 
-            if (requiredRole == "Pet Owner") return true;
+            if (requiredRole == "Pet Owner")
+                return true;
 
             if (requiredRole == "Clinic Staff" &&
                 (CurrentUser.Role == "Clinic Staff" ||
-                 CurrentUser.Role == "Admin")) return true;
+                 CurrentUser.Role == "Admin" ||
+                 CurrentUser.Role == "SuperAdmin" ||
+                 CurrentUser.Role == "Super Admin"))
+            {
+                return true;
+            }
 
-            if (requiredRole == "Admin" && CurrentUser.Role == "Admin") return true;
+            if (requiredRole == "Admin" &&
+                (CurrentUser.Role == "Admin" ||
+                 CurrentUser.Role == "SuperAdmin" ||
+                 CurrentUser.Role == "Super Admin"))
+            {
+                return true;
+            }
+
+            if (requiredRole == "SuperAdmin" &&
+                (CurrentUser.Role == "SuperAdmin" ||
+                 CurrentUser.Role == "Super Admin"))
+            {
+                return true;
+            }
 
             return false;
         }

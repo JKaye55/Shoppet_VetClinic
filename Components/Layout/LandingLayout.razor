@@ -1,0 +1,254 @@
+﻿
+@inherits LayoutComponentBase
+
+<div class="landing-layout">
+
+    <header class="landing-nav">
+        <div class="landing-nav-inner">
+
+            <a href="/" class="landing-brand" aria-label="ShoppetCare home">
+                <img src="/shoppetlogo.png"
+                     alt="ShoppetCare"
+                     class="landing-brand-logo" />
+                <span class="landing-brand-copy">
+                    <span class="landing-brand-name">ShoppetCare</span>
+                    <span class="landing-brand-subtitle">Connected Pet Care</span>
+                </span>
+            </a>
+
+            <nav class="landing-menu" aria-label="Public navigation">
+                <a href="/#pet-id">Pet ID</a>
+                <a href="/#marketplace">Marketplace</a>
+                <a href="/#clinics">Veterinary Care</a>
+                <a href="/#mobile">Mobile App</a>
+                <a href="/#clinic-business">For Clinics</a>
+                <a href="/inquire">Help</a>
+            </nav>
+
+            <div class="landing-actions">
+                <a href="/login" class="landing-signin">Sign In</a>
+                <a href="/register" class="landing-create">Create Account</a>
+            </div>
+
+        </div>
+    </header>
+
+    <main class="landing-content">
+        @Body
+    </main>
+
+    <footer class="sc-footer">
+
+        <section class="sc-footer-gateway" aria-labelledby="sc-footer-gateway-title">
+            <div class="sc-shell-wide sc-footer-gateway-shell">
+                <div class="sc-footer-gateway-copy">
+                    <span class="sc-footer-gateway-kicker">Your next step</span>
+
+                    <h2 id="sc-footer-gateway-title">
+                        Ready to explore
+                        <em>ShoppetCare?</em>
+                    </h2>
+
+                    <p>
+                        Create a free account for the complete experience, or preview the real
+                        platform first through Guest Mode with limited access.
+                    </p>
+
+                    <div class="sc-footer-gateway-actions">
+                        <a href="/register" class="sc-footer-gateway-primary">
+                            Create Free Account
+                        </a>
+
+                        <a href="/home?guest=true" class="sc-footer-gateway-secondary">
+                            Explore as Guest
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="sc-footer-inner">
+
+            <div class="sc-footer-main">
+                <div class="sc-footer-brand-column">
+                    <a href="/" class="sc-footer-brand">
+                        <img src="/shoppetlogo.png" alt="ShoppetCare" />
+                        <span>ShoppetCare</span>
+                    </a>
+                    <p>
+                        Connected pet management, Digital Pet IDs, veterinary care discovery,
+                        and a pet-owner marketplace across web and mobile.
+                    </p>
+                    <div class="sc-footer-signature">care that follows them.</div>
+                </div>
+
+                <div class="sc-footer-column">
+                    <h3>Explore</h3>
+                    <a href="/#pet-id">Digital Pet ID</a>
+                    <a href="/#marketplace">Marketplace</a>
+                    <a href="/#clinics">Veterinary Care</a>
+                    <a href="/#mobile">Mobile App</a>
+                </div>
+
+                <div class="sc-footer-column">
+                    <h3>Pet Owners</h3>
+                    <a href="/register">Create Account</a>
+                    <a href="/home?guest=true">Explore as Guest</a>
+                    <a href="/#clinics">Find Pet Care</a>
+                    <a href="/#marketplace">Browse Listings</a>
+                </div>
+
+                <div class="sc-footer-column">
+                    <h3>Clinics &amp; Support</h3>
+                    <a href="/#clinic-business">For Veterinary Clinics</a>
+                    <a href="/login">Clinic Sign In</a>
+                    <a href="/inquire">Help &amp; Customer Service</a>
+                    <a href="/#privacy">Privacy</a>
+                    <a href="/#terms">Terms</a>
+                </div>
+            </div>
+
+            <div class="sc-footer-trust" aria-label="ShoppetCare trust and support">
+                <article>
+                    <span class="sc-footer-trust-icon">
+                        <svg class="sp-icon" aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#shield-lock"></use>
+                        </svg>
+                    </span>
+                    <span>
+                        <strong>Owner-controlled information</strong>
+                        <small>You choose what appears on your pet's public profile.</small>
+                    </span>
+                </article>
+
+                <article>
+                    <span class="sc-footer-trust-icon">
+                        <svg class="sp-icon" aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#patch-check"></use>
+                        </svg>
+                    </span>
+                    <span>
+                        <strong>Visible verification indicators</strong>
+                        <small>Recognize verified ShoppetCare clinic partners.</small>
+                    </span>
+                </article>
+
+                <article>
+                    <span class="sc-footer-trust-icon">
+                        <svg class="sp-icon" aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#headset"></use>
+                        </svg>
+                    </span>
+                    <span>
+                        <strong>Help when you need it</strong>
+                        <small>Use the public inquiry and customer-support path.</small>
+                    </span>
+                </article>
+            </div>
+
+
+            <div class="sc-footer-bottom">
+                <div class="sc-footer-meta-row">
+                    <span>
+                        <svg class="sp-icon sp-icon-sm" aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#geo-alt"></use>
+                        </svg>
+                        Philippines
+                    </span>
+                    <span>English</span>
+                    <a href="/#privacy">Privacy Policy</a>
+                    <a href="/#terms">Terms &amp; Conditions</a>
+                    <a href="/inquire">Contact</a>
+                </div>
+
+                <div class="sc-footer-socials" aria-label="Social links">
+                    <a href="#" aria-label="Facebook">
+                        <svg class="sp-icon sp-icon-sm"><use href="/icons/bootstrap-icons.svg#facebook"></use></svg>
+                    </a>
+                    <a href="#" aria-label="Instagram">
+                        <svg class="sp-icon sp-icon-sm"><use href="/icons/bootstrap-icons.svg#instagram"></use></svg>
+                    </a>
+                    <a href="#" aria-label="TikTok">
+                        <svg class="sp-icon sp-icon-sm"><use href="/icons/bootstrap-icons.svg#tiktok"></use></svg>
+                    </a>
+                </div>
+            </div>
+
+            <div class="sc-footer-copy">
+                <span>© 2026 ShoppetCare. All rights reserved.</span>
+                <span>Web + Mobile Connected Pet Care Platform</span>
+            </div>
+
+            <span id="privacy" class="sc-anchor-target"></span>
+            <span id="terms" class="sc-anchor-target"></span>
+        </div>
+    </footer>
+
+
+<script>
+(() => {
+    const root = document.documentElement;
+    root.classList.add('js-landing');
+
+    const selector = [
+        '.sc-hero',
+        '.sc-intent',
+        '.sc-petid',
+        '.sc-marketplace',
+        '.sc-care',
+        '.sc-mobile',
+        '.sc-business',
+        '.sc-footer-gateway',
+        '.sc-footer-main',
+        '.sc-footer-trust',
+        '.sc-footer-bottom',
+        '.sc-footer-copy'
+    ].join(',');
+
+    function initShoppetLandingMotion() {
+        const targets = Array.from(document.querySelectorAll(selector));
+        if (!targets.length) return;
+
+        const reduced = window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const show = element => element.classList.add('is-visible');
+
+        if (reduced || !('IntersectionObserver' in window)) {
+            targets.forEach(show);
+            return;
+        }
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    show(entry.target);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.16,
+            rootMargin: '0px 0px -10% 0px'
+        });
+
+        targets.forEach(element => {
+            const rect = element.getBoundingClientRect();
+            if (rect.top < window.innerHeight * .90) {
+                show(element);
+            } else {
+                observer.observe(element);
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initShoppetLandingMotion, { once: true });
+    } else {
+        requestAnimationFrame(initShoppetLandingMotion);
+    }
+
+    window.addEventListener('pageshow', initShoppetLandingMotion);
+})();
+</script>
+
+</div>

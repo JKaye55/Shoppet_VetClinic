@@ -1,6 +1,7 @@
 @page "/register"
 @rendermode InteractiveServer
-@using Shoppet_VetClinic.Models
+
+@layout Shoppet_VetClinic.Components.Layout.LandingLayout
 @using Shoppet_VetClinic.Services
 @inject DatabaseService DbService
 @inject NavigationManager Nav
@@ -111,7 +112,7 @@
             Notify.WelcomeUser(user.Id, user.FullName);
 
             Auth.Login(user);
-            Nav.NavigateTo("/dashboard");
+            Nav.NavigateTo("/home");
         }
         catch (Exception ex)
         {
