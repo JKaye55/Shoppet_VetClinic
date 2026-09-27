@@ -1,0 +1,35 @@
+﻿@page "/account/{Mode}"
+@inject NavigationManager Nav
+
+@code {
+
+    private void Login()
+    {
+        Nav.NavigateTo("/login");
+    }
+
+
+    private void Register()
+    {
+        Nav.NavigateTo("/register");
+    }
+
+
+    private void Guest()
+    {
+        Nav.NavigateTo("/home?guest=true");
+    }
+
+
+    private void Marketplace()
+    {
+        Nav.NavigateTo("/marketplace");
+    }
+
+
+    private void Clinics()
+    {
+        Nav.NavigateTo("/clinics");
+    }
+
+}

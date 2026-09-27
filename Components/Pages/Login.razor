@@ -1,5 +1,9 @@
 @page "/login"
 @rendermode InteractiveServer
+
+@using Shoppet_VetClinic.Components.Layout
+@layout LandingLayout
+
 @using Shoppet_VetClinic.Services
 @inject DatabaseService DbService
 @inject AuthService Auth
@@ -152,10 +156,11 @@
             var destination = role switch
             {
                 "Admin" => "/admin-portal",
+                "SuperAdmin" => "/admin-portal",
+                "Super Admin" => "/admin-portal",
                 "Clinic Staff" => "/clinic-portal",
-                _ => "/dashboard"
-            };
-
+                _ => "/home"
+            };      
             Nav.NavigateTo(destination);
         }
         catch (Exception ex)
