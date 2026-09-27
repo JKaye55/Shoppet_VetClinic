@@ -1,79 +1,353 @@
 @namespace Shoppet_VetClinic.Components.Shared
 
-<footer class="sp-footer">
 
-    <div class="sp-footer-inner">
+<footer class="spf-footer">
 
-        <div class="sp-footer-brand">
+    @if (ShowGateway)
+    {
+        <!-- =====================================================
+             LANDING CONVERSION AREA
+             ===================================================== -->
 
-            <div class="sp-footer-logo">
-                <img src="/shoppetlogo.png"
-                     alt="ShoppetCare" />
+        <section class="spf-gateway">
+
+            <div class="spf-gateway-inner">
+
+                <span class="spf-kicker">
+                    YOUR NEXT STEP
+                </span>
+
+
+                <h2>
+                    Ready to explore
+                    <em>ShoppetCare?</em>
+                </h2>
+
+
+                <p>
+                    Create a free account for the complete
+                    ShoppetCare experience, or preview the
+                    platform first through Guest Mode.
+                </p>
+
+
+                <div class="spf-gateway-actions">
+
+                    <a href="/register"
+                       class="primary">
+
+                        Create Free Account
+
+                    </a>
+
+
+                    <a href="/home?guest=true"
+                       class="secondary">
+
+                        Explore as Guest
+
+                    </a>
+
+                </div>
+
             </div>
 
-            <div>
-                <div class="sp-footer-name">
-                    ShoppetCare
+        </section>
+    }
+
+
+    <!-- =========================================================
+         MAIN FOOTER
+         ========================================================= -->
+
+    <div class="spf-shell">
+
+        <div class="spf-main">
+
+
+            <!-- BRAND -->
+
+            <section class="spf-brand-column">
+
+                <a href="/"
+                   class="spf-brand">
+
+                    <img src="/shoppetlogo.png"
+                         alt="ShoppetCare" />
+
+
+                    <span>
+                        ShoppetCare
+                    </span>
+
+                </a>
+
+
+                <p>
+                    Connected pet management, Digital Pet IDs,
+                    verified veterinary care discovery,
+                    community features, and a pet-owner
+                    marketplace across web and mobile.
+                </p>
+
+
+                <div class="spf-signature">
+                    care that follows them.
                 </div>
 
-                <div class="sp-footer-tagline">
-                    Pet Care Directory
-                </div>
+            </section>
+
+
+            <!-- EXPLORE -->
+
+            <section class="spf-column">
+
+                <h3>
+                    Explore
+                </h3>
+
+
+                <a href="/home">
+                    Home
+                </a>
+
+                <a href="/marketplace">
+                    Marketplace
+                </a>
+
+                <a href="/community">
+                    Community
+                </a>
+
+                <a href="/clinics">
+                    Veterinary Care
+                </a>
+
+                <a href="/brands">
+                    Brands &amp; Diets
+                </a>
+
+            </section>
+
+
+            <!-- PET OWNERS -->
+
+            <section class="spf-column">
+
+                <h3>
+                    Pet Owners
+                </h3>
+
+
+                <a href="/dashboard">
+                    My ShoppetCare
+                </a>
+
+                <a href="/my-pets">
+                    My Pets
+                </a>
+
+                <a href="/account">
+                    Account &amp; Premium
+                </a>
+
+                <a href="/register">
+                    Create Account
+                </a>
+
+                <a href="/login">
+                    Sign In
+                </a>
+
+            </section>
+
+
+            <!-- CARE / SUPPORT -->
+
+            <section class="spf-column">
+
+                <h3>
+                    Clinics &amp; Support
+                </h3>
+
+
+                <a href="/clinics">
+                    Verified Clinics
+                </a>
+
+                <a href="/inquire">
+                    Front Desk &amp; Help
+                </a>
+
+                <a href="/announcements">
+                    Announcements
+                </a>
+
+                <a href="/login">
+                    Clinic Sign In
+                </a>
+
+            </section>
+
+        </div>
+
+
+        <!-- =====================================================
+             TRUST
+             ===================================================== -->
+
+        <div class="spf-trust">
+
+
+            <article>
+
+                <span class="spf-trust-icon">
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#shield-lock"></use>
+                    </svg>
+
+                </span>
+
+
+                <span>
+
+                    <strong>
+                        Owner-controlled information
+                    </strong>
+
+                    <small>
+                        Private owner and health information
+                        remains protected from public Pet ID views.
+                    </small>
+
+                </span>
+
+            </article>
+
+
+            <article>
+
+                <span class="spf-trust-icon">
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#patch-check"></use>
+                    </svg>
+
+                </span>
+
+
+                <span>
+
+                    <strong>
+                        Verified local care
+                    </strong>
+
+                    <small>
+                        Recognize ShoppetCare verified
+                        veterinary clinic partners.
+                    </small>
+
+                </span>
+
+            </article>
+
+
+            <article>
+
+                <span class="spf-trust-icon">
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#headset"></use>
+                    </svg>
+
+                </span>
+
+
+                <span>
+
+                    <strong>
+                        Help when you need it
+                    </strong>
+
+                    <small>
+                        Reach ShoppetCare through the
+                        Front Desk and inquiry experience.
+                    </small>
+
+                </span>
+
+            </article>
+
+        </div>
+
+
+        <!-- =====================================================
+             META
+             ===================================================== -->
+
+        <div class="spf-bottom">
+
+            <div class="spf-meta">
+
+                <span>
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#geo-alt"></use>
+                    </svg>
+
+                    Lipa City &amp; Tanauan, Batangas
+
+                </span>
+
+
+                <span>
+                    Philippines
+                </span>
+
+
+                <span>
+                    English
+                </span>
+
+
+                <a href="/inquire">
+                    Contact
+                </a>
+
+            </div>
+
+
+            <div class="spf-platform">
+
+                <svg aria-hidden="true">
+                    <use href="/icons/bootstrap-icons.svg#phone"></use>
+                </svg>
+
+                Web + Mobile Connected Pet Care
+
             </div>
 
         </div>
 
 
-        <div class="sp-footer-links">
+        <!-- =====================================================
+             COPYRIGHT
+             ===================================================== -->
 
-            <a href="/">
-                Home
-            </a>
-
-            <a href="/services">
-                Services
-            </a>
-
-            <a href="/clinics">
-                Verified Clinics
-            </a>
-
-            <a href="/brands">
-                Brands &amp; Diets
-            </a>
-
-            <a href="/inquire">
-                Front Desk
-            </a>
-
-        </div>
-
-
-        <div class="sp-footer-location">
-
-            <strong>
-                Serving Lipa City &amp; Tanauan
-            </strong>
+        <div class="spf-copy">
 
             <span>
-                Veterinary care, pet supplies, and
-                verified local providers.
+                © @DateTime.Now.Year ShoppetCare.
+                All rights reserved.
+            </span>
+
+
+            <span>
+                Student E-Commerce Pilot Platform
             </span>
 
         </div>
-
-    </div>
-
-
-    <div class="sp-footer-bottom">
-
-        <span>
-            © @DateTime.Now.Year ShoppetCare. All rights reserved.
-        </span>
-
-        <span>
-            Pilot Testing Portal
-        </span>
 
     </div>
 
@@ -82,153 +356,493 @@
 
 <style>
 
-    .sp-footer {
+    /* =========================================================
+           SHOPPETCARE GLOBAL FOOTER
+           ========================================================= */
+
+    .spf-footer {
+        position: relative;
         width: 100%;
-        background: #1E2D27;
-        color: #FFFFFF;
+        overflow: hidden;
         margin-top: auto;
+        background: radial-gradient( circle at 10% 18%, rgba(47,144,152,.16), transparent 22% ), linear-gradient( 145deg, #0D1F1E 0%, #081514 100% );
+        color: #FFFFFF;
     }
 
-    .sp-footer-inner {
-        width: 100%;
-        max-width: 1380px;
+
+        .spf-footer::after {
+            content: "";
+            position: absolute;
+            width: 420px;
+            height: 420px;
+            right: -250px;
+            bottom: -305px;
+            border: 1px solid rgba(243,210,122,.10);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+
+        .spf-footer svg {
+            width: 1em;
+            height: 1em;
+            fill: currentColor;
+        }
+
+
+    /* =========================================================
+           LANDING GATEWAY
+           ========================================================= */
+
+    .spf-gateway {
+        position: relative;
+        z-index: 2;
+        min-height: 315px;
+        display: flex;
+        align-items: center;
+        border-top: 1px solid rgba(23,61,61,.07);
+        background: radial-gradient( circle at 88% 25%, rgba(47,144,152,.09), transparent 26% ), #FBF8F2;
+        color: #173D3D;
+    }
+
+
+    .spf-gateway-inner {
+        width: min( 1540px, calc(100% - 56px) );
         margin: 0 auto;
-        padding: 42px 28px 34px;
+        padding: 48px 0;
+    }
+
+
+    .spf-kicker {
+        display: block;
+        margin-bottom: 10px;
+        color: #2F9098;
+        font-size: .64rem;
+        font-weight: 900;
+        letter-spacing: .1em;
+    }
+
+
+    .spf-gateway h2 {
+        max-width: 650px;
+        margin: 0;
+        color: #173D3D;
+        font-size: clamp( 2.7rem, 4vw, 4.15rem );
+        line-height: .97;
+        font-weight: 900;
+        letter-spacing: -.055em;
+    }
+
+
+        .spf-gateway h2 em {
+            display: block;
+            margin-top: 3px;
+            color: #2F9098;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: .94em;
+            font-weight: 500;
+            letter-spacing: -.035em;
+        }
+
+
+    .spf-gateway p {
+        max-width: 585px;
+        margin: 16px 0 0;
+        color: #5E706B;
+        font-size: .91rem;
+        line-height: 1.65;
+    }
+
+
+    .spf-gateway-actions {
+        margin-top: 22px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+    }
+
+
+        .spf-gateway-actions a {
+            min-height: 49px;
+            padding: 0 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: .8rem;
+            font-weight: 850;
+            text-decoration: none;
+        }
+
+
+        .spf-gateway-actions .primary {
+            border: 1px solid #2F9098;
+            background: #2F9098;
+            color: #FFFFFF;
+        }
+
+
+            .spf-gateway-actions .primary:hover {
+                border-color: #267C83;
+                background: #267C83;
+            }
+
+
+        .spf-gateway-actions .secondary {
+            border: 1px solid #C9D9D5;
+            background: #FFFFFF;
+            color: #173D3D;
+        }
+
+
+            .spf-gateway-actions .secondary:hover {
+                background: #EAF5F5;
+            }
+
+
+    /* =========================================================
+           SHELL
+           ========================================================= */
+
+    .spf-shell {
+        position: relative;
+        z-index: 2;
+        width: min( 1540px, calc(100% - 56px) );
+        margin: 0 auto;
+    }
+
+
+    /* =========================================================
+           MAIN
+           ========================================================= */
+
+    .spf-main {
+        padding: 54px 0 42px;
         display: grid;
-        grid-template-columns: minmax(220px, 1fr) minmax(280px, 1fr) minmax(220px, 1fr);
-        gap: 45px;
-        align-items: start;
+        grid-template-columns: minmax(300px,1.5fr) repeat( 3, minmax(150px,.7fr) );
+        gap: 48px;
     }
 
 
     /* BRAND */
 
-    .sp-footer-brand {
-        display: flex;
+    .spf-brand {
+        display: inline-flex;
         align-items: center;
-        gap: 13px;
+        gap: 11px;
+        color: #FFFFFF;
+        text-decoration: none;
     }
 
-    .sp-footer-logo {
-        width: 46px;
-        height: 46px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #FFFFFF;
-        border-radius: 12px;
-        overflow: hidden;
-    }
 
-        .sp-footer-logo img {
-            width: 38px;
-            height: 38px;
+        .spf-brand img {
+            width: 55px;
+            height: 55px;
+            padding: 5px;
             object-fit: contain;
+            border-radius: 14px;
+            background: #FFFFFF;
         }
 
-    .sp-footer-name {
-        font-size: 1.05rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
+
+        .spf-brand > span {
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: -.04em;
+        }
+
+
+    .spf-brand-column > p {
+        max-width: 390px;
+        margin: 18px 0 0;
+        color: rgba( 255, 255, 255, .60 );
+        font-size: .82rem;
+        line-height: 1.7;
     }
 
-    .sp-footer-tagline {
-        margin-top: 5px;
-        color: #B9C8C2;
-        font-size: 0.72rem;
-        font-weight: 500;
+
+    .spf-signature {
+        margin-top: 22px;
+        color: #EBCF7B;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 1.4rem;
+        font-style: italic;
+        line-height: 1.1;
     }
 
 
-    /* LINKS */
+    /* =========================================================
+           COLUMNS
+           ========================================================= */
 
-    .sp-footer-links {
+    .spf-column {
         display: flex;
-        flex-wrap: wrap;
-        gap: 9px 22px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 11px;
     }
 
-        .sp-footer-links a {
-            color: #DDE7E3;
-            text-decoration: none;
-            font-size: 0.76rem;
-            font-weight: 600;
-            transition: color 0.2s ease;
+
+        .spf-column h3 {
+            margin: 0 0 7px;
+            color: #FFFFFF;
+            font-size: .84rem;
+            font-weight: 850;
         }
 
-            .sp-footer-links a:hover {
-                color: #F7DD7D;
+
+        .spf-column a {
+            color: rgba( 255, 255, 255, .62 );
+            font-size: .76rem;
+            line-height: 1.4;
+            text-decoration: none;
+            transition: color .18s ease, transform .18s ease;
+        }
+
+
+            .spf-column a:hover {
+                color: #FFFFFF;
+                transform: translateX(2px);
             }
 
 
-    /* LOCATION */
+    /* =========================================================
+           TRUST
+           ========================================================= */
 
-    .sp-footer-location {
-        display: flex;
-        flex-direction: column;
-        gap: 7px;
+    .spf-trust {
+        display: grid;
+        grid-template-columns: repeat( 3, minmax(0,1fr) );
+        border-top: 1px solid rgba(255,255,255,.10);
+        border-bottom: 1px solid rgba(255,255,255,.10);
     }
 
-        .sp-footer-location strong {
-            color: #FFFFFF;
-            font-size: 0.78rem;
-            font-weight: 700;
-        }
 
-        .sp-footer-location span {
-            max-width: 270px;
-            color: #AEBDB7;
-            font-size: 0.72rem;
-            line-height: 1.6;
+        .spf-trust article {
+            min-height: 92px;
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
 
-    /* BOTTOM */
+            .spf-trust article:not(:last-child) {
+                border-right: 1px solid rgba(255,255,255,.10);
+            }
 
-    .sp-footer-bottom {
-        max-width: 1380px;
-        margin: 0 auto;
-        padding: 16px 28px;
-        border-top: 1px solid rgba(255,255,255,0.10);
+
+    .spf-trust-icon {
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+        display: grid;
+        place-items: center;
+        border-radius: 11px;
+        background: rgba( 255, 255, 255, .08 );
+        color: #9ADBDD;
+    }
+
+
+    .spf-trust strong,
+    .spf-trust small {
+        display: block;
+    }
+
+
+    .spf-trust strong {
+        color: #FFFFFF;
+        font-size: .73rem;
+    }
+
+
+    .spf-trust small {
+        margin-top: 4px;
+        color: rgba( 255, 255, 255, .52 );
+        font-size: .65rem;
+        line-height: 1.4;
+    }
+
+
+    /* =========================================================
+           BOTTOM
+           ========================================================= */
+
+    .spf-bottom {
+        padding: 19px 0;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 25px;
+    }
+
+
+    .spf-meta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 18px;
+    }
+
+
+        .spf-meta span,
+        .spf-meta a,
+        .spf-platform {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: rgba( 255, 255, 255, .57 );
+            font-size: .7rem;
+            text-decoration: none;
+        }
+
+
+            .spf-meta span:first-child {
+                color: rgba( 255, 255, 255, .82 );
+                font-weight: 750;
+            }
+
+
+            .spf-meta a:hover {
+                color: #FFFFFF;
+            }
+
+
+    .spf-platform {
+        white-space: nowrap;
+    }
+
+
+    /* =========================================================
+           COPYRIGHT
+           ========================================================= */
+
+    .spf-copy {
+        padding: 14px 0 20px;
+        display: flex;
+        justify-content: space-between;
         gap: 20px;
-        color: #93A59E;
-        font-size: 0.66rem;
-        font-weight: 500;
+        border-top: 1px solid rgba( 255, 255, 255, .055 );
+        color: rgba( 255, 255, 255, .34 );
+        font-size: .66rem;
     }
 
 
-    /* RESPONSIVE */
+    /* =========================================================
+           TABLET
+           ========================================================= */
 
-    @@media (max-width: 850px) {
+    @@media (max-width: 1050px) {
 
-        .sp-footer-inner {
+        .spf-main {
+            grid-template-columns: repeat( 3, minmax(0,1fr) );
+            gap: 35px;
+        }
+
+
+        .spf-brand-column {
+            grid-column: 1 / -1;
+        }
+    }
+
+
+    @@media (max-width: 800px) {
+
+        .spf-main {
+            grid-template-columns: repeat( 2, minmax(0,1fr) );
+        }
+
+
+        .spf-brand-column {
+            grid-column: 1 / -1;
+        }
+
+
+        .spf-trust {
             grid-template-columns: 1fr;
-            gap: 28px;
         }
 
-        .sp-footer-location span {
-            max-width: 100%;
+
+            .spf-trust article:not(:last-child) {
+                border-right: 0;
+                border-bottom: 1px solid rgba(255,255,255,.10);
+            }
+
+
+        .spf-bottom {
+            align-items: flex-start;
+            flex-direction: column;
         }
     }
 
 
-    @@media (max-width: 600px) {
+    /* =========================================================
+           MOBILE
+           ========================================================= */
 
-        .sp-footer-inner {
-            padding: 32px 18px 26px;
+    @@media (max-width: 560px) {
+
+        .spf-gateway-inner,
+        .spf-shell {
+            width: calc(100% - 28px);
         }
 
-        .sp-footer-bottom {
-            padding: 14px 18px;
-            flex-direction: column;
+
+        .spf-gateway {
+            min-height: auto;
+        }
+
+
+        .spf-gateway-inner {
+            padding: 42px 0;
+        }
+
+
+        .spf-gateway h2 {
+            font-size: clamp( 2.3rem, 12vw, 3.25rem );
+        }
+
+
+        .spf-gateway-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+
+
+            .spf-gateway-actions a {
+                width: 100%;
+            }
+
+
+        .spf-main {
+            padding: 42px 0 34px;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+
+        .spf-brand-column {
+            grid-column: auto;
+        }
+
+
+        .spf-column {
+            padding-top: 5px;
+        }
+
+
+        .spf-copy {
             align-items: flex-start;
-        }
-
-        .sp-footer-links {
-            gap: 10px 18px;
+            flex-direction: column;
+            gap: 5px;
         }
     }
 </style>
+
+
+@code {
+
+    [Parameter]
+    public bool ShowGateway { get; set; }
+
+}

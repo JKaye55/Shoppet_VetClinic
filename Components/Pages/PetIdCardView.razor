@@ -1,17 +1,20 @@
-﻿@inject CardService Cards
+﻿@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+
+@inject CardService Cards
 
 
 <article class="@CardClass">
 
     <!-- =========================================================
-         BRAND
+         TOP BRAND
          ========================================================= -->
 
-    <header class="sc-idcard-top">
+    <header class="pid-top">
 
-        <div class="sc-idcard-brand">
+        <div class="pid-brand">
 
-            <div class="sc-idcard-logo">
+            <div class="pid-logo">
 
                 <img src="/shoppetlogo.png"
                      alt="ShoppetCare" />
@@ -26,7 +29,7 @@
                 </strong>
 
                 <span>
-                    CONNECTED PET CARE
+                    DIGITAL PET IDENTITY
                 </span>
 
             </div>
@@ -34,147 +37,159 @@
         </div>
 
 
-        @if (IsPremium)
-        {
-            <div class="sc-idcard-tier premium">
+        <div class="pid-tier @(IsPremium ? "premium" : "basic")">
 
+            @if (IsPremium)
+            {
                 <svg aria-hidden="true">
                     <use href="/icons/bootstrap-icons.svg#star-fill"></use>
                 </svg>
 
-                Premium Pet ID
+                <span>
+                    Premium Pet ID
+                </span>
+            }
+            else
+            {
+                <span>
+                    Basic Pet ID
+                </span>
+            }
 
-            </div>
-        }
-        else
-        {
-            <div class="sc-idcard-tier basic">
-                Basic Pet ID
-            </div>
-        }
+        </div>
 
     </header>
 
 
     <!-- =========================================================
-         MAIN
+         PET IDENTITY
          ========================================================= -->
 
-    <div class="sc-idcard-main">
-
+    <section class="pid-main">
 
         <!-- PHOTO -->
 
-        <div class="sc-idcard-photo">
+        <div class="pid-photo-area">
 
-            @if (!string.IsNullOrWhiteSpace(
-                PhotoUrl))
-            {
-                <img src="@PhotoUrl"
-                     alt="@Pet.PetName" />
-            }
-            else
-            {
-                <div>
-                    @Initial
-                </div>
-            }
+            <div class="pid-photo">
+
+                @if (!string.IsNullOrWhiteSpace(PhotoUrl))
+                {
+                    <img src="@PhotoUrl"
+                         alt="@Pet.PetName" />
+                }
+                else
+                {
+                    <span>
+                        @Initial
+                    </span>
+                }
+
+            </div>
+
+
+            <div class="pid-status">
+
+                <span class="pid-status-dot"></span>
+
+                Active Digital ID
+
+            </div>
 
         </div>
 
 
-        <!-- INFORMATION -->
+        <!-- MAIN PET INFO -->
 
-        <div class="sc-idcard-info">
+        <div class="pid-details">
 
-            <div class="sc-idcard-row">
-
-                <span class="sc-idcard-row-icon">
-
-                    <svg aria-hidden="true">
-                        <use href="/icons/bootstrap-icons.svg#heart-fill"></use>
-                    </svg>
-
-                </span>
+            <span class="pid-label">
+                REGISTERED PET
+            </span>
 
 
-                <span>
-
-                    <small>
-                        Pet Name
-                    </small>
-
-                    <strong class="name">
-                        @Pet.PetName
-                    </strong>
-
-                </span>
-
-            </div>
+            <h2>
+                @Pet.PetName
+            </h2>
 
 
-            <div class="sc-idcard-row">
-
-                <span class="sc-idcard-row-icon">
-
-                    <svg aria-hidden="true">
-                        <use href="/icons/bootstrap-icons.svg#tag-fill"></use>
-                    </svg>
-
-                </span>
+            <p class="pid-description">
+                @Pet.Species
+                @if (!string.IsNullOrWhiteSpace(Pet.Breed))
+                {
+                    <span> · @Pet.Breed</span>
+                }
+            </p>
 
 
-                <span>
+            <div class="pid-info-grid">
 
-                    <small>
-                        Type
-                    </small>
+                <div class="pid-info-item">
 
-                    <strong>
-                        @Pet.Species
-                    </strong>
+                    <span class="pid-info-icon">
 
-                </span>
+                        <svg aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#tag-fill"></use>
+                        </svg>
 
-            </div>
+                    </span>
 
 
-            <div class="sc-idcard-row">
+                    <span>
 
-                <span class="sc-idcard-row-icon">
+                        <small>
+                            Species
+                        </small>
 
-                    <svg aria-hidden="true">
-                        <use href="/icons/bootstrap-icons.svg#stars"></use>
-                    </svg>
+                        <strong>
+                            @(string.IsNullOrWhiteSpace(Pet.Species)
+                                ? "Not specified"
+                                : Pet.Species)
+                        </strong>
 
-                </span>
+                    </span>
 
-
-                <span>
-
-                    <small>
-                        Breed
-                    </small>
-
-                    <strong>
-                        @(string.IsNullOrWhiteSpace(
-                            Pet.Breed)
-                            ? "Not specified"
-                            : Pet.Breed)
-                    </strong>
-
-                </span>
-
-            </div>
+                </div>
 
 
-            <div class="sc-idcard-stats">
+                <div class="pid-info-item">
 
-                <div>
+                    <span class="pid-info-icon">
 
-                    <svg aria-hidden="true">
-                        <use href="/icons/bootstrap-icons.svg#calendar3"></use>
-                    </svg>
+                        <svg aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#stars"></use>
+                        </svg>
+
+                    </span>
+
+
+                    <span>
+
+                        <small>
+                            Breed
+                        </small>
+
+                        <strong>
+                            @(string.IsNullOrWhiteSpace(Pet.Breed)
+                                ? "Not specified"
+                                : Pet.Breed)
+                        </strong>
+
+                    </span>
+
+                </div>
+
+
+                <div class="pid-info-item">
+
+                    <span class="pid-info-icon">
+
+                        <svg aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#calendar3"></use>
+                        </svg>
+
+                    </span>
+
 
                     <span>
 
@@ -183,8 +198,7 @@
                         </small>
 
                         <strong>
-                            @(string.IsNullOrWhiteSpace(
-                                Pet.Age)
+                            @(string.IsNullOrWhiteSpace(Pet.Age)
                                 ? "Not set"
                                 : Pet.Age)
                         </strong>
@@ -194,11 +208,16 @@
                 </div>
 
 
-                <div>
+                <div class="pid-info-item">
 
-                    <svg aria-hidden="true">
-                        <use href="/icons/bootstrap-icons.svg#speedometer2"></use>
-                    </svg>
+                    <span class="pid-info-icon">
+
+                        <svg aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#speedometer2"></use>
+                        </svg>
+
+                    </span>
+
 
                     <span>
 
@@ -223,33 +242,42 @@
 
         <!-- QR -->
 
-        <div class="sc-idcard-qr">
+        <div class="pid-qr-column">
 
-            @if (!string.IsNullOrWhiteSpace(
-                QrDataUri))
-            {
-                <img src="@QrDataUri"
-                     alt="@Pet.PetName Pet ID QR code" />
-            }
+            <div class="pid-qr">
 
-            <span>
-                Scan Pet ID
+                @if (!string.IsNullOrWhiteSpace(QrDataUri))
+                {
+                    <img src="@QrDataUri"
+                         alt="@Pet.PetName Pet ID QR code" />
+                }
+
+            </div>
+
+
+            <span class="pid-scan-label">
+                SCAN PET ID
             </span>
+
+
+            <small>
+                Opens public identity
+            </small>
 
         </div>
 
-    </div>
+    </section>
 
 
     <!-- =========================================================
-         OWNER / PET ID
+         OWNER + CARD ID
          ========================================================= -->
 
-    <div class="sc-idcard-identity">
+    <section class="pid-identity-bar">
 
         <div>
 
-            <span class="sc-idcard-row-icon">
+            <span class="pid-round-icon">
 
                 <svg aria-hidden="true">
                     <use href="/icons/bootstrap-icons.svg#person-fill"></use>
@@ -262,8 +290,8 @@
 
                 <small>
                     @(PublicMode
-                        ? "Owner Information"
-                        : "Owner")
+                        ? "Owner Privacy"
+                        : "Pet Owner")
                 </small>
 
                 <strong>
@@ -279,7 +307,7 @@
 
         <div>
 
-            <span class="sc-idcard-row-icon">
+            <span class="pid-round-icon">
 
                 <svg aria-hidden="true">
                     <use href="/icons/bootstrap-icons.svg#person-vcard"></use>
@@ -291,10 +319,10 @@
             <span>
 
                 <small>
-                    Pet ID
+                    Digital Pet ID
                 </small>
 
-                <strong class="id">
+                <strong class="pid-number">
                     @Pet.CardId
                 </strong>
 
@@ -302,14 +330,14 @@
 
         </div>
 
-    </div>
+    </section>
 
 
     <!-- =========================================================
-         SUMMARY
+         VALUE / CARE SNAPSHOT
          ========================================================= -->
 
-    <div class="sc-idcard-summary">
+    <section class="pid-snapshot">
 
         @if (PublicMode)
         {
@@ -322,7 +350,7 @@
                 <span>
 
                     <small>
-                        Digital Identity
+                        Identity
                     </small>
 
                     <strong>
@@ -380,27 +408,6 @@
             <div>
 
                 <svg aria-hidden="true">
-                    <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
-                </svg>
-
-                <span>
-
-                    <small>
-                        Digital Identity
-                    </small>
-
-                    <strong>
-                        Active
-                    </strong>
-
-                </span>
-
-            </div>
-
-
-            <div>
-
-                <svg aria-hidden="true">
                     <use href="/icons/bootstrap-icons.svg#shield-check"></use>
                 </svg>
 
@@ -441,21 +448,43 @@
                 </span>
 
             </div>
+
+
+            <div>
+
+                <svg aria-hidden="true">
+                    <use href="/icons/bootstrap-icons.svg#heart-fill"></use>
+                </svg>
+
+                <span>
+
+                    <small>
+                        Usual Diet
+                    </small>
+
+                    <strong>
+                        @(string.IsNullOrWhiteSpace(Pet.Diet)
+                            ? "Not specified"
+                            : Pet.Diet)
+                    </strong>
+
+                </span>
+
+            </div>
         }
 
-    </div>
+    </section>
 
 
     <!-- =========================================================
-         FOOTER
+         FOOT
          ========================================================= -->
 
-    <footer class="sc-idcard-footer">
+    <footer class="pid-footer">
 
         <span>
             Issued
-            @(Pet.CardIssuedAt?.ToString("MMM yyyy")
-                ?? "—")
+            @(Pet.CardIssuedAt?.ToString("MMM yyyy") ?? "—")
         </span>
 
 
@@ -470,397 +499,508 @@
 
 <style>
 
-    .sc-idcard {
-        --id-bg-a: #F8FFFF;
-        --id-bg-b: #EAF8F6;
-        --id-text: #173D3D;
-        --id-muted: #6D807A;
-        --id-accent: #2F9098;
-        --id-soft: #DDF3F1;
-        --id-border: #BFDCD7;
+    .pid-card {
+        --pid-a: #F7FFFF;
+        --pid-b: #E4F5F2;
+        --pid-accent: #2F9098;
+        --pid-accent-soft: #DDF3F1;
+        --pid-dark: #173D3D;
+        --pid-muted: #71847D;
+        --pid-border: #AFCFC9;
         position: relative;
         width: 100%;
         aspect-ratio: 1.586 / 1;
-        padding: 4%;
+        min-height: 470px;
+        padding: clamp(24px,3.2vw,42px);
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        border: 1px solid var(--id-border);
-        border-radius: 27px;
-        background: radial-gradient( circle at 92% 16%, rgba(47,144,152,.10), transparent 24% ), radial-gradient( circle at 85% 88%, rgba(47,144,152,.065), transparent 25% ), linear-gradient( 140deg, var(--id-bg-a), var(--id-bg-b) );
-        color: var(--id-text);
-        box-shadow: 0 24px 58px rgba(23,61,61,.13);
+        border: 1px solid var(--pid-border);
+        border-radius: 28px;
+        background: radial-gradient( circle at 91% 14%, rgba(255,255,255,.86), transparent 19% ), radial-gradient( circle at 89% 88%, rgba(47,144,152,.08), transparent 24% ), linear-gradient( 135deg, var(--pid-a), var(--pid-b) );
+        color: var(--pid-dark);
+        box-shadow: 0 25px 60px rgba(23,61,61,.12);
     }
 
 
-        .sc-idcard.is-premium {
-            --id-bg-a: #FFFDF8;
-            --id-bg-b: #FFF8E9;
-            --id-border: #E4C468;
+        .pid-card::before {
+            content: "";
+            position: absolute;
+            width: 290px;
+            height: 290px;
+            right: -150px;
+            top: -160px;
+            border: 1px solid rgba(47,144,152,.11);
+            border-radius: 50%;
+        }
+
+
+        .pid-card.is-premium {
             border-width: 2px;
+            --pid-border: #E0BF5D;
         }
 
 
-        .sc-idcard.theme-ocean {
-            --id-bg-a: #F0FCFE;
-            --id-bg-b: #D7F1F5;
-            --id-accent: #237F90;
-            --id-soft: #D2EDF1;
-            --id-border: #87C8D0;
+        .pid-card.theme-classic {
+            --pid-a: #F7FFFF;
+            --pid-b: #E6F6F3;
         }
 
 
-        .sc-idcard.theme-sunset {
-            --id-bg-a: #FFF8F3;
-            --id-bg-b: #FFE4D5;
-            --id-accent: #B9614D;
-            --id-soft: #F7DFD5;
-            --id-border: #E2A58B;
+        .pid-card.theme-ocean {
+            --pid-a: #EFFCFE;
+            --pid-b: #CFEFF3;
+            --pid-accent: #237F90;
+            --pid-accent-soft: #D3EEF1;
+            --pid-border: #83C6CF;
         }
 
 
-        .sc-idcard.theme-mint {
-            --id-bg-a: #F4FCF6;
-            --id-bg-b: #DDEFE2;
-            --id-accent: #4B886E;
-            --id-soft: #D9EEE1;
-            --id-border: #9FC5AE;
+        .pid-card.theme-sunset {
+            --pid-a: #FFF9F5;
+            --pid-b: #FFE4D5;
+            --pid-accent: #B9614D;
+            --pid-accent-soft: #F7DED4;
+            --pid-border: #E19A7E;
         }
 
 
-        .sc-idcard.theme-royal {
-            --id-bg-a: #F8F5FF;
-            --id-bg-b: #E8E0FC;
-            --id-accent: #5C4B95;
-            --id-soft: #E4DDF7;
-            --id-border: #B5A4DF;
+        .pid-card.theme-mint {
+            --pid-a: #F4FCF6;
+            --pid-b: #D9EDDF;
+            --pid-accent: #4B886E;
+            --pid-accent-soft: #D8ECE0;
+            --pid-border: #96C2A7;
         }
 
 
-        .sc-idcard svg {
+        .pid-card.theme-royal {
+            --pid-a: #F8F5FF;
+            --pid-b: #E4DAFA;
+            --pid-accent: #5C4B95;
+            --pid-accent-soft: #E4DDF7;
+            --pid-border: #AE9ADA;
+        }
+
+
+        .pid-card *,
+        .pid-card *::before,
+        .pid-card *::after {
+            box-sizing: border-box;
+        }
+
+
+        .pid-card svg {
             width: 1em;
             height: 1em;
             fill: currentColor;
         }
 
 
-    /* TOP */
+    /* =========================================================
+           TOP
+           ========================================================= */
 
-    .sc-idcard-top {
+    .pid-top {
         position: relative;
         z-index: 2;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 15px;
+        gap: 20px;
     }
 
 
-    .sc-idcard-brand {
+    .pid-brand {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 11px;
     }
 
 
-    .sc-idcard-logo {
-        width: clamp(36px,5vw,46px);
-        height: clamp(36px,5vw,46px);
-        padding: 4px;
+    .pid-logo {
+        width: 50px;
+        height: 50px;
+        padding: 5px;
         display: grid;
         place-items: center;
-        border-radius: 50%;
-        background: rgba(255,255,255,.82);
-        box-shadow: 0 3px 10px rgba(23,61,61,.07);
+        border-radius: 16px;
+        background: rgba(255,255,255,.88);
+        box-shadow: 0 6px 16px rgba(23,61,61,.07);
     }
 
 
-        .sc-idcard-logo img {
+        .pid-logo img {
             width: 100%;
             height: 100%;
             object-fit: contain;
         }
 
 
-    .sc-idcard-brand strong,
-    .sc-idcard-brand span {
+    .pid-brand strong,
+    .pid-brand span {
         display: block;
     }
 
 
-    .sc-idcard-brand strong {
-        font-size: clamp(.72rem,1.4vw,.95rem);
+    .pid-brand strong {
+        color: var(--pid-dark);
+        font-size: clamp( 15px, 1.5vw, 20px );
         font-weight: 950;
-        letter-spacing: -.03em;
+        letter-spacing: -.035em;
     }
 
 
-    .sc-idcard-brand span {
-        margin-top: 1px;
-        color: var(--id-muted);
-        font-size: clamp(.32rem,.6vw,.43rem);
-        font-weight: 850;
-        letter-spacing: .08em;
+    .pid-brand span {
+        margin-top: 2px;
+        color: var(--pid-muted);
+        font-size: 8px;
+        font-weight: 900;
+        letter-spacing: .12em;
     }
 
 
-    .sc-idcard-tier {
-        padding: clamp(5px,.75vw,8px) clamp(8px,1vw,11px);
+    .pid-tier {
+        min-height: 34px;
+        padding: 0 12px;
         display: inline-flex;
         align-items: center;
-        gap: 5px;
+        gap: 6px;
         border-radius: 999px;
-        font-size: clamp(.4rem,.7vw,.55rem);
+        font-size: 10px;
         font-weight: 900;
         white-space: nowrap;
     }
 
 
-        .sc-idcard-tier.basic {
-            background: var(--id-soft);
-            color: var(--id-accent);
+        .pid-tier.basic {
+            background: var(--pid-accent-soft);
+            color: var(--pid-accent);
         }
 
 
-        .sc-idcard-tier.premium {
-            border: 1px solid #E5C66E;
-            background: linear-gradient( 180deg, #FFF3CD, #FFE19A );
-            color: #75540E;
+        .pid-tier.premium {
+            border: 1px solid #E2BF58;
+            background: linear-gradient( 180deg, #FFF5D6, #FFE6A1 );
+            color: #74530B;
+            box-shadow: 0 5px 13px rgba(164,121,18,.12);
         }
 
 
-    /* MAIN */
+    /* =========================================================
+           MAIN
+           ========================================================= */
 
-    .sc-idcard-main {
+    .pid-main {
         position: relative;
         z-index: 2;
         flex: 1;
-        margin-top: 3.2%;
+        margin-top: clamp( 26px, 4.6%, 44px );
         display: grid;
-        grid-template-columns: 22% minmax(0,1fr) 18%;
+        grid-template-columns: minmax(145px,23%) minmax(0,1fr) minmax(135px,20%);
         align-items: center;
-        gap: 3.5%;
+        gap: clamp( 20px, 4%, 45px );
     }
 
 
-    .sc-idcard-photo {
+    /* PHOTO */
+
+    .pid-photo-area {
+        text-align: center;
+    }
+
+
+    .pid-photo {
         width: 100%;
+        max-width: 205px;
         aspect-ratio: 1;
+        margin: 0 auto;
         overflow: hidden;
-        border: clamp(3px,.45vw,5px) solid #FFFFFF;
+        display: grid;
+        place-items: center;
+        border: clamp( 4px, .5vw, 6px ) solid rgba(255,255,255,.98);
         border-radius: 50%;
         background: #DCEDEA;
-        box-shadow: 0 8px 20px rgba(23,61,61,.15);
+        box-shadow: 0 14px 30px rgba(23,61,61,.15);
     }
 
 
-        .sc-idcard-photo img {
+        .pid-photo img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
 
-        .sc-idcard-photo > div {
+        .pid-photo > span {
             width: 100%;
             height: 100%;
             display: grid;
             place-items: center;
-            background: linear-gradient( 135deg, var(--id-accent), #173D3D );
+            background: linear-gradient( 135deg, var(--pid-accent), #173D3D );
             color: #FFFFFF;
-            font-size: clamp(1.1rem,4vw,2rem);
+            font-size: 40px;
             font-weight: 950;
         }
 
 
-    .sc-idcard-info {
+    .pid-status {
+        margin-top: 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--pid-accent);
+        font-size: 9px;
+        font-weight: 900;
+    }
+
+
+    .pid-status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--pid-accent);
+        box-shadow: 0 0 0 4px rgba(47,144,152,.10);
+    }
+
+
+    /* DETAILS */
+
+    .pid-details {
         min-width: 0;
     }
 
 
-    .sc-idcard-row {
-        margin-bottom: 5px;
+    .pid-label {
+        color: var(--pid-accent);
+        font-size: 8px;
+        font-weight: 950;
+        letter-spacing: .12em;
+    }
+
+
+    .pid-details h2 {
+        margin: 4px 0 0;
+        color: var(--pid-dark);
+        font-size: clamp( 26px, 3.7vw, 43px );
+        line-height: .95;
+        font-weight: 950;
+        letter-spacing: -.055em;
+    }
+
+
+    .pid-description {
+        margin: 6px 0 0;
+        color: var(--pid-muted);
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+
+    .pid-info-grid {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: repeat( 2, minmax(0,1fr) );
+        gap: 8px;
+    }
+
+
+    .pid-info-item {
+        min-width: 0;
+        padding: 8px;
         display: flex;
         align-items: center;
-        gap: 7px;
+        gap: 8px;
+        border-radius: 10px;
+        background: rgba(255,255,255,.55);
     }
 
 
-    .sc-idcard-row-icon {
-        width: clamp(22px,2.8vw,29px);
-        height: clamp(22px,2.8vw,29px);
-        flex: 0 0 auto;
+    .pid-info-icon {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
         display: grid;
         place-items: center;
-        border-radius: 50%;
-        background: var(--id-soft);
-        color: var(--id-accent);
-        font-size: clamp(.55rem,.95vw,.72rem);
+        border-radius: 9px;
+        background: var(--pid-accent-soft);
+        color: var(--pid-accent);
+        font-size: 11px;
     }
 
 
-    .sc-idcard-row > span:last-child,
-    .sc-idcard-identity > div > span:last-child {
+    .pid-info-item > span:last-child {
         min-width: 0;
     }
 
 
-    .sc-idcard-row small,
-    .sc-idcard-row strong,
-    .sc-idcard-identity small,
-    .sc-idcard-identity strong {
+    .pid-info-item small,
+    .pid-info-item strong {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+
+    .pid-info-item small {
+        color: var(--pid-muted);
+        font-size: 7px;
+    }
+
+
+    .pid-info-item strong {
+        margin-top: 2px;
+        color: var(--pid-dark);
+        font-size: 10px;
+        font-weight: 900;
+    }
+
+
+    /* QR */
+
+    .pid-qr-column {
+        text-align: center;
+    }
+
+
+    .pid-qr {
+        width: 100%;
+        max-width: 175px;
+        margin: 0 auto;
+        padding: 11px;
+        border: 2px solid var(--pid-border);
+        border-radius: 17px;
+        background: #FFFFFF;
+        box-shadow: 0 10px 24px rgba(23,61,61,.09);
+    }
+
+
+        .pid-qr img {
+            width: 100%;
+            display: block;
+        }
+
+
+    .pid-scan-label {
+        display: block;
+        margin-top: 8px;
+        color: var(--pid-dark);
+        font-size: 8px;
+        font-weight: 950;
+        letter-spacing: .09em;
+    }
+
+
+    .pid-qr-column small {
+        display: block;
+        margin-top: 2px;
+        color: var(--pid-muted);
+        font-size: 7px;
+    }
+
+
+    /* =========================================================
+           IDENTITY BAR
+           ========================================================= */
+
+    .pid-identity-bar {
+        position: relative;
+        z-index: 2;
+        margin-top: 24px;
+        padding: 16px 0;
+        display: grid;
+        grid-template-columns: 1.3fr .7fr;
+        gap: 18px;
+        border-top: 1px solid rgba(47,144,152,.16);
+        border-bottom: 1px solid rgba(47,144,152,.12);
+    }
+
+
+        .pid-identity-bar > div {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+
+    .pid-round-icon {
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        display: grid;
+        place-items: center;
+        border-radius: 10px;
+        background: var(--pid-accent-soft);
+        color: var(--pid-accent);
+    }
+
+
+    .pid-identity-bar small,
+    .pid-identity-bar strong {
         display: block;
     }
 
 
-    .sc-idcard-row small,
-    .sc-idcard-identity small {
-        color: var(--id-muted);
-        font-size: clamp(.36rem,.6vw,.46rem);
+    .pid-identity-bar small {
+        color: var(--pid-muted);
+        font-size: 7px;
     }
 
 
-    .sc-idcard-row strong,
-    .sc-idcard-identity strong {
-        margin-top: 1px;
+    .pid-identity-bar strong {
+        margin-top: 2px;
         overflow: hidden;
-        color: var(--id-text);
-        font-size: clamp(.52rem,.9vw,.7rem);
+        color: var(--pid-dark);
+        font-size: 10px;
         font-weight: 900;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
 
-        .sc-idcard-row strong.name {
-            font-size: clamp(.72rem,1.4vw,1rem);
-        }
-
-
-    .sc-idcard-stats {
-        margin-top: 7px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: clamp(11px,2.2vw,23px);
+    .pid-number {
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        letter-spacing: .02em;
     }
 
 
-        .sc-idcard-stats > div {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+    /* =========================================================
+           SNAPSHOT
+           ========================================================= */
 
-
-            .sc-idcard-stats > div > svg {
-                color: var(--id-accent);
-                font-size: clamp(.55rem,.9vw,.7rem);
-            }
-
-
-        .sc-idcard-stats small,
-        .sc-idcard-stats strong {
-            display: block;
-        }
-
-
-        .sc-idcard-stats small {
-            color: var(--id-muted);
-            font-size: clamp(.33rem,.52vw,.41rem);
-        }
-
-
-        .sc-idcard-stats strong {
-            color: var(--id-text);
-            font-size: clamp(.43rem,.7vw,.55rem);
-        }
-
-
-    .sc-idcard-qr {
-        padding: clamp(5px,.8vw,8px);
-        border: 2px solid var(--id-border);
-        border-radius: clamp(9px,1.2vw,13px);
-        background: #FFFFFF;
-        text-align: center;
-        box-shadow: 0 6px 15px rgba(23,61,61,.08);
-    }
-
-
-        .sc-idcard-qr img {
-            width: 100%;
-            display: block;
-        }
-
-
-        .sc-idcard-qr span {
-            display: block;
-            margin-top: 2px;
-            color: #53635E;
-            font-size: clamp(.3rem,.47vw,.38rem);
-            font-weight: 900;
-        }
-
-
-    /* IDENTITY */
-
-    .sc-idcard-identity {
+    .pid-snapshot {
         position: relative;
         z-index: 2;
-        margin-top: 2.6%;
-        padding-top: 2.3%;
+        margin-top: 12px;
+        padding: 11px 13px;
         display: grid;
-        grid-template-columns: repeat(2,minmax(0,1fr));
-        gap: 13px;
-        border-top: 1px solid rgba(47,144,152,.16);
-    }
-
-
-        .sc-idcard-identity > div {
-            min-width: 0;
-            display: flex;
-            align-items: center;
-            gap: 7px;
-        }
-
-
-        .sc-idcard-identity strong.id {
-            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-        }
-
-
-    /* SUMMARY */
-
-    .sc-idcard-summary {
-        position: relative;
-        z-index: 2;
-        margin-top: 2.1%;
-        padding: 1.9% 2.3%;
-        display: grid;
-        grid-template-columns: repeat(3,minmax(0,1fr));
-        gap: 8px;
+        grid-template-columns: repeat( 3, minmax(0,1fr) );
+        gap: 10px;
         border: 1px solid rgba(47,144,152,.09);
-        border-radius: 11px;
-        background: rgba(255,255,255,.64);
+        border-radius: 12px;
+        background: rgba(255,255,255,.68);
     }
 
 
-        .sc-idcard-summary > div {
+        .pid-snapshot > div {
             min-width: 0;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
 
 
-            .sc-idcard-summary > div > svg {
+            .pid-snapshot > div > svg {
                 flex: 0 0 auto;
-                color: var(--id-accent);
-                font-size: clamp(.52rem,.85vw,.68rem);
+                color: var(--pid-accent);
+                font-size: 13px;
             }
 
 
-        .sc-idcard-summary small,
-        .sc-idcard-summary strong {
+        .pid-snapshot small,
+        .pid-snapshot strong {
             display: block;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -868,71 +1008,77 @@
         }
 
 
-        .sc-idcard-summary small {
-            color: var(--id-muted);
-            font-size: clamp(.3rem,.47vw,.38rem);
+        .pid-snapshot small {
+            color: var(--pid-muted);
+            font-size: 7px;
         }
 
 
-        .sc-idcard-summary strong {
-            color: var(--id-text);
-            font-size: clamp(.38rem,.6vw,.49rem);
+        .pid-snapshot strong {
+            margin-top: 1px;
+            color: var(--pid-dark);
+            font-size: 9px;
+            font-weight: 900;
         }
 
 
-    /* FOOTER */
+    /* =========================================================
+           FOOTER
+           ========================================================= */
 
-    .sc-idcard-footer {
+    .pid-footer {
         position: relative;
         z-index: 2;
         margin-top: auto;
-        padding-top: 1.7%;
+        padding-top: 10px;
         display: flex;
         justify-content: space-between;
-        gap: 10px;
-        color: var(--id-muted);
-        font-size: clamp(.29rem,.46vw,.37rem);
+        gap: 15px;
+        color: var(--pid-muted);
+        font-size: 7px;
         font-weight: 750;
     }
 
 
-    @@media (max-width: 570px) {
+    @@media (max-width: 640px) {
 
-        .sc-idcard {
+        .pid-card {
             aspect-ratio: auto;
-            min-height: 430px;
-            padding: 20px;
-            border-radius: 21px;
+            min-height: auto;
+            padding: 22px;
+            border-radius: 22px;
         }
 
 
-        .sc-idcard-main {
-            margin-top: 20px;
-            grid-template-columns: 92px minmax(0,1fr);
+        .pid-main {
+            grid-template-columns: 105px minmax(0,1fr);
         }
 
 
-        .sc-idcard-qr {
-            width: 105px;
+        .pid-qr-column {
             grid-column: 1 / -1;
+            width: 130px;
+            margin-top: 5px;
         }
 
 
-        .sc-idcard-identity {
-            margin-top: 18px;
-            padding-top: 14px;
+        .pid-info-grid {
             grid-template-columns: 1fr;
         }
 
 
-        .sc-idcard-summary {
-            margin-top: 12px;
+        .pid-identity-bar {
             grid-template-columns: 1fr;
         }
 
 
-        .sc-idcard-footer {
-            margin-top: 14px;
+        .pid-snapshot {
+            grid-template-columns: 1fr;
+        }
+
+
+        .pid-footer {
+            margin-top: 15px;
         }
     }
 
@@ -982,8 +1128,7 @@
         string.IsNullOrWhiteSpace(
             Pet.PetName)
             ? "P"
-            : Pet.PetName
-                .Substring(0, 1)
+            : Pet.PetName[..1]
                 .ToUpperInvariant();
 
 
@@ -998,7 +1143,7 @@
 
 
             var css =
-                "sc-idcard " +
+                "pid-card " +
                 Cards.GetThemeCssClass(
                     theme);
 

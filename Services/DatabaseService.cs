@@ -1,12 +1,17 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Shoppet_VetClinic.Models;
+
+
 
 namespace Shoppet_VetClinic.Services
 {
     public class DatabaseService
     {
-        private readonly string _connectionString;
 
+        private readonly string _connectionString;
+        private readonly PasswordHasher<UserAccount>
+            _passwordHasher = new();
         public DatabaseService(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("ShoppetDb")
@@ -525,139 +530,353 @@ namespace Shoppet_VetClinic.Services
             return users;
         }
 
-
-        private static UserAccount MapUser(SqlDataReader reader)
+        private static UserAccount MapUser(
+ SqlDataReader reader)
         {
             return new UserAccount
             {
-                Id = reader.GetInt32(0),
+                Id =
+                    reader.GetInt32(0),
 
-                FullName = reader.IsDBNull(1)
-                    ? string.Empty
-                    : reader.GetString(1),
+                FullName =
+                    reader.IsDBNull(1)
+                        ? string.Empty
+                        : reader.GetString(1),
 
-                Email = reader.IsDBNull(2)
-                    ? string.Empty
-                    : reader.GetString(2),
+                Email =
+                    reader.IsDBNull(2)
+                        ? string.Empty
+                        : reader.GetString(2),
 
-                Password = reader.IsDBNull(3)
-                    ? string.Empty
-                    : reader.GetString(3),
+                // Never expose the stored hash through the model.
+                Password =
+                    string.Empty,
 
-                Role = reader.IsDBNull(4)
-                    ? string.Empty
-                    : reader.GetString(4),
+                Role =
+                    reader.IsDBNull(4)
+                        ? string.Empty
+                        : reader.GetString(4),
 
-                ClinicId = reader.IsDBNull(5)
-                    ? null
-                    : reader.GetInt32(5),
+                ClinicId =
+                    reader.IsDBNull(5)
+                        ? null
+                        : reader.GetInt32(5),
 
-                CreatedAt = reader.GetDateTime(6),
+                CreatedAt =
+                    reader.IsDBNull(6)
+                        ? DateTime.Now
+                        : reader.GetDateTime(6),
 
-                IsPremium = !reader.IsDBNull(7)
-                    && reader.GetBoolean(7),
+                IsPremium =
+                    !reader.IsDBNull(7)
+                    &&
+                    reader.GetBoolean(7),
 
-                PremiumActivatedAt = reader.IsDBNull(8)
-                    ? null
-                    : reader.GetDateTime(8),
+                PremiumActivatedAt =
+                    reader.IsDBNull(8)
+                        ? null
+                        : reader.GetDateTime(8),
 
-                PremiumReference = reader.IsDBNull(9)
-                    ? null
-                    : reader.GetString(9),
+                PremiumReference =
+                    reader.IsDBNull(9)
+                        ? null
+                        : reader.GetString(9),
 
-                ApiToken = reader.IsDBNull(10)
-                    ? null
-                    : reader.GetString(10),
+                ApiToken =
+                    reader.IsDBNull(10)
+                        ? null
+                        : reader.GetString(10),
 
-                ApiTokenExpiresAt = reader.IsDBNull(11)
-                    ? null
-                    : reader.GetDateTime(11)
+                ApiTokenExpiresAt =
+                    reader.IsDBNull(11)
+                        ? null
+                        : reader.GetDateTime(11)
             };
         }
 
 
         public UserAccount? RegisterUser(
-            string fullName,
-            string email,
-            string password,
-            string role)
+    string fullName,
+    string email,
+    string password,
+    string role)
         {
-            using var conn = new SqlConnection(_connectionString);
+            fullName =
+                fullName.Trim();
+
+
+            email =
+                email
+                    .Trim()
+                    .ToLowerInvariant();
+
+
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
+
             conn.Open();
 
-            using var checkCmd = new SqlCommand(
-                "SELECT COUNT(1) FROM UserAccounts WHERE Email=@Email",
-                conn);
 
-            checkCmd.Parameters.AddWithValue("@Email", email);
+            using var checkCmd =
+                new SqlCommand(@"
+            SELECT COUNT(1)
+            FROM UserAccounts
+            WHERE Email = @Email;",
+                    conn);
 
-            if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
-                return null;
 
-            using var insertCmd = new SqlCommand(@"
-                INSERT INTO UserAccounts
-                    (FullName, Email, PasswordHash, Role)
-                OUTPUT
-                    INSERTED.Id,
-                    INSERTED.CreatedAt
-                VALUES
-                    (@FullName, @Email, @Password, @Role)",
-                conn);
+            checkCmd.Parameters.AddWithValue(
+                "@Email",
+                email);
 
-            insertCmd.Parameters.AddWithValue("@FullName", fullName);
-            insertCmd.Parameters.AddWithValue("@Email", email);
-            insertCmd.Parameters.AddWithValue("@Password", password);
-            insertCmd.Parameters.AddWithValue("@Role", role);
 
-            using var reader = insertCmd.ExecuteReader();
-
-            if (reader.Read())
+            if (Convert.ToInt32(
+                checkCmd.ExecuteScalar()) > 0)
             {
-                return new UserAccount
-                {
-                    Id = reader.GetInt32(0),
-                    FullName = fullName,
-                    Email = email,
-                    Password = password,
-                    Role = role,
-                    CreatedAt = reader.GetDateTime(1)
-                };
+                return null;
             }
 
-            return null;
+
+            var user =
+                new UserAccount
+                {
+                    FullName =
+                        fullName,
+
+                    Email =
+                        email,
+
+                    Role =
+                        role
+                };
+
+
+            var passwordHash =
+                _passwordHasher
+                    .HashPassword(
+                        user,
+                        password);
+
+
+            using var insertCmd =
+                new SqlCommand(@"
+            INSERT INTO UserAccounts
+            (
+                FullName,
+                Email,
+                PasswordHash,
+                Role
+            )
+
+            OUTPUT
+                INSERTED.Id,
+                INSERTED.CreatedAt
+
+            VALUES
+            (
+                @FullName,
+                @Email,
+                @PasswordHash,
+                @Role
+            );",
+                    conn);
+
+
+            insertCmd.Parameters.AddWithValue(
+                "@FullName",
+                fullName);
+
+
+            insertCmd.Parameters.AddWithValue(
+                "@Email",
+                email);
+
+
+            insertCmd.Parameters.AddWithValue(
+                "@PasswordHash",
+                passwordHash);
+
+
+            insertCmd.Parameters.AddWithValue(
+                "@Role",
+                role);
+
+
+            using var reader =
+                insertCmd.ExecuteReader();
+
+
+            if (!reader.Read())
+            {
+                return null;
+            }
+
+
+            user.Id =
+                reader.GetInt32(0);
+
+
+            user.CreatedAt =
+                reader.IsDBNull(1)
+                    ? DateTime.Now
+                    : reader.GetDateTime(1);
+
+
+            return user;
         }
-
-
-        public UserAccount? AuthenticateUser(string email, string password)
+        public UserAccount? AuthenticateUser(
+    string email,
+    string password)
         {
-            using var conn = new SqlConnection(_connectionString);
+            email =
+                email
+                    .Trim()
+                    .ToLowerInvariant();
+
+
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
+
             conn.Open();
 
-            using var cmd = new SqlCommand(@"
-                SELECT
-                    Id, FullName, Email, PasswordHash, Role,
-                    ClinicId, CreatedAt,
-                    ISNULL(IsPremium, 0),
-                    PremiumActivatedAt,
-                    PremiumReference,
-                    ApiToken,
-                    ApiTokenExpiresAt
-                FROM UserAccounts
-                WHERE Email=@Email
-                  AND PasswordHash=@Password",
-                conn);
 
-            cmd.Parameters.AddWithValue("@Email", email);
-            cmd.Parameters.AddWithValue("@Password", password);
+            using var cmd =
+                new SqlCommand(@"
+            SELECT
+                Id,
+                FullName,
+                Email,
+                PasswordHash,
+                Role,
+                ClinicId,
+                CreatedAt,
+                ISNULL(IsPremium, 0),
+                PremiumActivatedAt,
+                PremiumReference,
+                ApiToken,
+                ApiTokenExpiresAt
 
-            using var reader = cmd.ExecuteReader();
+            FROM UserAccounts
 
-            if (reader.Read())
-                return MapUser(reader);
+            WHERE Email = @Email;",
+                    conn);
 
-            return null;
+
+            cmd.Parameters.AddWithValue(
+                "@Email",
+                email);
+
+
+            UserAccount user;
+
+            string storedCredential;
+
+
+            using (var reader =
+                cmd.ExecuteReader())
+            {
+                if (!reader.Read())
+                {
+                    return null;
+                }
+
+
+                storedCredential =
+                    reader.IsDBNull(3)
+                        ? string.Empty
+                        : reader.GetString(3);
+
+
+                user =
+                    MapUser(
+                        reader);
+            }
+
+
+            PasswordVerificationResult verification;
+
+
+            try
+            {
+                verification =
+                    _passwordHasher
+                        .VerifyHashedPassword(
+                            user,
+                            storedCredential,
+                            password);
+            }
+            catch
+            {
+                // Existing database rows currently contain
+                // plain text. They are handled below.
+                verification =
+                    PasswordVerificationResult.Failed;
+            }
+
+
+            var legacyPlainTextMatch =
+                verification ==
+                    PasswordVerificationResult.Failed
+                &&
+                string.Equals(
+                    storedCredential,
+                    password,
+                    StringComparison.Ordinal);
+
+
+            if (!legacyPlainTextMatch &&
+                verification ==
+                    PasswordVerificationResult.Failed)
+            {
+                return null;
+            }
+
+
+            // Automatically migrate existing plaintext accounts
+            // to proper hashes on their next successful login.
+            if (legacyPlainTextMatch ||
+                verification ==
+                    PasswordVerificationResult.SuccessRehashNeeded)
+            {
+                var upgradedHash =
+                    _passwordHasher
+                        .HashPassword(
+                            user,
+                            password);
+
+
+                using var upgrade =
+                    new SqlCommand(@"
+                UPDATE UserAccounts
+
+                SET PasswordHash =
+                    @PasswordHash
+
+                WHERE Id =
+                    @Id;",
+                        conn);
+
+
+                upgrade.Parameters.AddWithValue(
+                    "@PasswordHash",
+                    upgradedHash);
+
+
+                upgrade.Parameters.AddWithValue(
+                    "@Id",
+                    user.Id);
+
+
+                upgrade.ExecuteNonQuery();
+            }
+
+
+            return user;
         }
-
 
         public UserAccount? GetUserById(int userId)
         {
@@ -687,6 +906,262 @@ namespace Shoppet_VetClinic.Services
             return null;
         }
 
+        public UserAccount? GetUserByEmail(
+    string email)
+        {
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
+
+            conn.Open();
+
+
+            using var cmd =
+                new SqlCommand(@"
+            SELECT
+                Id,
+                FullName,
+                Email,
+                PasswordHash,
+                Role,
+                ClinicId,
+                CreatedAt,
+                ISNULL(IsPremium, 0),
+                PremiumActivatedAt,
+                PremiumReference,
+                ApiToken,
+                ApiTokenExpiresAt
+
+            FROM UserAccounts
+
+            WHERE Email =
+                @Email;",
+                    conn);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Email",
+                email
+                    .Trim()
+                    .ToLowerInvariant());
+
+
+            using var reader =
+                cmd.ExecuteReader();
+
+
+            return
+                reader.Read()
+                    ? MapUser(reader)
+                    : null;
+        }
+
+
+        public bool UpdateUserPassword(
+     int userId,
+     string newPassword)
+        {
+            var user =
+                GetUserById(
+                    userId);
+
+
+            if (user is null)
+            {
+                return false;
+            }
+
+
+            var passwordHash =
+                _passwordHasher
+                    .HashPassword(
+                        user,
+                        newPassword);
+
+
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
+
+            conn.Open();
+
+
+            using var cmd =
+                new SqlCommand(@"
+            UPDATE UserAccounts
+
+            SET PasswordHash =
+                @PasswordHash
+
+            WHERE Id =
+                @Id;",
+                    conn);
+
+
+            cmd.Parameters.AddWithValue(
+                "@PasswordHash",
+                passwordHash);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Id",
+                userId);
+
+
+            return
+                cmd.ExecuteNonQuery() > 0;
+        }
+
+
+        public bool ChangeUserPassword(
+            int userId,
+            string currentPassword,
+            string newPassword)
+        {
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
+
+            conn.Open();
+
+
+            using var check =
+                new SqlCommand(@"
+            SELECT COUNT(1)
+            FROM UserAccounts
+            WHERE Id = @UserId
+              AND PasswordHash = @CurrentPassword",
+                    conn);
+
+
+            check.Parameters.AddWithValue(
+                "@UserId",
+                userId);
+
+
+            check.Parameters.AddWithValue(
+                "@CurrentPassword",
+                currentPassword);
+
+
+            var valid =
+                Convert.ToInt32(
+                    check.ExecuteScalar()) > 0;
+
+
+            if (!valid)
+            {
+                return false;
+            }
+
+
+            using var update =
+                new SqlCommand(@"
+            UPDATE UserAccounts
+            SET PasswordHash = @NewPassword
+            WHERE Id = @UserId",
+                    conn);
+
+
+            update.Parameters.AddWithValue(
+                "@NewPassword",
+                newPassword);
+
+
+            update.Parameters.AddWithValue(
+                "@UserId",
+                userId);
+
+
+            return
+                update.ExecuteNonQuery() > 0;
+        }
+
+        public bool EmailExistsForOtherUser(
+     string email,
+     int userId)
+        {
+            email =
+                email
+                    .Trim()
+                    .ToLowerInvariant();
+
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
+            conn.Open();
+
+            using var cmd =
+                new SqlCommand(@"
+            SELECT COUNT(1)
+            FROM UserAccounts
+            WHERE
+                LOWER(Email) = @Email
+                AND
+                Id <> @UserId;",
+                    conn);
+
+            cmd.Parameters.AddWithValue(
+                "@Email",
+                email);
+
+            cmd.Parameters.AddWithValue(
+                "@UserId",
+                userId);
+
+            return
+                Convert.ToInt32(
+                    cmd.ExecuteScalar()) > 0;
+        }
+
+
+        public bool UpdateUserProfile(
+            int userId,
+            string fullName,
+            string email)
+        {
+            fullName =
+                fullName.Trim();
+
+            email =
+                email
+                    .Trim()
+                    .ToLowerInvariant();
+
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
+            conn.Open();
+
+            using var cmd =
+                new SqlCommand(@"
+            UPDATE UserAccounts
+            SET
+                FullName = @FullName,
+                Email = @Email
+            WHERE Id = @Id;",
+                    conn);
+
+            cmd.Parameters.AddWithValue(
+                "@FullName",
+                fullName);
+
+            cmd.Parameters.AddWithValue(
+                "@Email",
+                email);
+
+            cmd.Parameters.AddWithValue(
+                "@Id",
+                userId);
+
+            return
+                cmd.ExecuteNonQuery() > 0;
+        }
 
         // =========================================================
         // PREMIUM (Pet ID Virtual Card Premium — ₱49 one-time)

@@ -162,6 +162,8 @@
                         </label>
 
                         <input id="register-name"
+                               type="text"
+                               maxlength="150"
                                placeholder="Juan Dela Cruz"
                                @bind="fullName"
                                autocomplete="name"
@@ -179,6 +181,7 @@
 
                         <input id="register-email"
                                type="email"
+                               maxlength="254"
                                placeholder="you@example.com"
                                @bind="email"
                                autocomplete="email"
@@ -196,11 +199,16 @@
 
                         <input id="register-password"
                                type="password"
-                               placeholder="At least 8 characters"
+                               maxlength="64"
+                               placeholder="Use at least 15 characters"
                                @bind="password"
                                autocomplete="new-password"
                                disabled="@isRegistering" />
 
+                        <small class="sc-register-password-help">
+                            Use at least 15 characters. Spaces are allowed,
+                            so a memorable passphrase works well.
+                        </small>
                     </div>
 
 
@@ -213,11 +221,11 @@
 
                         <input id="register-confirm"
                                type="password"
-                               placeholder="Enter your password again"
+                               maxlength="64"
+                               placeholder="Enter the same password again"
                                @bind="confirmPassword"
                                autocomplete="new-password"
                                disabled="@isRegistering" />
-
                     </div>
 
 
@@ -274,6 +282,13 @@
 
 
 <style>
+    .sc-register-password-help {
+        display: block;
+        margin-top: 5px;
+        color: #87948F;
+        font-size: .64rem;
+        line-height: 1.4;
+    }
 
     .sc-register-page {
         min-height: calc(100vh - 74px);
@@ -616,8 +631,6 @@
     }
 
 </style>
-
-
 @code {
 
     private string fullName =
@@ -653,41 +666,53 @@
 
 
         email =
-            email
-                .Trim()
-                .ToLowerInvariant();
+            AuthService.NormalizeEmail(
+                email);
 
 
-        if (
-            string.IsNullOrWhiteSpace(fullName)
-            ||
-            string.IsNullOrWhiteSpace(email)
-            ||
-            string.IsNullOrWhiteSpace(password)
-            ||
-            string.IsNullOrWhiteSpace(confirmPassword)
-        )
+        var nameError =
+            AuthService.ValidateFullName(
+                fullName);
+
+
+        if (nameError is not null)
         {
             errorMessage =
-                "Please complete all required fields.";
+                nameError;
 
             return;
         }
 
 
-        if (password.Length < 8)
+        if (!AuthService
+            .IsValidEmailAddress(
+                email))
         {
             errorMessage =
-                "Please use a password with at least 8 characters.";
+                "Please enter a valid email address.";
+
+            return;
+        }
+
+
+        var passwordError =
+            AuthService.ValidateNewPassword(
+                password);
+
+
+        if (passwordError is not null)
+        {
+            errorMessage =
+                passwordError;
 
             return;
         }
 
 
         if (!string.Equals(
-                password,
-                confirmPassword,
-                StringComparison.Ordinal))
+            password,
+            confirmPassword,
+            StringComparison.Ordinal))
         {
             errorMessage =
                 "The passwords do not match.";
@@ -696,7 +721,8 @@
         }
 
 
-        isRegistering = true;
+        isRegistering =
+            true;
 
 
         try
@@ -712,7 +738,7 @@
             if (user is null)
             {
                 errorMessage =
-                    "That email address is already registered.";
+                    "An account is already registered with that email address.";
 
                 return;
             }
@@ -723,10 +749,12 @@
                 user.FullName);
 
 
-            await Auth.LoginAsync(user);
+            await Auth.LoginAsync(
+                user);
 
 
-            Nav.NavigateTo("/home");
+            Nav.NavigateTo(
+                "/dashboard");
         }
         catch (Exception ex)
         {
@@ -739,7 +767,8 @@
         }
         finally
         {
-            isRegistering = false;
+            isRegistering =
+                false;
         }
     }
 
@@ -753,7 +782,8 @@
         await Auth.EnterGuestModeAsync();
 
 
-        Nav.NavigateTo("/home");
+        Nav.NavigateTo(
+            "/home");
     }
 
 }

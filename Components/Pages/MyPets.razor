@@ -5,117 +5,156 @@
 <PageTitle>My Pets | ShoppetCare</PageTitle>
 
 
-<div class="sp-pets-page">
+<div class="pets-page">
+
 
     <!-- =========================================================
          HERO
          ========================================================= -->
 
-    <section class="sp-pets-hero">
+    <section class="pets-hero">
 
-        <div class="sp-pets-shell sp-pets-hero-inner">
+        <div class="pets-shell pets-hero-grid">
 
-            <div>
+            <div class="pets-hero-copy">
 
-                <span class="sp-pets-eyebrow light">
+                <span class="pets-eyebrow">
                     PET MANAGEMENT
                 </span>
 
+
                 <h1>
-                    Everything about your pets,
-                    <em>in one place.</em>
+                    Everything about
+                    <em>your pets.</em>
                 </h1>
 
+
                 <p>
-                    Keep pet information current, manage photos,
-                    view health records, and access each pet's
-                    digital ShoppetCare ID.
+                    Update profiles, manage photos,
+                    open Digital Pet IDs, and keep
+                    important health records organized.
                 </p>
 
             </div>
 
 
-            <div class="sp-pets-hero-actions">
+            <aside class="pets-hero-panel">
 
-                @if (IsPremium)
-                {
-                    <span class="sp-premium-badge">
+                <div class="pets-hero-stat">
 
-                        <i class="bi bi-star-fill"></i>
-
-                        Premium Member
-
+                    <span>
+                        PET FAMILY
                     </span>
-                }
+
+                    <strong>
+                        @Pets.Count
+                    </strong>
+
+                    <small>
+                        @(Pets.Count == 1
+                            ? "Pet profile"
+                            : "Pet profiles")
+                    </small>
+
+                </div>
+
+
+                <div class="pets-plan">
+
+                    @if (IsPremium)
+                    {
+                        <span class="premium">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#star-fill"></use>
+                            </svg>
+
+                            Premium Member
+
+                        </span>
+                    }
+                    else
+                    {
+                        <span>
+                            Free Plan
+                        </span>
+                    }
+
+                </div>
+
 
                 <button type="button"
-                        class="sp-pets-add"
+                        class="add-pet"
                         disabled="@(!CanAddMorePets)"
                         @onclick="OpenAddForm">
 
-                    <i class="bi bi-plus-lg"></i>
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#plus-lg"></use>
+                    </svg>
 
                     Add Pet
 
                 </button>
 
-            </div>
+            </aside>
 
         </div>
 
     </section>
 
 
-    <section class="sp-pets-content">
+    <!-- =========================================================
+         CONTENT
+         ========================================================= -->
 
-        <div class="sp-pets-shell">
+    <section class="pets-content">
+
+        <div class="pets-shell">
 
 
-            <!-- =====================================================
-                 FREE PLAN NOTICE
-                 ===================================================== -->
-            @if (!IsPremium && Pets.Count >= 1)
+            @if (!IsPremium &&
+                 Pets.Count >= 1)
             {
-                <div class="sp-plan-notice">
+                <div class="plan-notice">
 
-                    <div class="sp-plan-icon">
+                    <span class="notice-icon">
 
-                        <i class="bi bi-info-circle"></i>
+                        <svg aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#info-circle"></use>
+                        </svg>
 
-                    </div>
+                    </span>
+
 
                     <div>
 
                         <strong>
-                            Your Free pet profile is active
+                            Your Free pet profile is active.
                         </strong>
 
-                        <span>
-                            You can continue editing this pet,
-                            changing its photo, using its Pet ID,
-                            and managing up to 5 health records.
-                            Premium unlocks additional pet profiles
-                            and unlimited health records.
-                        </span>
+                        <p>
+                            You can keep editing this pet,
+                            use its Digital Pet ID, and manage
+                            up to 5 health records.
+                        </p>
 
                     </div>
 
+
                     <a href="/premium">
-                        View Premium
+                        Compare Premium →
                     </a>
 
                 </div>
             }
 
 
-            <!-- =====================================================
-                 MESSAGE
-                 ===================================================== -->
-            @if (!string.IsNullOrWhiteSpace(StatusMessage))
+            @if (!string.IsNullOrWhiteSpace(
+                StatusMessage))
             {
                 <div class="@(IsError
-                                        ? "sp-pets-message error"
-                                        : "sp-pets-message success")">
+                                                    ? "pets-message error"
+                                                    : "pets-message success")">
 
                     @StatusMessage
 
@@ -124,343 +163,292 @@
 
 
             <!-- =====================================================
-                 ADD / EDIT PET FORM
+                 FORM
                  ===================================================== -->
             @if (ShowPetForm)
             {
-                <section class="sp-pet-form">
+                <section class="pet-editor">
 
-                    <div class="sp-pet-form-heading">
+                    <div class="editor-header">
 
                         <div>
 
-                            <span class="sp-pets-eyebrow">
+                            <span class="pets-eyebrow">
                                 @(IsEditingPet
-                                    ? "EDIT PET PROFILE"
-                                    : "NEW PET PROFILE")
+                                    ? "EDIT PET"
+                                    : "NEW PET")
                             </span>
 
                             <h2>
                                 @(IsEditingPet
                                     ? $"Update {PetForm.PetName}"
-                                    : "Add your pet")
+                                    : "Add a pet profile")
                             </h2>
 
                             <p>
-                                Choose from common options where
-                                possible to make pet information
-                                quicker and easier to enter.
+                                Use the guided choices below
+                                to keep information consistent.
                             </p>
 
                         </div>
 
 
                         <button type="button"
-                                class="sp-close-button"
+                                class="close-editor"
                                 disabled="@IsSaving"
                                 @onclick="ClosePetForm"
                                 aria-label="Close">
 
-                            <i class="bi bi-x-lg"></i>
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#x-lg"></use>
+                            </svg>
 
                         </button>
 
                     </div>
 
 
-                    <!-- =============================================
-                         PHOTO
-                         ============================================= -->
-
-                    <div class="sp-photo-editor">
-
-                        <div class="sp-photo-preview">
-
-                            @if (!string.IsNullOrWhiteSpace(
-                                PetPhotoPreview))
-                            {
-                                <img src="@PetPhotoPreview"
-                                     alt="Pet photo preview" />
-                            }
-                            else
-                            {
-                                <div class="sp-photo-placeholder">
-
-                                    <i class="bi bi-image"></i>
-
-                                    <span>
-                                        Pet Photo
-                                    </span>
-
-                                </div>
-                            }
-
-                        </div>
+                    <div class="editor-layout">
 
 
-                        <div class="sp-photo-copy">
+                        <!-- PHOTO -->
 
-                            <strong>
-                                Pet Photo
-                            </strong>
+                        <div class="photo-column">
 
-                            <p>
-                                Choose a clear JPG, PNG, or WEBP
-                                image from your device.
-                            </p>
+                            <div class="photo-preview">
 
-
-                            <label class="sp-file-picker">
-
-                                <i class="bi bi-upload"></i>
-
-                                @(IsEditingPet
-                                    ? "Choose New Photo"
-                                    : "Choose Photo")
-
-                                <InputFile OnChange="HandlePetPhotoSelected"
-                                           accept="image/jpeg,image/png,image/webp"
-                                           class="sp-file-input" />
-
-                            </label>
-
-
-                            @if (!string.IsNullOrWhiteSpace(
-                                SelectedPetFileName))
-                            {
-                                <small>
-                                    Selected: @SelectedPetFileName
-                                </small>
-                            }
-                            else if (IsEditingPet &&
-                                     !string.IsNullOrWhiteSpace(
-                                         PetPhotoPreview))
-                            {
-                                <small>
-                                    Current photo will remain unless
-                                    you choose a new one.
-                                </small>
-                            }
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- =============================================
-                         FORM FIELDS
-                         ============================================= -->
-
-                    <div class="sp-pet-form-grid">
-
-
-                        <!-- PET NAME -->
-
-                        <div class="sp-field wide">
-
-                            <label>
-                                Pet Name *
-                            </label>
-
-                            <input type="text"
-                                   maxlength="150"
-                                   @bind="PetForm.PetName"
-                                   placeholder="Example: Beba" />
-
-                        </div>
-
-
-                        <!-- SPECIES -->
-
-                        <div class="sp-field">
-
-                            <label>
-                                Species *
-                            </label>
-
-                            <select @bind="PetForm.Species"
-                                    @bind:after="SpeciesChanged">
-
-                                <option value="Dog">
-                                    Dog
-                                </option>
-
-                                <option value="Cat">
-                                    Cat
-                                </option>
-
-                                <option value="Rabbit">
-                                    Rabbit
-                                </option>
-
-                                <option value="Bird">
-                                    Bird
-                                </option>
-
-                                <option value="Hamster">
-                                    Hamster
-                                </option>
-
-                                <option value="Fish">
-                                    Fish
-                                </option>
-
-                                <option value="Other">
-                                    Other
-                                </option>
-
-                            </select>
-
-                        </div>
-
-
-                        <!-- BREED -->
-
-                        <div class="sp-field">
-
-                            <label>
-                                Breed
-                            </label>
-
-
-                            @if (PetForm.Species == "Other")
-                            {
-                                <input type="text"
-                                       maxlength="150"
-                                       @bind="PetForm.Breed"
-                                       placeholder="Enter breed or pet type" />
-                            }
-                            else
-                            {
-                                <select @bind="PetForm.Breed">
-
-                                    <option value="">
-                                        Select breed
-                                    </option>
-
-                                    @foreach (var breed in CurrentBreeds)
-                                    {
-                                        <option value="@breed">
-                                            @breed
-                                        </option>
-                                    }
-
-                                </select>
-                            }
-
-                        </div>
-
-
-                        <!-- AGE -->
-
-                        <div class="sp-field">
-
-                            <label>
-                                Age
-                            </label>
-
-                            <select @bind="PetForm.Age">
-
-                                <option value="">
-                                    Select age
-                                </option>
-
-                                @foreach (var age in AgeOptions)
+                                @if (!string.IsNullOrWhiteSpace(
+                                    PetPhotoPreview))
                                 {
-                                    <option value="@age">
-                                        @age
-                                    </option>
+                                    <img src="@PetPhotoPreview"
+                                         alt="Pet preview" />
+                                }
+                                else
+                                {
+                                    <span class="photo-placeholder">
+
+                                        <svg aria-hidden="true">
+                                            <use href="/icons/bootstrap-icons.svg#image"></use>
+                                        </svg>
+
+                                        Pet Photo
+
+                                    </span>
                                 }
 
-                            </select>
-
-                        </div>
+                            </div>
 
 
-                        <!-- WEIGHT -->
+                            <div class="photo-copy">
 
-                        <div class="sp-field">
+                                <strong>
+                                    Pet photo
+                                </strong>
 
-                            <label>
-                                Weight
-                            </label>
+                                <p>
+                                    JPG, PNG, or WEBP.
+                                    Maximum 5 MB.
+                                </p>
 
-                            <div class="sp-weight-field">
 
-                                <input type="number"
-                                       min="0"
-                                       step="0.1"
-                                       @bind="PetForm.WeightKg"
-                                       placeholder="0.0" />
+                                <label class="file-picker">
 
-                                <span>
-                                    kg
-                                </span>
+                                    <svg aria-hidden="true">
+                                        <use href="/icons/bootstrap-icons.svg#upload"></use>
+                                    </svg>
+
+                                    @(IsEditingPet
+                                        ? "Choose New Photo"
+                                        : "Choose Photo")
+
+                                    <InputFile OnChange="HandlePetPhotoSelected"
+                                               accept="image/jpeg,image/png,image/webp" />
+
+                                </label>
+
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                    SelectedPetFileName))
+                                {
+                                    <small>
+                                        @SelectedPetFileName
+                                    </small>
+                                }
 
                             </div>
 
                         </div>
 
 
-                        <!-- DIET -->
+                        <!-- FIELDS -->
 
-                        <div class="sp-field wide">
+                        <div class="editor-fields">
 
-                            <label>
-                                Usual Diet
-                            </label>
 
-                            <select @bind="PetForm.Diet">
+                            <div class="field full">
 
-                                <option value="">
-                                    Select usual diet
-                                </option>
+                                <label>
+                                    Pet Name *
+                                </label>
 
-                                @foreach (var diet in DietOptions)
+                                <input type="text"
+                                       maxlength="150"
+                                       @bind="PetForm.PetName"
+                                       placeholder="Example: Buddy" />
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label>
+                                    Species *
+                                </label>
+
+                                <select @bind="PetForm.Species"
+                                        @bind:after="SpeciesChanged">
+
+                                    <option value="Dog">Dog</option>
+                                    <option value="Cat">Cat</option>
+                                    <option value="Rabbit">Rabbit</option>
+                                    <option value="Bird">Bird</option>
+                                    <option value="Hamster">Hamster</option>
+                                    <option value="Fish">Fish</option>
+                                    <option value="Other">Other</option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label>
+                                    Breed
+                                </label>
+
+
+                                @if (PetForm.Species == "Other")
                                 {
-                                    <option value="@diet">
-                                        @diet
-                                    </option>
+                                    <input type="text"
+                                           maxlength="150"
+                                           @bind="PetForm.Breed"
+                                           placeholder="Enter breed or pet type" />
+                                }
+                                else
+                                {
+                                    <select @bind="PetForm.Breed">
+
+                                        <option value="">
+                                            Select breed
+                                        </option>
+
+                                        @foreach (var breed in CurrentBreeds)
+                                        {
+                                            <option value="@breed">
+                                                @breed
+                                            </option>
+                                        }
+
+                                    </select>
                                 }
 
-                            </select>
+                            </div>
+
+
+                            <div class="field">
+
+                                <label>
+                                    Age
+                                </label>
+
+                                <select @bind="PetForm.Age">
+
+                                    <option value="">
+                                        Select age
+                                    </option>
+
+                                    @foreach (var age in AgeOptions)
+                                    {
+                                        <option value="@age">
+                                            @age
+                                        </option>
+                                    }
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label>
+                                    Weight
+                                </label>
+
+                                <div class="weight-input">
+
+                                    <input type="number"
+                                           min="0"
+                                           step="0.1"
+                                           @bind="PetForm.WeightKg"
+                                           placeholder="0.0" />
+
+                                    <span>
+                                        kg
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="field full">
+
+                                <label>
+                                    Usual Diet
+                                </label>
+
+                                <select @bind="PetForm.Diet">
+
+                                    <option value="">
+                                        Select usual diet
+                                    </option>
+
+                                    @foreach (var diet in DietOptions)
+                                    {
+                                        <option value="@diet">
+                                            @diet
+                                        </option>
+                                    }
+
+                                </select>
+
+                            </div>
 
                         </div>
 
                     </div>
 
 
-                    <div class="sp-form-actions">
+                    <div class="editor-actions">
 
                         <button type="button"
-                                class="sp-primary-action"
+                                class="save"
                                 disabled="@IsSaving"
                                 @onclick="SavePetAsync">
 
-                            @if (IsSaving)
-                            {
-                                <span>
-                                    Saving...
-                                </span>
-                            }
-                            else if (IsEditingPet)
-                            {
-                                <span>
-                                    Save Changes
-                                </span>
-                            }
-                            else
-                            {
-                                <span>
-                                    Save Pet
-                                </span>
-                            }
+                            @(IsSaving
+                                ? "Saving..."
+                                : IsEditingPet
+                                    ? "Save Changes"
+                                    : "Save Pet")
 
                         </button>
 
 
                         <button type="button"
-                                class="sp-secondary-action"
+                                class="cancel"
                                 disabled="@IsSaving"
                                 @onclick="ClosePetForm">
 
@@ -475,29 +463,38 @@
 
 
             <!-- =====================================================
-                 SECTION TITLE
+                 COLLECTION HEADING
                  ===================================================== -->
 
-            <div class="sp-pets-section-heading">
+            <div class="collection-heading">
 
                 <div>
 
-                    <span class="sp-pets-eyebrow">
-                        YOUR PETS
+                    <span class="pets-eyebrow">
+                        YOUR PET FAMILY
                     </span>
 
                     <h2>
-                        Pet Profiles
+                        Pet collection
                     </h2>
+
+                    <p>
+                        Select a pet to edit its profile,
+                        open its Digital Pet ID,
+                        or manage health records.
+                    </p>
 
                 </div>
 
 
-                <span>
+                <span class="collection-count">
+
                     @Pets.Count
+
                     @(Pets.Count == 1
-                        ? "pet"
-                        : "pets")
+                        ? "Pet"
+                        : "Pets")
+
                 </span>
 
             </div>
@@ -508,43 +505,46 @@
                  ===================================================== -->
             @if (Pets.Count == 0)
             {
-                <section class="sp-empty-pets">
+                <div class="empty-pets">
 
-                    <div class="sp-empty-icon">
+                    <span class="empty-pets-icon">
 
-                        <i class="bi bi-heart"></i>
+                        <svg aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#heart"></use>
+                        </svg>
 
-                    </div>
+                    </span>
+
 
                     <h3>
-                        Your first pet profile starts here.
+                        Meet your first
+                        ShoppetCare pet profile.
                     </h3>
 
+
                     <p>
-                        Add your pet to create a Digital Pet ID,
-                        manage health information, and keep their
-                        details organized.
+                        Create a pet profile to unlock
+                        its Digital Pet ID and organized
+                        health-record workspace.
                     </p>
 
-                    <button type="button"
-                            class="sp-primary-action"
-                            @onclick="OpenAddForm">
 
-                        <i class="bi bi-plus-lg"></i>
+                    <button type="button"
+                            @onclick="OpenAddForm">
 
                         Add Your First Pet
 
                     </button>
 
-                </section>
+                </div>
             }
             else
             {
                 <!-- =================================================
-                     PET GRID
+                     PET CARDS
                      ================================================= -->
 
-                <div class="sp-pet-grid">
+                <div class="pet-grid">
 
                     @foreach (var pet in Pets)
                     {
@@ -553,12 +553,12 @@
                                 pet.Id);
 
 
-                        <article class="sp-pet-card">
+                        <article class="pet-card">
 
 
-                            <div class="sp-pet-card-header">
+                            <div class="pet-card-visual">
 
-                                <div class="sp-pet-card-photo">
+                                <div class="pet-photo">
 
                                     @if (!string.IsNullOrWhiteSpace(
                                         photoUrl))
@@ -568,171 +568,168 @@
                                     }
                                     else
                                     {
-                                        <div class="sp-pet-initial">
+                                        <span>
                                             @GetPetInitial(pet)
-                                        </div>
+                                        </span>
                                     }
-
-                                </div>
-
-
-                                <div class="sp-pet-title">
-
-                                    <span>
-                                        @pet.Species
-                                    </span>
-
-                                    <h3>
-                                        @pet.PetName
-                                    </h3>
-
-                                    <p>
-                                        @(string.IsNullOrWhiteSpace(
-                                            pet.Breed)
-                                            ? "Breed not specified"
-                                            : pet.Breed)
-                                    </p>
 
                                 </div>
 
 
                                 @if (IsPremium)
                                 {
-                                    <div class="sp-card-premium">
+                                    <span class="pet-premium">
 
-                                        <i class="bi bi-star-fill"></i>
+                                        <svg aria-hidden="true">
+                                            <use href="/icons/bootstrap-icons.svg#star-fill"></use>
+                                        </svg>
 
-                                    </div>
+                                        Premium
+
+                                    </span>
                                 }
 
                             </div>
 
 
-                            <!-- =====================================
-                                 DETAILS
-                                 ===================================== -->
+                            <div class="pet-card-body">
 
-                            <div class="sp-pet-info-grid">
+                                <span class="species">
+                                    @pet.Species
+                                </span>
 
-                                <div>
 
-                                    <span>
-                                        Age
-                                    </span>
+                                <h3>
+                                    @pet.PetName
+                                </h3>
 
-                                    <strong>
-                                        @(string.IsNullOrWhiteSpace(
-                                            pet.Age)
-                                            ? "Not set"
-                                            : pet.Age)
-                                    </strong>
+
+                                <p class="breed">
+                                    @(string.IsNullOrWhiteSpace(
+                                        pet.Breed)
+                                        ? "Breed not specified"
+                                        : pet.Breed)
+                                </p>
+
+
+                                <div class="pet-specs">
+
+                                    <div>
+
+                                        <span>
+                                            AGE
+                                        </span>
+
+                                        <strong>
+                                            @(string.IsNullOrWhiteSpace(
+                                                pet.Age)
+                                                ? "Not set"
+                                                : pet.Age)
+                                        </strong>
+
+                                    </div>
+
+
+                                    <div>
+
+                                        <span>
+                                            WEIGHT
+                                        </span>
+
+                                        <strong>
+                                            @(pet.WeightKg.HasValue
+                                                ? $"{pet.WeightKg.Value:0.##} kg"
+                                                : "Not set")
+                                        </strong>
+
+                                    </div>
 
                                 </div>
 
 
-                                <div>
+                                <div class="diet">
 
                                     <span>
-                                        Weight
-                                    </span>
-
-                                    <strong>
-                                        @(pet.WeightKg.HasValue
-                                            ? $"{pet.WeightKg.Value:0.##} kg"
-                                            : "Not set")
-                                    </strong>
-
-                                </div>
-
-
-                                <div class="wide">
-
-                                    <span>
-                                        Diet
+                                        USUAL DIET
                                     </span>
 
                                     <strong>
                                         @(string.IsNullOrWhiteSpace(
                                             pet.Diet)
-                                            ? "Not set"
+                                            ? "Not specified"
                                             : pet.Diet)
                                     </strong>
 
                                 </div>
 
-                            </div>
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                    pet.CardId))
+                                {
+                                    <div class="pet-id">
+
+                                        <div>
+
+                                            <span>
+                                                DIGITAL PET ID
+                                            </span>
+
+                                            <strong>
+                                                @pet.CardId
+                                            </strong>
+
+                                        </div>
 
 
-                            <!-- =====================================
-                                 PET ID
-                                 ===================================== -->
-                            @if (!string.IsNullOrWhiteSpace(
-                                                            pet.CardId))
-                            {
-                                <div class="sp-pet-id-strip">
-
-                                    <div>
-
-                                        <span>
-                                            DIGITAL PET ID
-                                        </span>
-
-                                        <strong>
-                                            @pet.CardId
-                                        </strong>
+                                        <svg aria-hidden="true">
+                                            <use href="/icons/bootstrap-icons.svg#qr-code"></use>
+                                        </svg>
 
                                     </div>
+                                }
 
-                                    <i class="bi bi-qr-code"></i>
+
+                                <div class="pet-actions">
+
+                                    <a href="/pet/@pet.Id/card"
+                                       class="primary">
+
+                                        <svg aria-hidden="true">
+                                            <use href="/icons/bootstrap-icons.svg#person-vcard"></use>
+                                        </svg>
+
+                                        Pet ID
+
+                                    </a>
+
+
+                                    <a href="/pet/@pet.Id/records">
+
+                                        Records
+
+                                    </a>
+
+
+                                    <button type="button"
+                                            @onclick="() => OpenEditForm(pet)">
+
+                                        Edit
+
+                                    </button>
+
+
+                                    <button type="button"
+                                            class="delete"
+                                            title="Delete pet"
+                                            @onclick="() => DeletePetAsync(pet)">
+
+                                        <svg aria-hidden="true">
+                                            <use href="/icons/bootstrap-icons.svg#trash3"></use>
+                                        </svg>
+
+                                    </button>
 
                                 </div>
-                            }
-
-
-                            <!-- =====================================
-                                 ACTIONS
-                                 ===================================== -->
-
-                            <div class="sp-pet-card-actions">
-
-                                <button type="button"
-                                        class="edit"
-                                        @onclick="() => OpenEditForm(pet)">
-
-                                    <i class="bi bi-pencil"></i>
-
-                                    Edit
-
-                                </button>
-
-
-                                <a href="/pet/@pet.Id/card"
-                                   class="primary">
-
-                                    <i class="bi bi-person-vcard"></i>
-
-                                    Pet ID
-
-                                </a>
-
-
-                                <a href="/pet/@pet.Id/records">
-
-                                    <i class="bi bi-clipboard2-pulse"></i>
-
-                                    Records
-
-                                </a>
-
-
-                                <button type="button"
-                                        class="delete"
-                                        @onclick="() => DeletePetAsync(pet)"
-                                        title="Delete pet">
-
-                                    <i class="bi bi-trash3"></i>
-
-                                </button>
 
                             </div>
 
@@ -751,15 +748,41 @@
 
 <style>
 
-    .sp-pets-page {
-        min-height: 100vh;
-        background: #FAF9F6;
-        color: #172A28;
+    :root {
+        --pc-teal: #2F9098;
+        --pc-teal-dark: #267C83;
+        --pc-dark: #173D3D;
+        --pc-cream: #FBF8F2;
+        --pc-yellow: #F3D27A;
+        --pc-border: #DDE7E4;
+        --pc-muted: #73847E;
     }
 
 
-    .sp-pets-shell {
-        width: min(1180px, calc(100% - 40px));
+    .pets-page,
+    .pets-page *,
+    .pets-page *::before,
+    .pets-page *::after {
+        box-sizing: border-box;
+    }
+
+
+    .pets-page {
+        min-height: 100vh;
+        color: var(--pc-dark);
+        background: var(--pc-cream);
+    }
+
+
+        .pets-page svg {
+            width: 1em;
+            height: 1em;
+            fill: currentColor;
+        }
+
+
+    .pets-shell {
+        width: min( 1480px, calc(100% - 48px) );
         margin: 0 auto;
     }
 
@@ -768,124 +791,163 @@
            HERO
            ========================================================= */
 
-    .sp-pets-hero {
-        padding: 58px 0 52px;
-        background: radial-gradient( circle at 88% 15%, rgba(243,210,122,.21), transparent 27% ), linear-gradient( 135deg, #173D3D, #102E2D );
-        color: #FFFFFF;
+    .pets-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 46px 0;
+        border-bottom: 1px solid var(--pc-border);
+        background: radial-gradient( circle at 90% 15%, rgba(47,144,152,.14), transparent 27% ), linear-gradient( 125deg, #FFFDF9, #FBF8F2 53%, #EEF7F5 );
     }
 
 
-    .sp-pets-hero-inner {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 35px;
-    }
-
-
-    .sp-pets-eyebrow {
-        display: inline-block;
-        color: #2F9098;
-        font-size: .64rem;
-        font-weight: 900;
-        letter-spacing: .11em;
-    }
-
-
-        .sp-pets-eyebrow.light {
-            color: #9ADBDD;
+        .pets-hero::after {
+            content: "";
+            position: absolute;
+            top: -290px;
+            right: -230px;
+            width: 440px;
+            height: 440px;
+            border: 1px solid rgba(47,144,152,.13);
+            border-radius: 50%;
         }
 
 
-    .sp-pets-hero h1 {
-        max-width: 700px;
-        margin: 9px 0 0;
-        font-size: clamp(2.6rem, 5vw, 4.6rem);
+    .pets-hero-grid {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: minmax(0,1fr) 340px;
+        align-items: end;
+        gap: 50px;
+    }
+
+
+    .pets-eyebrow {
+        display: block;
+        color: var(--pc-teal);
+        font-size: 11px;
         font-weight: 900;
-        line-height: .95;
+        letter-spacing: .12em;
+    }
+
+
+    .pets-hero h1 {
+        max-width: 760px;
+        margin: 8px 0 0;
+        color: var(--pc-dark);
+        font-size: clamp( 46px, 5vw, 72px );
+        line-height: .91;
+        font-weight: 900;
         letter-spacing: -.055em;
     }
 
 
-        .sp-pets-hero h1 em {
+        .pets-hero h1 em {
             display: block;
-            color: #F3D27A;
+            color: var(--pc-teal);
             font-family: Georgia, "Times New Roman", serif;
+            font-style: italic;
             font-weight: 500;
         }
 
 
-    .sp-pets-hero p {
-        max-width: 620px;
+    .pets-hero-copy > p {
+        max-width: 650px;
         margin: 18px 0 0;
-        color: rgba(255,255,255,.66);
+        color: #657771;
+        font-size: 15px;
         line-height: 1.65;
     }
 
 
-    .sp-pets-hero-actions {
-        display: flex;
-        align-items: center;
-        gap: 9px;
-        flex-wrap: wrap;
+    .pets-hero-panel {
+        padding: 21px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 15px;
+        align-items: end;
+        border: 1px solid #D5E3DF;
+        border-radius: 20px;
+        background: rgba(255,255,255,.88);
+        box-shadow: 0 13px 32px rgba(23,61,61,.07);
     }
 
 
-    .sp-premium-badge {
-        min-height: 43px;
-        padding: 0 13px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        border: 1px solid rgba(243,210,122,.3);
-        border-radius: 999px;
-        background: rgba(243,210,122,.10);
-        color: #F3D27A;
-        font-size: .67rem;
-        font-weight: 850;
+    .pets-hero-stat span,
+    .pets-hero-stat strong,
+    .pets-hero-stat small {
+        display: block;
     }
 
 
-    .sp-pets-add,
-    .sp-primary-action,
-    .sp-secondary-action {
-        min-height: 43px;
-        padding: 0 15px;
+    .pets-hero-stat > span {
+        color: var(--pc-teal);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .1em;
+    }
+
+
+    .pets-hero-stat strong {
+        margin-top: 3px;
+        color: var(--pc-dark);
+        font-size: 36px;
+        line-height: 1;
+        font-weight: 950;
+    }
+
+
+    .pets-hero-stat small {
+        margin-top: 3px;
+        color: #82908B;
+        font-size: 11px;
+    }
+
+
+    .pets-plan {
+        align-self: start;
+    }
+
+
+        .pets-plan > span {
+            padding: 7px 9px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border-radius: 999px;
+            background: #EEF3F1;
+            color: #65736E;
+            font-size: 10px;
+            font-weight: 850;
+        }
+
+
+            .pets-plan > span.premium {
+                border: 1px solid #E3CE7F;
+                background: #FFF4CF;
+                color: #806213;
+            }
+
+
+    .add-pet {
+        grid-column: 1 / -1;
+        min-height: 45px;
+        border: 0;
+        border-radius: 10px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 7px;
-        border-radius: 9px;
-        font-size: .71rem;
+        background: var(--pc-teal);
+        color: #FFFFFF;
+        font-size: 13px;
         font-weight: 850;
         cursor: pointer;
     }
 
 
-    .sp-pets-add,
-    .sp-primary-action {
-        border: 1px solid #2F9098;
-        background: #2F9098;
-        color: #FFFFFF;
-    }
-
-
-    .sp-pets-add {
-        border-color: #F3D27A;
-        background: #F3D27A;
-        color: #173D3D;
-    }
-
-
-    .sp-secondary-action {
-        border: 1px solid #D7E0DD;
-        background: #FFFFFF;
-        color: #586762;
-    }
-
-
     button:disabled {
-        opacity: .55;
+        opacity: .52;
         cursor: not-allowed;
     }
 
@@ -894,608 +956,609 @@
            CONTENT
            ========================================================= */
 
-    .sp-pets-content {
-        padding: 25px 0 80px;
+    .pets-content {
+        padding: 28px 0 74px;
     }
 
 
-    /* =========================================================
-           PLAN NOTICE
-           ========================================================= */
-
-    .sp-plan-notice {
-        margin-bottom: 17px;
-        padding: 14px 17px;
+    .plan-notice {
+        margin-bottom: 15px;
+        padding: 13px 15px;
         display: grid;
         grid-template-columns: auto minmax(0,1fr) auto;
         align-items: center;
         gap: 13px;
-        border: 1px solid #E7D59A;
+        border: 1px solid #E5D28E;
         border-radius: 13px;
         background: #FFF8DF;
     }
 
 
-    .sp-plan-icon {
-        width: 38px;
-        height: 38px;
+    .notice-icon {
+        width: 39px;
+        height: 39px;
         display: grid;
         place-items: center;
         border-radius: 10px;
         background: #FFFFFF;
-        color: #806212;
+        color: #896817;
     }
 
 
-    .sp-plan-notice strong,
-    .sp-plan-notice span {
-        display: block;
+    .plan-notice strong {
+        color: #5D4C1D;
+        font-size: 13px;
     }
 
 
-    .sp-plan-notice strong {
-        color: #5E4B17;
-        font-size: .73rem;
+    .plan-notice p {
+        margin: 3px 0 0;
+        color: #7F7144;
+        font-size: 11px;
     }
 
 
-    .sp-plan-notice span {
-        margin-top: 3px;
-        color: #7E6C37;
-        font-size: .65rem;
-        line-height: 1.45;
-    }
-
-
-    .sp-plan-notice a {
-        color: #6F5815;
-        font-size: .67rem;
+    .plan-notice a {
+        color: var(--pc-teal-dark);
+        font-size: 12px;
         font-weight: 850;
+        text-decoration: none;
     }
 
 
-    /* =========================================================
-           MESSAGE
-           ========================================================= */
-
-    .sp-pets-message {
-        margin-bottom: 17px;
+    .pets-message {
+        margin-bottom: 15px;
         padding: 12px 14px;
         border-radius: 10px;
-        font-size: .72rem;
+        font-size: 13px;
     }
 
 
-        .sp-pets-message.success {
+        .pets-message.success {
             border: 1px solid #B8DDCF;
             background: #EFFAF5;
             color: #28664D;
         }
 
 
-        .sp-pets-message.error {
-            border: 1px solid #F2B8B8;
+        .pets-message.error {
+            border: 1px solid #F0BEBE;
             background: #FFF3F3;
             color: #9B2C2C;
         }
 
 
     /* =========================================================
-           FORM
+           EDITOR
            ========================================================= */
 
-    .sp-pet-form {
-        margin-bottom: 27px;
-        padding: 25px;
-        border: 1px solid #DDE7E4;
-        border-radius: 19px;
+    .pet-editor {
+        margin-bottom: 34px;
+        padding: 27px;
+        border: 1px solid var(--pc-border);
+        border-radius: 21px;
         background: #FFFFFF;
-        box-shadow: 0 14px 36px rgba(23,61,61,.065);
+        box-shadow: 0 15px 38px rgba(23,61,61,.06);
     }
 
 
-    .sp-pet-form-heading {
+    .editor-header {
         display: flex;
-        align-items: flex-start;
         justify-content: space-between;
         gap: 20px;
     }
 
 
-        .sp-pet-form-heading h2 {
+        .editor-header h2 {
             margin: 5px 0 0;
-            color: #173D3D;
-            font-size: 1.35rem;
+            color: var(--pc-dark);
+            font-size: 26px;
             font-weight: 900;
+            letter-spacing: -.03em;
         }
 
 
-        .sp-pet-form-heading p {
+        .editor-header p {
             margin: 5px 0 0;
-            color: #80908B;
-            font-size: .69rem;
+            color: #82908B;
+            font-size: 12px;
         }
 
 
-    .sp-close-button {
-        width: 38px;
-        height: 38px;
+    .close-editor {
+        width: 40px;
+        height: 40px;
+        border: 1px solid #D8E3DF;
+        border-radius: 10px;
         display: grid;
         place-items: center;
-        border: 1px solid #DCE5E2;
-        border-radius: 9px;
         background: #FFFFFF;
-        color: #63716D;
+        color: #64746E;
         cursor: pointer;
     }
 
 
-    /* =========================================================
-           PHOTO EDITOR
-           ========================================================= */
+    .editor-layout {
+        margin-top: 22px;
+        display: grid;
+        grid-template-columns: 280px minmax(0,1fr);
+        gap: 25px;
+    }
 
-    .sp-photo-editor {
-        margin-top: 21px;
+
+    .photo-column {
         padding: 16px;
-        display: flex;
-        align-items: center;
-        gap: 17px;
-        border: 1px solid #E0E8E5;
-        border-radius: 14px;
-        background: #F8FBFA;
+        border-radius: 15px;
+        background: linear-gradient( 145deg, #EAF6F4, #F8FBFA );
     }
 
 
-    .sp-photo-preview {
-        width: 105px;
-        height: 105px;
-        flex: 0 0 105px;
+    .photo-preview {
+        width: 100%;
+        aspect-ratio: 1;
         overflow: hidden;
+        display: grid;
+        place-items: center;
         border-radius: 16px;
-        background: #ECF3F1;
+        background: #E4EFEC;
     }
 
 
-        .sp-photo-preview img {
+        .photo-preview img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
 
-    .sp-photo-placeholder {
-        width: 100%;
-        height: 100%;
+    .photo-placeholder {
         display: grid;
-        place-items: center;
-        align-content: center;
-        gap: 5px;
-        color: #8B9994;
+        justify-items: center;
+        gap: 7px;
+        color: #758681;
+        font-size: 12px;
     }
 
 
-        .sp-photo-placeholder i {
-            font-size: 1.4rem;
+        .photo-placeholder svg {
+            width: 25px;
+            height: 25px;
         }
 
 
-        .sp-photo-placeholder span {
-            font-size: .59rem;
+    .photo-copy {
+        margin-top: 13px;
+    }
+
+
+        .photo-copy strong {
+            color: var(--pc-dark);
+            font-size: 14px;
         }
 
 
-    .sp-photo-copy strong,
-    .sp-photo-copy p,
-    .sp-photo-copy small {
-        display: block;
-    }
+        .photo-copy p {
+            margin: 4px 0 10px;
+            color: #7A8984;
+            font-size: 11px;
+        }
 
 
-    .sp-photo-copy strong {
-        color: #173D3D;
-        font-size: .77rem;
-    }
-
-
-    .sp-photo-copy p {
-        margin: 4px 0 10px;
-        color: #7C8C87;
-        font-size: .64rem;
-    }
-
-
-    .sp-photo-copy small {
-        margin-top: 7px;
-        color: #73827D;
-        font-size: .6rem;
-    }
-
-
-    .sp-file-picker {
+    .file-picker {
         position: relative;
         min-height: 38px;
-        padding: 0 12px;
+        padding: 0 11px;
         display: inline-flex;
         align-items: center;
-        justify-content: center;
         gap: 6px;
         overflow: hidden;
-        border: 1px solid #C7D7D3;
-        border-radius: 8px;
+        border: 1px solid #C9DAD6;
+        border-radius: 9px;
         background: #FFFFFF;
-        color: #267C83;
-        font-size: .65rem;
+        color: var(--pc-teal-dark);
+        font-size: 12px;
         font-weight: 850;
         cursor: pointer;
     }
 
 
-    .sp-file-input {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        cursor: pointer;
+        .file-picker input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+
+    .photo-copy small {
+        display: block;
+        margin-top: 7px;
+        color: #7D8C87;
+        font-size: 10px;
     }
 
 
-    /* =========================================================
-           FIELDS
-           ========================================================= */
-
-    .sp-pet-form-grid {
-        margin-top: 18px;
+    .editor-fields {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0,1fr));
-        gap: 13px;
+        grid-template-columns: repeat( 2, minmax(0,1fr) );
+        gap: 14px;
     }
 
 
-    .sp-field.wide {
+    .field.full {
         grid-column: 1 / -1;
     }
 
 
-    .sp-field label {
+    .field label {
         display: block;
         margin-bottom: 6px;
-        color: #45554F;
-        font-size: .67rem;
+        color: #455A53;
+        font-size: 12px;
         font-weight: 850;
     }
 
 
-    .sp-field input,
-    .sp-field select {
+    .field input,
+    .field select {
         width: 100%;
-        min-height: 45px;
+        min-height: 46px;
         padding: 0 12px;
-        border: 1px solid #CFDCD8;
+        border: 1px solid #CDDCD8;
         border-radius: 9px;
         background: #FFFFFF;
-        color: #172A28;
+        color: var(--pc-dark);
+        font-size: 13px;
         outline: none;
     }
 
 
-        .sp-field input:focus,
-        .sp-field select:focus {
-            border-color: #2F9098;
+        .field input:focus,
+        .field select:focus {
+            border-color: var(--pc-teal);
             box-shadow: 0 0 0 3px rgba(47,144,152,.08);
         }
 
 
-    .sp-weight-field {
+    .weight-input {
         position: relative;
     }
 
 
-        .sp-weight-field input {
-            padding-right: 42px;
+        .weight-input input {
+            padding-right: 45px;
         }
 
 
-        .sp-weight-field span {
+        .weight-input span {
             position: absolute;
             top: 50%;
             right: 12px;
             transform: translateY(-50%);
-            color: #87958F;
-            font-size: .67rem;
+            color: #82908B;
+            font-size: 12px;
         }
 
 
-    .sp-form-actions {
-        margin-top: 19px;
+    .editor-actions {
+        margin-top: 20px;
         display: flex;
+        justify-content: flex-end;
         gap: 8px;
     }
 
 
+        .editor-actions button {
+            min-height: 43px;
+            padding: 0 14px;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 850;
+            cursor: pointer;
+        }
+
+
+        .editor-actions .save {
+            border: 1px solid var(--pc-teal);
+            background: var(--pc-teal);
+            color: #FFFFFF;
+        }
+
+
+        .editor-actions .cancel {
+            border: 1px solid #D3DFDC;
+            background: #FFFFFF;
+            color: #5F706A;
+        }
+
+
     /* =========================================================
-           PET SECTION
+           COLLECTION
            ========================================================= */
 
-    .sp-pets-section-heading {
-        margin: 30px 0 14px;
+    .collection-heading {
+        margin: 5px 0 16px;
         display: flex;
         align-items: flex-end;
         justify-content: space-between;
-        gap: 15px;
+        gap: 24px;
     }
 
 
-        .sp-pets-section-heading h2 {
-            margin: 4px 0 0;
-            color: #173D3D;
-            font-size: 1.45rem;
+        .collection-heading h2 {
+            margin: 5px 0 0;
+            color: var(--pc-dark);
+            font-size: 30px;
             font-weight: 900;
+            letter-spacing: -.04em;
         }
 
 
-        .sp-pets-section-heading > span {
-            color: #84928D;
-            font-size: .68rem;
+        .collection-heading p {
+            max-width: 600px;
+            margin: 6px 0 0;
+            color: #7C8C87;
+            font-size: 12px;
+            line-height: 1.5;
         }
+
+
+    .collection-count {
+        padding: 8px 11px;
+        border-radius: 999px;
+        background: #EAF5F5;
+        color: var(--pc-teal-dark);
+        font-size: 11px;
+        font-weight: 850;
+    }
 
 
     /* =========================================================
            PET GRID
            ========================================================= */
 
-    .sp-pet-grid {
+    .pet-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0,1fr));
-        gap: 14px;
+        grid-template-columns: repeat( 3, minmax(0,1fr) );
+        gap: 16px;
     }
 
 
-    .sp-pet-card {
-        padding: 18px;
-        border: 1px solid #DDE7E4;
-        border-radius: 17px;
+    .pet-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--pc-border);
+        border-radius: 21px;
         background: #FFFFFF;
-        box-shadow: 0 9px 25px rgba(23,61,61,.05);
-        transition: transform .18s ease, box-shadow .18s ease;
+        box-shadow: 0 10px 28px rgba(23,61,61,.05);
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
     }
 
 
-        .sp-pet-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 31px rgba(23,61,61,.08);
+        .pet-card:hover {
+            transform: translateY(-4px);
+            border-color: #BDD7D2;
+            box-shadow: 0 18px 40px rgba(23,61,61,.09);
         }
 
 
-    .sp-pet-card-header {
+    .pet-card-visual {
         position: relative;
-        display: flex;
-        align-items: center;
-        gap: 12px;
+        padding: 18px 18px 0;
     }
 
 
-    .sp-pet-card-photo {
-        width: 70px;
-        height: 70px;
-        flex: 0 0 70px;
+    .pet-photo {
+        width: 112px;
+        height: 112px;
         overflow: hidden;
-        border-radius: 18px;
-        background: #EEF4F1;
+        display: grid;
+        place-items: center;
+        border-radius: 24px;
+        background: linear-gradient( 135deg, #E4F1EE, #F2F7F5 );
     }
 
 
-        .sp-pet-card-photo img {
+        .pet-photo img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
 
-    .sp-pet-initial {
-        width: 100%;
-        height: 100%;
-        display: grid;
-        place-items: center;
-        background: linear-gradient( 135deg, #2F9098, #173D3D );
-        color: #FFFFFF;
-        font-size: 1.1rem;
-        font-weight: 900;
-    }
-
-
-    .sp-pet-title {
-        min-width: 0;
-        flex: 1;
-    }
-
-
-        .sp-pet-title > span {
-            color: #2F9098;
-            font-size: .56rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-        }
-
-
-        .sp-pet-title h3 {
-            margin: 2px 0 0;
-            color: #173D3D;
-            font-size: 1.02rem;
+        .pet-photo > span {
+            color: var(--pc-teal-dark);
+            font-size: 27px;
             font-weight: 900;
         }
 
 
-        .sp-pet-title p {
-            margin: 3px 0 0;
-            color: #84928D;
-            font-size: .64rem;
-        }
-
-
-    .sp-card-premium {
+    .pet-premium {
         position: absolute;
-        top: 0;
-        right: 0;
-        color: #C49A27;
-        font-size: .75rem;
+        top: 18px;
+        right: 18px;
+        padding: 7px 9px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: 1px solid #E4CF80;
+        border-radius: 999px;
+        background: #FFF4CF;
+        color: #806213;
+        font-size: 10px;
+        font-weight: 850;
     }
 
 
-    /* =========================================================
-           PET INFORMATION
-           ========================================================= */
+    .pet-card-body {
+        padding: 17px 18px 18px;
+    }
 
-    .sp-pet-info-grid {
+
+    .species {
+        color: var(--pc-teal);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+    }
+
+
+    .pet-card h3 {
+        margin: 3px 0 0;
+        color: var(--pc-dark);
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: -.025em;
+    }
+
+
+    .breed {
+        margin: 3px 0 0;
+        color: #75857F;
+        font-size: 12px;
+    }
+
+
+    .pet-specs {
         margin-top: 15px;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0,1fr));
+        grid-template-columns: repeat( 2, minmax(0,1fr) );
         gap: 7px;
     }
 
 
-        .sp-pet-info-grid > div {
-            padding: 9px;
-            border-radius: 8px;
-            background: #F8FAF9;
+        .pet-specs > div,
+        .diet {
+            padding: 10px;
+            border-radius: 9px;
+            background: #F6F9F8;
         }
 
 
-        .sp-pet-info-grid .wide {
-            grid-column: 1 / -1;
-        }
+            .pet-specs span,
+            .pet-specs strong,
+            .diet span,
+            .diet strong {
+                display: block;
+            }
 
 
-        .sp-pet-info-grid span,
-        .sp-pet-info-grid strong {
-            display: block;
-        }
+            .pet-specs span,
+            .diet span {
+                color: #95A19D;
+                font-size: 9px;
+                font-weight: 850;
+                letter-spacing: .07em;
+            }
 
 
-        .sp-pet-info-grid span {
-            color: #96A19E;
-            font-size: .54rem;
-            text-transform: uppercase;
-            letter-spacing: .05em;
-        }
+            .pet-specs strong,
+            .diet strong {
+                margin-top: 3px;
+                color: #52645D;
+                font-size: 12px;
+            }
 
 
-        .sp-pet-info-grid strong {
-            margin-top: 2px;
-            color: #55645F;
-            font-size: .65rem;
-        }
+    .diet {
+        margin-top: 7px;
+    }
 
 
-    /* =========================================================
-           PET ID
-           ========================================================= */
-
-    .sp-pet-id-strip {
+    .pet-id {
         margin-top: 11px;
-        padding: 10px 11px;
+        padding: 11px 12px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        border-radius: 9px;
-        background: linear-gradient( 135deg, #173D3D, #244C49 );
+        border-radius: 10px;
+        background: linear-gradient( 135deg, var(--pc-dark), #285751 );
         color: #FFFFFF;
     }
 
 
-        .sp-pet-id-strip span,
-        .sp-pet-id-strip strong {
+        .pet-id span,
+        .pet-id strong {
             display: block;
         }
 
 
-        .sp-pet-id-strip span {
-            color: #9ADBDD;
-            font-size: .5rem;
+        .pet-id span {
+            color: #A4D9D4;
+            font-size: 9px;
             font-weight: 900;
             letter-spacing: .08em;
         }
 
 
-        .sp-pet-id-strip strong {
+        .pet-id strong {
             margin-top: 2px;
             font-family: monospace;
-            font-size: .67rem;
+            font-size: 12px;
         }
 
 
-        .sp-pet-id-strip i {
-            color: #F3D27A;
-            font-size: 1.05rem;
+        .pet-id > svg {
+            width: 21px;
+            height: 21px;
+            color: var(--pc-yellow);
         }
 
 
-    /* =========================================================
-           ACTIONS
-           ========================================================= */
-
-    .sp-pet-card-actions {
+    .pet-actions {
         margin-top: 13px;
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: minmax(0,1fr) auto auto auto;
         gap: 6px;
     }
 
 
-        .sp-pet-card-actions a,
-        .sp-pet-card-actions button {
-            min-height: 35px;
+        .pet-actions a,
+        .pet-actions button {
+            min-height: 37px;
             padding: 0 9px;
+            border: 1px solid #D3DFDC;
+            border-radius: 8px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 5px;
-            border: 1px solid #D6E0DD;
-            border-radius: 8px;
             background: #FFFFFF;
-            color: #55645F;
-            font-size: .61rem;
-            font-weight: 800;
+            color: #586B64;
+            font-size: 11px;
+            font-weight: 850;
             text-decoration: none;
             cursor: pointer;
         }
 
 
-        .sp-pet-card-actions .primary {
-            border-color: #2F9098;
-            background: #2F9098;
+        .pet-actions .primary {
+            border-color: var(--pc-teal);
+            background: var(--pc-teal);
             color: #FFFFFF;
         }
 
 
-        .sp-pet-card-actions .edit {
-            color: #267C83;
+        .pet-actions .delete {
+            border-color: #ECCACA;
+            color: #A44747;
         }
 
 
-        .sp-pet-card-actions .delete {
-            margin-left: auto;
-            border-color: #EECACA;
-            color: #A04343;
-        }
+    /* EMPTY */
 
-
-    /* =========================================================
-           EMPTY
-           ========================================================= */
-
-    .sp-empty-pets {
-        padding: 70px 25px;
+    .empty-pets {
+        padding: 70px 24px;
         text-align: center;
-        border: 1px dashed #D5E0DD;
-        border-radius: 18px;
+        border: 1px dashed #C9DAD6;
+        border-radius: 20px;
         background: #FFFFFF;
     }
 
 
-    .sp-empty-icon {
+    .empty-pets-icon {
         width: 55px;
         height: 55px;
         margin: 0 auto;
@@ -1503,92 +1566,100 @@
         place-items: center;
         border-radius: 15px;
         background: #EAF5F5;
-        color: #2F9098;
-        font-size: 1.25rem;
+        color: var(--pc-teal);
     }
 
 
-    .sp-empty-pets h3 {
-        margin: 14px 0 0;
-        color: #173D3D;
-        font-size: 1rem;
+    .empty-pets h3 {
+        margin: 15px 0 0;
+        color: var(--pc-dark);
+        font-size: 24px;
         font-weight: 900;
     }
 
 
-    .sp-empty-pets p {
-        max-width: 470px;
-        margin: 6px auto 16px;
-        color: #85928E;
-        font-size: .69rem;
-        line-height: 1.5;
+    .empty-pets p {
+        max-width: 480px;
+        margin: 7px auto 17px;
+        color: #7F8E89;
+        font-size: 13px;
+        line-height: 1.55;
     }
 
 
-    /* =========================================================
-           RESPONSIVE
-           ========================================================= */
-
-    @@media (max-width: 900px) {
-
-        .sp-pets-hero-inner {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-
-
-        .sp-pet-grid {
-            grid-template-columns: repeat(2, minmax(0,1fr));
-        }
+    .empty-pets button {
+        min-height: 43px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 9px;
+        background: var(--pc-teal);
+        color: #FFFFFF;
+        font-size: 12px;
+        font-weight: 850;
     }
 
 
-    @@media (max-width: 650px) {
+    @@media (max-width: 1050px) {
 
-        .sp-pets-shell {
-            width: calc(100% - 24px);
-        }
-
-
-        .sp-pets-hero {
-            padding: 46px 0;
-        }
-
-
-            .sp-pets-hero h1 {
-                font-size: 2.5rem;
-            }
-
-
-        .sp-plan-notice {
-            grid-template-columns: auto minmax(0,1fr);
-        }
-
-
-            .sp-plan-notice > a {
-                grid-column: 2;
-            }
-
-
-        .sp-photo-editor {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-
-
-        .sp-pet-form-grid,
-        .sp-pet-grid {
+        .pets-hero-grid {
             grid-template-columns: 1fr;
         }
 
 
-        .sp-field.wide,
-        .sp-pet-info-grid .wide {
+        .pets-hero-panel {
+            max-width: 420px;
+        }
+
+
+        .pet-grid {
+            grid-template-columns: repeat( 2, minmax(0,1fr) );
+        }
+    }
+
+
+    @@media (max-width: 740px) {
+
+        .pets-shell {
+            width: calc(100% - 24px);
+        }
+
+
+        .editor-layout {
+            grid-template-columns: 1fr;
+        }
+
+
+        .photo-column {
+            max-width: 320px;
+        }
+    }
+
+
+    @@media (max-width: 600px) {
+
+        .pet-grid,
+        .editor-fields {
+            grid-template-columns: 1fr;
+        }
+
+
+        .field.full {
             grid-column: auto;
         }
 
 
-        .sp-form-actions {
+        .plan-notice {
+            grid-template-columns: auto minmax(0,1fr);
+        }
+
+
+            .plan-notice > a {
+                grid-column: 2;
+            }
+
+
+        .collection-heading {
+            align-items: flex-start;
             flex-direction: column;
         }
     }

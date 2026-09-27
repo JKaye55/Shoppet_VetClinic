@@ -1,112 +1,335 @@
 @page "/dashboard"
 @rendermode InteractiveServer
 
-@using Microsoft.AspNetCore.Components.Forms
 @using Shoppet_VetClinic.Models
 @using Shoppet_VetClinic.Services
-@inject FileStorageService FileStorage
+
 @inject DatabaseService DbService
+@inject FileStorageService FileStorage
 @inject AuthService Auth
 @inject NavigationManager Nav
 
-<div class="dashboard-page">
+<PageTitle>My ShoppetCare | Overview</PageTitle>
 
-    @if (isCheckingAuth)
+
+<div class="ov-page">
+
+    @if (!isReady)
     {
-        <div class="container-xl py-5">
-            <div class="loading-card">
-                Loading your dashboard...
-            </div>
+        <div class="ov-loading">
+            Loading My ShoppetCare...
         </div>
     }
-    else if (isAuthenticated)
+    else
     {
-        <main class="container-xl py-5">
+        <main class="ov-shell">
 
-            @if (!string.IsNullOrWhiteSpace(message) && !showUpgradePrompt)
-            {
-                <div class="alert @(messageIsError ? "alert-danger" : "alert-success")
-                    rounded-4 border-0 shadow-sm mb-4">
-                    @message
-                </div>
-            }
-            @if (showUpgradePrompt)
-            {
-                <div class="alert alert-warning rounded-3 border d-flex justify-content-between align-items-center flex-wrap gap-3 mt-3">
-                    <div>
-                        <strong>Free plan limit reached</strong><br />
-                        <span class="small">
-                            Upgrade to Pet ID Virtual Card Premium for unlimited pets
-                            and unlimited health records.
-                        </span>
-                    </div>
-                    <a href="/premium" class="btn btn-warning rounded-pill fw-bold px-4">
-                        <i class="bi bi-star-fill"></i> Upgrade for ₱49
-                    </a>
-                </div>
-            }
 
             <!-- =====================================================
-                 PROFILE HEADER
+                 HERO
                  ===================================================== -->
 
-            <section class="profile-card mb-4">
+            <section class="ov-hero">
 
-                <div class="profile-photo-area">
+                <div class="ov-hero-main">
 
-                    @if (!string.IsNullOrWhiteSpace(profilePhotoPreview))
+                    <span class="ov-eyebrow">
+                        MY SHOPPETCARE
+                    </span>
+
+
+                    <div class="ov-owner">
+
+                        <div class="ov-owner-photo">
+
+                            @if (!string.IsNullOrWhiteSpace(
+                                ownerPhotoUrl))
+                            {
+                                <img src="@ownerPhotoUrl"
+                                     alt="@Auth.CurrentUser?.FullName" />
+                            }
+                            else
+                            {
+                                <span>
+                                    @GetInitials()
+                                </span>
+                            }
+
+                        </div>
+
+
+                        <h1>
+                            Welcome back,
+                            <em>@FirstName.</em>
+                        </h1>
+
+                    </div>
+
+
+                    <p class="ov-hero-copy">
+                        One connected place for your pets,
+                        Digital Pet IDs, trusted veterinary care,
+                        community, and the ShoppetCare marketplace.
+                    </p>
+
+
+                    <div class="ov-hero-actions">
+
+                        <a href="/my-pets"
+                           class="primary">
+
+                            Manage My Pets
+
+                            <span>→</span>
+
+                        </a>
+
+
+                        <a href="/marketplace"
+                           class="secondary">
+
+                            Explore Marketplace
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+
+                <!-- MEMBERSHIP -->
+
+                <aside class="ov-membership">
+
+                    <span class="ov-membership-label">
+                        MEMBERSHIP
+                    </span>
+
+
+                    @if (Auth.IsPremium)
                     {
-                        <img src="@profilePhotoPreview"
-                             class="profile-photo"
-                             alt="Profile photo" />
+                        <div class="ov-membership-title">
+
+                            <span class="star">
+
+                                <svg aria-hidden="true">
+                                    <use href="/icons/bootstrap-icons.svg#star-fill"></use>
+                                </svg>
+
+                            </span>
+
+
+                            <div>
+
+                                <strong>
+                                    Lifetime Premium
+                                </strong>
+
+                                <small>
+                                    Active membership
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <p>
+                            Your account has Premium pet-management
+                            and Pet ID features enabled.
+                        </p>
+
+
+                        <a href="/account">
+                            Manage membership →
+                        </a>
                     }
                     else
                     {
-                        <div class="profile-photo-placeholder">
-                            @GetUserInitials()
-                        </div>
+                        <strong class="ov-free-plan">
+                            Free Plan
+                        </strong>
+
+                        <p>
+                            Core pet-management tools
+                            are ready to use.
+                        </p>
+
+
+                        <a href="/premium">
+                            Explore Premium →
+                        </a>
                     }
 
-                    <label class="photo-upload-button">
-                        Change Photo
+                </aside>
 
-                        <InputFile OnChange="HandleProfilePhotoSelected"
-                                   accept="image/png,image/jpeg,image/webp"
-                                   class="file-input-hidden" />
-                    </label>
+            </section>
+
+
+            <!-- =====================================================
+                 ACCOUNT TODAY
+                 ===================================================== -->
+
+            <section class="ov-today">
+
+                <div class="ov-today-title">
+
+                    <span class="ov-eyebrow">
+                        ACCOUNT TODAY
+                    </span>
+
+                    <h2>
+                        The essentials,
+                        <em>right away.</em>
+                    </h2>
 
                 </div>
 
-                <div class="profile-information">
 
-                    <span class="eyebrow">
-                        MY ACCOUNT
-                    </span>
+                <div class="ov-metrics">
 
-                    <h1>
-                        Welcome, @userName
-                    </h1>
 
-                    <p>
-                        @userEmail
-                    </p>
+                    <a href="/my-pets"
+                       class="ov-metric primary">
 
-                    <span class="account-role">
-                        @userRole
-                    </span>
+                        <span class="metric-icon">
 
-                </div>
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#heart-fill"></use>
+                            </svg>
 
-                <div class="profile-actions">
+                        </span>
 
-                    <a href="/inquire"
-                       class="primary-action">
-                        New Inquiry
+
+                        <span class="metric-copy">
+
+                            <strong>
+                                @pets.Count
+                            </strong>
+
+                            <span>
+                                Pet Profiles
+                            </span>
+
+                            <small>
+                                Manage pet family
+                            </small>
+
+                        </span>
+
+
+                        <span class="metric-arrow">
+                            →
+                        </span>
+
                     </a>
 
+
+                    <a href="/my-pets"
+                       class="ov-metric">
+
+                        <span class="metric-icon">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#qr-code"></use>
+                            </svg>
+
+                        </span>
+
+
+                        <span class="metric-copy">
+
+                            <strong>
+                                @activePetIdCount
+                            </strong>
+
+                            <span>
+                                Digital Pet IDs
+                            </span>
+
+                            <small>
+                                Active identities
+                            </small>
+
+                        </span>
+
+
+                        <span class="metric-arrow">
+                            →
+                        </span>
+
+                    </a>
+
+
+                    <a href="/my-pets"
+                       class="ov-metric">
+
+                        <span class="metric-icon">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#clipboard2-pulse"></use>
+                            </svg>
+
+                        </span>
+
+
+                        <span class="metric-copy">
+
+                            <strong>
+                                @healthRecordCount
+                            </strong>
+
+                            <span>
+                                Health Records
+                            </span>
+
+                            <small>
+                                Across your pets
+                            </small>
+
+                        </span>
+
+
+                        <span class="metric-arrow">
+                            →
+                        </span>
+
+                    </a>
+
+
                     <a href="/clinics"
-                       class="secondary-action">
-                        Find a Clinic
+                       class="ov-metric">
+
+                        <span class="metric-icon">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#calendar-event"></use>
+                            </svg>
+
+                        </span>
+
+
+                        <span class="metric-copy">
+
+                            <strong>
+                                @appointments.Count
+                            </strong>
+
+                            <span>
+                                Upcoming Visits
+                            </span>
+
+                            <small>
+                                Veterinary care
+                            </small>
+
+                        </span>
+
+
+                        <span class="metric-arrow">
+                            →
+                        </span>
+
                     </a>
 
                 </div>
@@ -115,664 +338,346 @@
 
 
             <!-- =====================================================
-                 STATISTICS
+                 MAIN BENTO
                  ===================================================== -->
 
-            <div class="row g-4 mb-4">
-
-                <div class="col-md-4">
-
-                    <div class="stat-card">
-
-                        <span>MY PETS</span>
-
-                        <strong>
-                            @pets.Count
-                        </strong>
-
-                        <small>
-                            Saved pet profiles
-                        </small>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-4">
-
-                    <div class="stat-card">
-
-                        <span>MY INQUIRIES</span>
-
-                        <strong>
-                            @inquiryCount
-                        </strong>
-
-                        <small>
-                            Front-desk requests
-                        </small>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-4">
-
-                    <div class="stat-card">
-
-                        <span>UPCOMING APPOINTMENTS</span>
-
-                        <strong>
-                            @appointments.Count
-                        </strong>
-
-                        <small>
-                            Scheduled clinic visits
-                        </small>
-
-                    </div>
-
-                </div>
-
-            </div>
+            <section class="ov-bento">
 
 
-            <!-- =====================================================
-                 MAIN CONTENT
-                 ===================================================== -->
+                <!-- PET HUB -->
 
-            <div class="row g-4">
+                <article class="ov-pet-hub">
 
-                <!-- =================================================
-                     PET PROFILES
-                     ================================================= -->
+                    <div class="ov-pet-heading">
 
-                <div class="col-lg-7">
+                        <div>
 
-                    <section class="panel-card h-100">
+                            <span class="ov-eyebrow">
+                                PET HUB
+                            </span>
 
-                        <div class="panel-header">
+                            <h2>
+                                Your pet family.
+                            </h2>
 
-                            <div>
-
-                                <span class="section-label">
-                                    PET MANAGEMENT
-                                </span>
-
-                                <h2>
-                                    My Pet Profiles
-                                </h2>
-
-                                <p>
-                                    Save your pets once so you can easily select them
-                                    for inquiries and appointments.
-                                </p>
-
-                            </div>
-
-                            <button type="button"
-                                    class="outline-action"
-                                    @onclick="OpenAddPetForm">
-
-                                Add Pet
-
-                            </button>
+                            <p>
+                                My Pets is the single management
+                                workspace for profiles, photos,
+                                Digital Pet IDs, and health records.
+                            </p>
 
                         </div>
 
 
-                        <!-- =================================================
-                             PET FORM
-                             ================================================= -->
-                        @if (showPetForm)
-                        {
-                            <div class="pet-form">
+                        <span class="ov-count">
 
-                                <div class="form-top">
+                            @pets.Count
 
-                                    <div>
+                            @(pets.Count == 1
+                                ? "Pet"
+                                : "Pets")
 
-                                        <div class="form-section-title">
-                                            @(isEditingPet
-                                                ? "Edit Pet Profile"
-                                                : "New Pet Profile")
-                                        </div>
+                        </span>
 
-                                        <div class="form-section-subtitle">
-                                            Add your pet's information and photo.
-                                        </div>
-
-                                    </div>
-
-                                </div>
+                    </div>
 
 
-                                <!-- PET PHOTO -->
+                    @if (pets.Count == 0)
+                    {
+                        <div class="ov-empty-family">
 
-                                <div class="pet-photo-section">
+                            <span class="empty-icon">
 
-                                    <div class="pet-photo-preview">
+                                <svg aria-hidden="true">
+                                    <use href="/icons/bootstrap-icons.svg#heart"></use>
+                                </svg>
 
-                                        @if (!string.IsNullOrWhiteSpace(petPhotoPreview))
+                            </span>
+
+
+                            <div>
+
+                                <strong>
+                                    Start your pet family.
+                                </strong>
+
+                                <p>
+                                    Create your first pet profile
+                                    and Digital Pet ID.
+                                </p>
+
+                            </div>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="ov-family">
+
+                            <div class="ov-avatar-stack">
+
+                                @foreach (var pet in pets.Take(4))
+                                {
+                                    var photo =
+                                        GetPetPhoto(
+                                            pet.Id);
+
+
+                                    <div class="ov-pet-avatar"
+                                         title="@pet.PetName">
+
+                                        @if (!string.IsNullOrWhiteSpace(photo))
                                         {
-                                            <img src="@petPhotoPreview"
-                                                 alt="Pet photo"
-                                                 class="pet-photo" />
+                                            <img src="@photo"
+                                                 alt="@pet.PetName" />
                                         }
                                         else
                                         {
-                                            <div class="pet-photo-placeholder">
-                                                Pet Photo
-                                            </div>
+                                            <span>
+                                                @GetPetInitial(pet)
+                                            </span>
                                         }
-
-                                    </div>
-
-                                    <div class="pet-photo-controls">
-
-                                        <strong>
-                                            Pet Photo
-                                        </strong>
-
-                                        <span>
-                                            Add a clear photo of your pet.
-                                        </span>
-
-                                        <label class="upload-photo-button">
-
-                                            Choose Photo
-
-                                            <InputFile OnChange="HandlePetPhotoSelected"
-                                                       accept="image/png,image/jpeg,image/webp"
-                                                       class="file-input-hidden" />
-
-                                        </label>
-
-                                        @if (!string.IsNullOrWhiteSpace(selectedPetFileName))
-                                        {
-                                            <small>
-                                                @selectedPetFileName
-                                            </small>
-                                        }
-
-                                    </div>
-
-                                </div>
-
-
-                                <!-- PET DETAILS -->
-
-                                <div class="row g-3">
-
-                                    <div class="col-md-6">
-
-                                        <label>
-                                            Pet Name
-                                        </label>
-
-                                        <input class="form-control"
-                                               @bind="petForm.PetName"
-                                               placeholder="e.g. Beba" />
-
-                                    </div>
-
-
-                                    <div class="col-md-6">
-
-                                        <label>
-                                            Species
-                                        </label>
-
-                                        <select class="form-select"
-                                                @bind="petForm.Species"
-                                                @bind:after="SpeciesChanged">
-
-                                            <option value="Dog">
-                                                Dog
-                                            </option>
-
-                                            <option value="Cat">
-                                                Cat
-                                            </option>
-
-                                            <option value="Rabbit">
-                                                Rabbit
-                                            </option>
-
-                                            <option value="Bird">
-                                                Bird
-                                            </option>
-
-                                            <option value="Other">
-                                                Other
-                                            </option>
-
-                                        </select>
-
-                                    </div>
-
-
-                                    <div class="col-md-6">
-
-                                        <label>
-                                            Breed
-                                        </label>
-
-                                        <select class="form-select"
-                                                @bind="petForm.Breed">
-
-                                            @foreach (var breed in CurrentBreeds)
-                                            {
-                                                <option value="@breed">
-                                                    @breed
-                                                </option>
-                                            }
-
-                                        </select>
-
-                                    </div>
-
-
-                                    <div class="col-md-6">
-
-                                        <label>
-                                            Age
-                                        </label>
-
-                                        <select class="form-select"
-                                                @bind="petForm.Age">
-
-                                            <option value="">
-                                                Select age
-                                            </option>
-
-                                            <option>
-                                                Under 1 year
-                                            </option>
-
-                                            <option>
-                                                1 year
-                                            </option>
-
-                                            <option>
-                                                2 years
-                                            </option>
-
-                                            <option>
-                                                3 years
-                                            </option>
-
-                                            <option>
-                                                4 years
-                                            </option>
-
-                                            <option>
-                                                5 years
-                                            </option>
-
-                                            <option>
-                                                6–8 years
-                                            </option>
-
-                                            <option>
-                                                9–12 years
-                                            </option>
-
-                                            <option>
-                                                13+ years
-                                            </option>
-
-                                        </select>
-
-                                    </div>
-
-
-                                    <div class="col-md-6">
-
-                                        <label>
-                                            Weight
-                                        </label>
-
-                                        <select class="form-select"
-                                                @bind="selectedWeight">
-
-                                            <option value="">
-                                                Not set
-                                            </option>
-
-                                            @for (decimal kg = 1; kg <= 30; kg++)
-                                            {
-                                                <option value="@kg">
-                                                    @kg.ToString("0") kg
-                                                </option>
-                                            }
-
-                                        </select>
-
-                                    </div>
-
-
-                                    <div class="col-md-6">
-
-                                        <label>
-                                            Diet
-                                        </label>
-
-                                        <select class="form-select"
-                                                @bind="petForm.Diet">
-
-                                            <option value="">
-                                                Not specified
-                                            </option>
-
-                                            <option>
-                                                Regular Pet Food
-                                            </option>
-
-                                            <option>
-                                                Royal Canin
-                                            </option>
-
-                                            <option>
-                                                Hill's
-                                            </option>
-
-                                            <option>
-                                                Purina
-                                            </option>
-
-                                            <option>
-                                                Special / Prescription Diet
-                                            </option>
-
-                                        </select>
-
-                                    </div>
-
-                                </div>
-
-
-                                <!-- FORM BUTTONS -->
-
-                                <div class="form-actions">
-
-                                    <button type="button"
-                                            class="save-action"
-                                            @onclick="SavePet"
-                                            disabled="@isSavingPet">
-
-                                        @(isSavingPet
-                                            ? "Saving..."
-                                            : isEditingPet
-                                                ? "Update Pet"
-                                                : "Save Pet")
-
-                                    </button>
-
-                                    <button type="button"
-                                            class="cancel-action"
-                                            @onclick="ClosePetForm"
-                                            disabled="@isSavingPet">
-
-                                        Cancel
-
-                                    </button>
-
-                                </div>
-
-                            </div>
-                        }
-
-
-                        <!-- =================================================
-                             PET LIST
-                             ================================================= -->
-                        @if (pets.Count == 0)
-                        {
-                            <div class="empty-box">
-
-                                <strong>
-                                    No saved pets yet.
-                                </strong>
-
-                                <span>
-                                    Add your first pet above.
-                                </span>
-
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="pet-list">
-
-                                @foreach (var pet in pets)
-                                {
-                                    <div class="pet-row">
-
-                                        <div class="pet-row-left">
-
-                                            <div class="pet-list-photo">
-
-                                                @{
-                                                    var photoUrl = GetPetPhoto(pet.Id);
-                                                }
-
-                                                @if (!string.IsNullOrWhiteSpace(photoUrl))
-                                                {
-                                                    <img src="@photoUrl"
-                                                         alt="@pet.PetName" />
-                                                }
-                                                else
-                                                {
-                                                    <span>
-                                                        @GetPetInitial(pet)
-                                                    </span>
-                                                }
-
-                                            </div>
-
-
-                                            <div class="pet-details">
-
-                                                <strong>
-                                                    @pet.PetName
-                                                </strong>
-
-                                                <span>
-                                                    @pet.Species · @pet.Breed
-                                                </span>
-
-                                                <small>
-
-                                                    @(string.IsNullOrWhiteSpace(pet.Age)
-                                                        ? "Age not set"
-                                                        : pet.Age)
-
-                                                    ·
-
-                                                    @(pet.WeightKg.HasValue
-                                                        ? $"{pet.WeightKg:0.#} kg"
-                                                        : "Weight not set")
-
-                                                    ·
-
-                                                    @(string.IsNullOrWhiteSpace(pet.Diet)
-                                                        ? "Diet not set"
-                                                        : pet.Diet)
-
-                                                </small>
-
-                                            </div>
-
-                                        </div>
-
-
-                                        <div class="pet-row-actions">
-
-                                            <a href="/pet/@pet.Id/card"
-                                               class="pet-id-button">
-
-                                                Pet ID
-
-                                            </a>
-
-                                            <a href="/pet/@pet.Id/records"
-                                               class="records-button">
-
-                                                Records
-
-                                            </a>
-
-                                            <button type="button"
-                                                    class="edit-pet-button"
-                                                    @onclick="() => OpenEditPetForm(pet)"
-                                                    disabled="@isSavingPet">
-
-                                                Edit
-
-                                            </button>
-
-                                            <button type="button"
-                                                    class="delete-pet-button"
-                                                    @onclick="() => DeletePet(pet)"
-                                                    disabled="@isSavingPet">
-
-                                                Delete
-
-                                            </button>
-
-                                        </div>
 
                                     </div>
                                 }
 
                             </div>
-                        }
-
-                    </section>
-
-                </div>
 
 
-                <!-- =================================================
-                     APPOINTMENTS
-                     ================================================= -->
+                            <div class="ov-family-copy">
 
-                <div class="col-lg-5">
-
-                    <section class="panel-card h-100">
-
-                        <div class="panel-header">
-
-                            <div>
-
-                                <span class="section-label">
-                                    SCHEDULE
-                                </span>
-
-                                <h2>
-                                    Upcoming Appointments
-                                </h2>
+                                <strong>
+                                    @GetPetFamilyHeadline()
+                                </strong>
 
                                 <p>
-                                    Your scheduled clinic visits and selected time slots.
+                                    Ready whenever you need
+                                    to update a profile,
+                                    open an ID card,
+                                    or review records.
                                 </p>
 
                             </div>
 
-                            <a href="/clinics"
-                               class="outline-action text-decoration-none">
+                        </div>
+                    }
 
-                                Book
 
-                            </a>
+                    <div class="ov-capabilities">
+
+                        <div>
+
+                            <span class="cap-icon">
+
+                                <svg aria-hidden="true">
+                                    <use href="/icons/bootstrap-icons.svg#person-vcard"></use>
+                                </svg>
+
+                            </span>
+
+                            <span>
+
+                                <strong>
+                                    Profiles
+                                </strong>
+
+                                <small>
+                                    Identity &amp; details
+                                </small>
+
+                            </span>
 
                         </div>
 
 
-                        @if (appointments.Count == 0)
-                        {
-                            <div class="empty-box">
+                        <div>
+
+                            <span class="cap-icon">
+
+                                <svg aria-hidden="true">
+                                    <use href="/icons/bootstrap-icons.svg#qr-code"></use>
+                                </svg>
+
+                            </span>
+
+                            <span>
 
                                 <strong>
-                                    No appointments scheduled.
+                                    Digital Pet ID
                                 </strong>
 
-                                <span>
-                                    Choose a clinic, pet, service, date, and available time.
-                                </span>
+                                <small>
+                                    Scannable identity
+                                </small>
 
-                                <a href="/clinics"
-                                   class="empty-action">
+                            </span>
 
-                                    Find Available Clinics
-
-                                </a>
-
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="appointment-list">
-
-                                @foreach (var appointment in appointments)
-                                {
-                                    <div class="appointment-row">
-
-                                        <div class="appointment-date">
-
-                                            <strong>
-                                                @appointment.AppointmentDate.ToString("dd")
-                                            </strong>
-
-                                            <span>
-                                                @appointment.AppointmentDate.ToString("MMM")
-                                            </span>
-
-                                        </div>
+                        </div>
 
 
-                                        <div class="appointment-info">
+                        <div>
 
-                                            <strong>
-                                                @appointment.ServiceType
-                                            </strong>
+                            <span class="cap-icon">
 
-                                            <span>
-                                                @appointment.PetName
-                                            </span>
+                                <svg aria-hidden="true">
+                                    <use href="/icons/bootstrap-icons.svg#clipboard2-pulse"></use>
+                                </svg>
 
-                                            <small>
-                                                @GetClinicName(appointment.ClinicId)
-                                            </small>
+                            </span>
 
-                                            <small>
-                                                @appointment.AppointmentDate.ToString(
-                                                    "dddd, MMM d, yyyy · h:mm tt")
-                                            </small>
+                            <span>
 
-                                        </div>
+                                <strong>
+                                    Health Records
+                                </strong>
+
+                                <small>
+                                    Care information
+                                </small>
+
+                            </span>
+
+                        </div>
+
+                    </div>
 
 
-                                        <button type="button"
-                                                class="cancel-link"
-                                                @onclick="() => CancelAppointment(appointment.Id)">
+                    <a href="/my-pets"
+                       class="ov-open-pets">
 
-                                            Cancel
+                        Open My Pets
 
-                                        </button>
+                        <span>→</span>
 
-                                    </div>
-                                }
+                    </a>
 
-                            </div>
-                        }
+                </article>
 
-                    </section>
 
-                </div>
+                <!-- MARKETPLACE -->
 
-            </div>
+                <a href="/marketplace"
+                   class="ov-marketplace">
+
+                    <div class="marketplace-top">
+
+                        <span class="market-icon">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#shop"></use>
+                            </svg>
+
+                        </span>
+
+                        <span class="market-pill">
+                            PET-OWNER MARKETPLACE
+                        </span>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="ov-eyebrow">
+                            PRE-LOVED MARKETPLACE
+                        </span>
+
+                        <h2>
+                            Give pet items
+                            <em>a second home.</em>
+                        </h2>
+
+                        <p>
+                            Browse or sell useful pet items
+                            directly with fellow pet owners.
+                        </p>
+
+                    </div>
+
+
+                    <span class="ov-card-link">
+                        Explore Marketplace →
+                    </span>
+
+                </a>
+
+
+                <!-- CARE -->
+
+                <a href="/clinics"
+                   class="ov-small-card care">
+
+                    <span class="small-icon">
+
+                        <svg aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#hospital"></use>
+                        </svg>
+
+                    </span>
+
+
+                    <div>
+
+                        <span class="ov-eyebrow">
+                            VERIFIED CARE
+                        </span>
+
+                        <h3>
+                            Find veterinary care.
+                        </h3>
+
+                        <p>
+                            Discover trusted local clinics.
+                        </p>
+
+                    </div>
+
+
+                    <span class="small-arrow">
+                        →
+                    </span>
+
+                </a>
+
+
+                <!-- COMMUNITY -->
+
+                <a href="/community"
+                   class="ov-small-card community">
+
+                    <span class="small-icon">
+
+                        <svg aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#people-fill"></use>
+                        </svg>
+
+                    </span>
+
+
+                    <div>
+
+                        <span class="ov-eyebrow">
+                            COMMUNITY
+                        </span>
+
+                        <h3>
+                            Share pet moments.
+                        </h3>
+
+                        <p>
+                            Connect through stories and photos.
+                        </p>
+
+                    </div>
+
+
+                    <span class="small-arrow">
+                        →
+                    </span>
+
+                </a>
+
+            </section>
 
         </main>
     }
@@ -781,1343 +686,1046 @@
 
 
 <style>
-    .pet-id-button,
-    .records-button {
-        min-height: 32px;
-        padding: 0 10px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 999px;
-        font-size: .58rem;
-        font-weight: 850;
-        text-decoration: none;
+
+    :root {
+        --sc-teal: #2F9098;
+        --sc-teal-dark: #267C83;
+        --sc-dark: #173D3D;
+        --sc-deep: #102E2D;
+        --sc-cream: #FBF8F2;
+        --sc-yellow: #F3D27A;
+        --sc-yellow-soft: #FFF5D6;
+        --sc-border: #DDE7E4;
+        --sc-muted: #70817B;
+        --sc-white: #FFFFFF;
     }
 
-    .pet-id-button {
-        border: 1px solid #2F9098;
-        background: #2F9098;
-        color: #FFFFFF;
+
+    .ov-page,
+    .ov-page *,
+    .ov-page *::before,
+    .ov-page *::after {
+        box-sizing: border-box;
     }
 
-        .pet-id-button:hover {
-            background: #267C83;
-            color: #FFFFFF;
-        }
 
-    .records-button {
-        border: 1px solid #CFE0DC;
-        background: #F3F8F6;
-        color: #267C83;
-    }
-
-        .records-button:hover {
-            border-color: #2F9098;
-            background: #EAF5F5;
-            color: #267C83;
-        }
-
-    .dashboard-page {
+    .ov-page {
         min-height: 100vh;
-        background: #FAF8F5;
-        color: #1E2824;
+        padding: 32px 0 76px;
+        color: var(--sc-dark);
+        background: radial-gradient( circle at 94% 3%, rgba(47,144,152,.10), transparent 22% ), var(--sc-cream);
     }
 
-    .loading-card {
-        background: white;
-        border-radius: 20px;
-        padding: 50px;
-        text-align: center;
-        box-shadow: 0 12px 35px rgba(30,40,36,.07);
+
+        .ov-page svg {
+            width: 1em;
+            height: 1em;
+            fill: currentColor;
+        }
+
+
+    .ov-shell,
+    .ov-loading {
+        width: min( 1480px, calc(100% - 48px) );
+        margin: 0 auto;
     }
 
-    .profile-card {
-        display: flex;
-        align-items: center;
-        gap: 24px;
-        background: white;
-        border: 1px solid #E5E9E6;
-        border-radius: 24px;
-        padding: 24px;
-        box-shadow: 0 10px 30px rgba(30,40,36,.05);
-    }
 
-    .profile-photo-area {
-        width: 108px;
-        flex-shrink: 0;
+    .ov-loading {
+        padding: 90px 0;
+        color: var(--sc-muted);
         text-align: center;
     }
 
-    .profile-photo,
-    .profile-photo-placeholder {
-        width: 96px;
-        height: 96px;
-        border-radius: 50%;
-        object-fit: cover;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: auto;
-    }
 
-    .profile-photo-placeholder {
-        background: #1E2D27;
-        color: white;
-        font-size: 1.5rem;
-        font-weight: 850;
-    }
-
-    .photo-upload-button {
-        display: inline-flex;
-        margin-top: 9px;
-        cursor: pointer;
-        background: #EEF4F1;
-        color: #3F6256;
-        border-radius: 999px;
-        padding: 6px 11px;
-        font-size: .68rem;
-        font-weight: 800;
-    }
-
-    .file-input-hidden {
-        display: none;
-    }
-
-    .profile-information {
-        flex: 1;
-    }
-
-    .eyebrow,
-    .section-label {
-        color: #5C766D;
-        font-size: .7rem;
-        font-weight: 850;
-        letter-spacing: .13em;
-    }
-
-    .profile-information h1 {
-        margin: 5px 0 5px;
-        font-size: clamp(1.7rem, 3vw, 2.4rem);
-        font-weight: 850;
-        letter-spacing: -.04em;
-    }
-
-    .profile-information p {
-        margin: 0;
-        color: #7C8782;
-        font-size: .85rem;
-    }
-
-    .account-role {
-        display: inline-block;
-        margin-top: 8px;
-        padding: 5px 10px;
-        border-radius: 999px;
-        background: #EEF4F1;
-        color: #3F6256;
-        font-size: .67rem;
-        font-weight: 850;
-        text-transform: uppercase;
-    }
-
-    .profile-actions {
-        display: flex;
-        gap: 9px;
-        flex-wrap: wrap;
-    }
-
-    .primary-action,
-    .save-action {
-        border: 0;
-        background: #F7DD7D;
-        color: #2F423B;
-        border-radius: 999px;
-        padding: 12px 20px;
-        font-weight: 850;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-        .primary-action:hover,
-        .save-action:hover {
-            background: #F2D257;
-            color: #2F423B;
-        }
-
-        .save-action:disabled,
-        .cancel-action:disabled,
-        .edit-pet-button:disabled,
-        .delete-pet-button:disabled {
-            opacity: .55;
-            cursor: not-allowed;
-        }
-
-    .secondary-action {
-        border: 1px solid #CBD6D1;
-        background: white;
-        color: #456157;
-        border-radius: 999px;
-        padding: 11px 18px;
-        font-weight: 800;
-        text-decoration: none;
-    }
-
-        .secondary-action:hover {
-            background: #EEF4F1;
-            color: #1E2D27;
-        }
-
-    .stat-card {
-        background: white;
-        border: 1px solid #E5E9E6;
-        border-radius: 20px;
-        padding: 24px;
-        box-shadow: 0 10px 30px rgba(30,40,36,.05);
-    }
-
-        .stat-card span {
-            display: block;
-            color: #7C8782;
-            font-size: .7rem;
-            font-weight: 850;
-            letter-spacing: .08em;
-        }
-
-        .stat-card strong {
-            display: block;
-            color: #1E2824;
-            font-size: 2.5rem;
-            line-height: 1.1;
-            margin: 8px 0 4px;
-        }
-
-        .stat-card small {
-            color: #68746F;
-        }
-
-    .panel-card {
-        background: white;
-        border: 1px solid #E5E9E6;
-        border-radius: 22px;
-        padding: 26px;
-        box-shadow: 0 10px 30px rgba(30,40,36,.05);
-    }
-
-    .panel-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: start;
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-
-        .panel-header h2 {
-            margin: 4px 0;
-            font-size: 1.35rem;
-            font-weight: 850;
-        }
-
-        .panel-header p {
-            margin: 0;
-            color: #7C8782;
-            font-size: .82rem;
-        }
-
-    .outline-action {
-        border: 1px solid #AAB8B2;
-        background: white;
-        color: #456157;
-        border-radius: 999px;
-        padding: 8px 15px;
-        font-weight: 750;
-        white-space: nowrap;
-        cursor: pointer;
-    }
-
-        .outline-action:hover {
-            background: #EEF4F1;
-            color: #1E2D27;
-        }
-
-    .pet-form {
-        background: #EEF4F1;
-        border-radius: 18px;
-        padding: 20px;
-        margin-bottom: 18px;
-    }
-
-    .form-top {
-        margin-bottom: 18px;
-    }
-
-    .form-section-title {
-        font-weight: 850;
-        color: #1E2D27;
-    }
-
-    .form-section-subtitle {
-        color: #74817B;
-        font-size: .78rem;
-        margin-top: 3px;
-    }
-
-    .pet-form label {
+    .ov-eyebrow {
         display: block;
-        font-size: .72rem;
-        font-weight: 800;
-        margin-bottom: 6px;
-        color: #4F5D57;
+        color: var(--sc-teal);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .12em;
     }
 
-    .pet-form .form-control,
-    .pet-form .form-select {
-        min-height: 44px;
-        border-radius: 11px;
-        border: 1px solid #D9E1DD;
-    }
 
-    .pet-photo-section {
-        display: flex;
-        align-items: center;
-        gap: 18px;
-        padding: 15px;
-        background: white;
-        border: 1px solid #DDE6E1;
-        border-radius: 16px;
-        margin-bottom: 18px;
-    }
+    /* =========================================================
+           HERO
+           ========================================================= */
 
-    .pet-photo-preview {
-        width: 82px;
-        height: 82px;
-        flex-shrink: 0;
-    }
-
-    .pet-photo,
-    .pet-photo-placeholder {
-        width: 82px;
-        height: 82px;
-        border-radius: 16px;
-        object-fit: cover;
-    }
-
-    .pet-photo-placeholder {
-        background: #DDE9E4;
-        color: #547067;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        font-size: .7rem;
-        font-weight: 800;
-    }
-
-    .pet-photo-controls {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-    }
-
-        .pet-photo-controls strong {
-            color: #25362F;
-            font-size: .82rem;
-        }
-
-        .pet-photo-controls span {
-            color: #7C8782;
-            font-size: .72rem;
-        }
-
-        .pet-photo-controls small {
-            color: #5C766D;
-            font-size: .65rem;
-        }
-
-    .upload-photo-button {
-        width: fit-content;
-        margin-top: 7px;
-        cursor: pointer;
-        background: #1E2D27;
-        color: white;
-        border-radius: 999px;
-        padding: 7px 13px;
-        font-size: .68rem;
-        font-weight: 800;
-    }
-
-        .upload-photo-button:hover {
-            background: #5C766D;
-        }
-
-    .form-actions {
-        display: flex;
-        gap: 8px;
-        margin-top: 16px;
-    }
-
-    .cancel-action {
-        border: 0;
-        background: white;
-        color: #44534D;
-        border-radius: 999px;
-        padding: 12px 20px;
-        font-weight: 750;
-        cursor: pointer;
-    }
-
-    .empty-box {
-        border: 1px dashed #CBD6D1;
-        border-radius: 16px;
-        padding: 25px;
-        text-align: center;
-        color: #7C8782;
-    }
-
-        .empty-box strong,
-        .empty-box span {
-            display: block;
-        }
-
-        .empty-box strong {
-            color: #34443D;
-            margin-bottom: 5px;
-        }
-
-    .empty-action {
-        display: inline-block;
-        margin-top: 13px;
-        color: #456157;
-        font-size: .76rem;
-        font-weight: 850;
-        text-decoration: none;
-    }
-
-    .pet-list,
-    .appointment-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .pet-row {
-        border: 1px solid #E6EBE8;
-        border-radius: 15px;
-        padding: 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .pet-row-left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 0;
-    }
-
-    .pet-list-photo {
-        width: 58px;
-        height: 58px;
-        flex-shrink: 0;
-        border-radius: 14px;
+    .ov-hero {
+        position: relative;
         overflow: hidden;
-        background: #EEF4F1;
-        display: flex;
+        min-height: 320px;
+        padding: 45px 50px;
+        display: grid;
+        grid-template-columns: minmax(0,1.45fr) minmax(300px,.55fr);
         align-items: center;
-        justify-content: center;
-        color: #456157;
-        font-weight: 850;
+        gap: 55px;
+        border: 1px solid var(--sc-border);
+        border-radius: 30px;
+        background: radial-gradient( circle at 92% 14%, rgba(47,144,152,.14), transparent 28% ), linear-gradient( 125deg, #FFFDF9, #FBF8F2 53%, #EEF7F5 );
+        box-shadow: 0 28px 65px rgba(23,61,61,.08);
     }
 
-        .pet-list-photo img {
+
+        .ov-hero::after {
+            content: "";
+            position: absolute;
+            top: -330px;
+            right: -280px;
+            width: 520px;
+            height: 520px;
+            border: 1px solid rgba(47,144,152,.13);
+            border-radius: 50%;
+        }
+
+
+    .ov-hero-main,
+    .ov-membership {
+        position: relative;
+        z-index: 2;
+    }
+
+
+    .ov-owner {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+    }
+
+
+    .ov-owner-photo {
+        width: 90px;
+        height: 90px;
+        flex: 0 0 90px;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        border: 4px solid #FFFFFF;
+        border-radius: 24px;
+        background: linear-gradient( 135deg, var(--sc-teal), var(--sc-dark) );
+        color: #FFFFFF;
+        font-size: 20px;
+        font-weight: 900;
+        box-shadow: 0 13px 29px rgba(23,61,61,.15);
+    }
+
+
+        .ov-owner-photo img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-    .pet-details {
-        min-width: 0;
+
+    .ov-owner h1 {
+        margin: 0;
+        color: var(--sc-dark);
+        font-size: clamp( 44px, 5vw, 72px );
+        line-height: .91;
+        font-weight: 900;
+        letter-spacing: -.055em;
     }
 
-        .pet-details strong,
-        .pet-details span,
-        .pet-details small {
+
+        .ov-owner h1 em {
+            display: block;
+            color: var(--sc-teal);
+            font-family: Georgia, "Times New Roman", serif;
+            font-style: italic;
+            font-weight: 500;
+            letter-spacing: -.035em;
+        }
+
+
+    .ov-hero-copy {
+        max-width: 770px;
+        margin: 23px 0 0;
+        color: #62756E;
+        font-size: 15px;
+        line-height: 1.7;
+    }
+
+
+    .ov-hero-actions {
+        margin-top: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+
+        .ov-hero-actions a {
+            min-height: 48px;
+            padding: 0 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 11px;
+            border-radius: 11px;
+            font-size: 13px;
+            font-weight: 850;
+            text-decoration: none;
+        }
+
+
+        .ov-hero-actions .primary {
+            background: var(--sc-teal);
+            color: #FFFFFF;
+            box-shadow: 0 9px 22px rgba(47,144,152,.17);
+        }
+
+
+        .ov-hero-actions .secondary {
+            border: 1px solid #C8DAD6;
+            background: #FFFFFF;
+            color: var(--sc-dark);
+        }
+
+
+    /* MEMBERSHIP */
+
+    .ov-membership {
+        padding: 24px;
+        border: 1px solid #D7E4E0;
+        border-radius: 20px;
+        background: rgba(255,255,255,.88);
+        box-shadow: 0 13px 31px rgba(23,61,61,.07);
+    }
+
+
+    .ov-membership-label {
+        color: #9B7418;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .12em;
+    }
+
+
+    .ov-membership-title {
+        margin-top: 13px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+
+        .ov-membership-title .star {
+            width: 43px;
+            height: 43px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            background: var(--sc-yellow-soft);
+            color: #9B7418;
+        }
+
+
+        .ov-membership-title strong,
+        .ov-membership-title small {
             display: block;
         }
 
-        .pet-details strong {
-            color: #26352F;
+
+        .ov-membership-title strong {
+            color: var(--sc-dark);
+            font-size: 17px;
         }
 
-        .pet-details span {
-            color: #5C766D;
-            font-size: .82rem;
-            margin-top: 3px;
+
+        .ov-membership-title small {
+            margin-top: 2px;
+            color: #9B7418;
+            font-size: 11px;
+            font-weight: 800;
         }
 
-        .pet-details small {
-            color: #7C8782;
-            margin-top: 4px;
-            font-size: .7rem;
-        }
 
-    .pet-row-actions {
-        display: flex;
-        gap: 5px;
-        flex-shrink: 0;
+    .ov-membership p {
+        margin: 14px 0 0;
+        color: #75867F;
+        font-size: 12px;
+        line-height: 1.6;
     }
 
-    .edit-pet-button,
-    .delete-pet-button {
-        border: 0;
-        border-radius: 999px;
-        padding: 7px 11px;
-        font-size: .68rem;
-        font-weight: 800;
-        cursor: pointer;
+
+    .ov-membership > a {
+        display: inline-block;
+        margin-top: 16px;
+        color: var(--sc-teal-dark);
+        font-size: 12px;
+        font-weight: 850;
+        text-decoration: none;
     }
 
-    .edit-pet-button {
-        background: #EEF4F1;
-        color: #3F6256;
+
+    .ov-free-plan {
+        display: block;
+        margin-top: 11px;
+        color: var(--sc-dark);
+        font-size: 18px;
     }
 
-    .delete-pet-button {
-        background: #FDECEC;
-        color: #9C4842;
-    }
 
-    .appointment-row {
+    /* =========================================================
+           ACCOUNT TODAY
+           ========================================================= */
+
+    .ov-today {
+        margin-top: 16px;
+        padding: 22px 24px;
         display: grid;
-        grid-template-columns: 54px 1fr auto;
-        gap: 12px;
+        grid-template-columns: 250px minmax(0,1fr);
         align-items: center;
-        border: 1px solid #E6EBE8;
-        border-radius: 15px;
-        padding: 12px;
+        gap: 26px;
+        border: 1px solid var(--sc-border);
+        border-radius: 19px;
+        background: #FFFFFF;
+        box-shadow: 0 10px 29px rgba(23,61,61,.045);
     }
 
-    .appointment-date {
-        width: 50px;
-        height: 58px;
-        background: #1E2D27;
-        color: white;
+
+    .ov-today-title h2 {
+        margin: 5px 0 0;
+        color: var(--sc-dark);
+        font-size: 24px;
+        line-height: 1.05;
+        font-weight: 900;
+        letter-spacing: -.035em;
+    }
+
+
+        .ov-today-title h2 em {
+            color: var(--sc-teal);
+            font-family: Georgia, "Times New Roman", serif;
+            font-style: italic;
+            font-weight: 500;
+        }
+
+
+    .ov-metrics {
+        display: grid;
+        grid-template-columns: repeat( 4, minmax(0,1fr) );
+        gap: 9px;
+    }
+
+
+    .ov-metric {
+        min-height: 94px;
+        padding: 14px;
+        display: grid;
+        grid-template-columns: auto minmax(0,1fr) auto;
+        align-items: center;
+        gap: 11px;
+        border: 1px solid #E1E9E6;
         border-radius: 13px;
+        background: #FBFCFB;
+        color: var(--sc-dark);
+        text-decoration: none;
+        transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+
+
+        .ov-metric.primary {
+            border-color: #C4DEDA;
+            background: linear-gradient( 135deg, #EAF6F5, #FFFFFF );
+        }
+
+
+        .ov-metric:hover {
+            transform: translateY(-2px);
+            border-color: #BCD8D3;
+            box-shadow: 0 9px 21px rgba(23,61,61,.06);
+        }
+
+
+    .metric-icon {
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+        border-radius: 11px;
+        background: #E4F3F1;
+        color: var(--sc-teal);
+    }
+
+
+    .metric-copy {
+        min-width: 0;
+    }
+
+
+        .metric-copy strong,
+        .metric-copy span,
+        .metric-copy small {
+            display: block;
+        }
+
+
+        .metric-copy strong {
+            color: var(--sc-dark);
+            font-size: 20px;
+            font-weight: 950;
+        }
+
+
+        .metric-copy > span {
+            margin-top: 1px;
+            color: #4F655E;
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+
+        .metric-copy small {
+            margin-top: 2px;
+            color: #919E99;
+            font-size: 10px;
+        }
+
+
+    .metric-arrow {
+        color: #9AA9A4;
+    }
+
+
+    /* =========================================================
+           BENTO LAYOUT
+           ========================================================= */
+
+    .ov-bento {
+        margin-top: 26px;
+        display: grid;
+        grid-template-columns: repeat( 12, minmax(0,1fr) );
+        grid-template-rows: repeat( 2, minmax(190px,auto) );
+        gap: 12px;
+    }
+
+
+    /* PET HUB */
+
+    .ov-pet-hub {
+        grid-column: span 7;
+        grid-row: span 2;
+        min-height: 500px;
+        padding: 30px;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
+        border: 1px solid var(--sc-border);
+        border-radius: 22px;
+        background: radial-gradient( circle at 90% 9%, rgba(47,144,152,.13), transparent 29% ), #FFFFFF;
+        box-shadow: 0 12px 32px rgba(23,61,61,.05);
     }
 
-        .appointment-date strong {
-            font-size: 1.15rem;
-            line-height: 1;
+
+    .ov-pet-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+
+        .ov-pet-heading h2 {
+            margin: 6px 0 0;
+            color: var(--sc-dark);
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -.04em;
         }
 
-        .appointment-date span {
-            font-size: .65rem;
-            text-transform: uppercase;
-            margin-top: 3px;
-            color: #F7DD7D;
+
+        .ov-pet-heading p {
+            max-width: 600px;
+            margin: 7px 0 0;
+            color: #788984;
+            font-size: 13px;
+            line-height: 1.55;
         }
 
-    .appointment-info strong,
-    .appointment-info span,
-    .appointment-info small {
+
+    .ov-count {
+        min-height: 33px;
+        padding: 0 11px;
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        background: #EAF5F5;
+        color: var(--sc-teal-dark);
+        font-size: 11px;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+
+
+    .ov-family {
+        margin-top: 47px;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+    }
+
+
+    .ov-avatar-stack {
+        display: flex;
+        padding-left: 23px;
+    }
+
+
+    .ov-pet-avatar {
+        width: 90px;
+        height: 90px;
+        margin-left: -23px;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        border: 4px solid #FFFFFF;
+        border-radius: 24px;
+        background: linear-gradient( 135deg, var(--sc-teal), var(--sc-dark) );
+        color: #FFFFFF;
+        font-size: 18px;
+        font-weight: 900;
+        box-shadow: 0 11px 25px rgba(23,61,61,.14);
+    }
+
+
+        .ov-pet-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+
+    .ov-family-copy strong {
+        display: block;
+        color: var(--sc-dark);
+        font-size: 17px;
+    }
+
+
+    .ov-family-copy p {
+        max-width: 400px;
+        margin: 5px 0 0;
+        color: #7D8C87;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+
+    .ov-capabilities {
+        margin-top: 37px;
+        display: grid;
+        grid-template-columns: repeat( 3, minmax(0,1fr) );
+        gap: 8px;
+    }
+
+
+        .ov-capabilities > div {
+            min-height: 72px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: 11px;
+            background: #F5F9F8;
+        }
+
+
+    .cap-icon {
+        width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+        display: grid;
+        place-items: center;
+        border-radius: 9px;
+        background: #E2F2EF;
+        color: var(--sc-teal);
+    }
+
+
+    .ov-capabilities strong,
+    .ov-capabilities small {
         display: block;
     }
 
-    .appointment-info strong {
-        font-size: .84rem;
+
+    .ov-capabilities strong {
+        color: var(--sc-dark);
+        font-size: 12px;
     }
 
-    .appointment-info span {
-        color: #5C766D;
-        font-size: .78rem;
+
+    .ov-capabilities small {
         margin-top: 2px;
+        color: #899792;
+        font-size: 10px;
     }
 
-    .appointment-info small {
-        color: #7C8782;
-        font-size: .7rem;
-        margin-top: 2px;
+
+    .ov-open-pets {
+        min-height: 48px;
+        margin-top: auto;
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-radius: 10px;
+        background: var(--sc-teal);
+        color: #FFFFFF;
+        font-size: 13px;
+        font-weight: 850;
+        text-decoration: none;
     }
 
-    .cancel-link {
-        border: 0;
-        background: transparent;
-        color: #A34B45;
-        font-size: .72rem;
-        font-weight: 800;
-        cursor: pointer;
+
+    .ov-empty-family {
+        margin-top: 42px;
+        padding: 30px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border: 1px dashed #CADCD7;
+        border-radius: 14px;
+        background: #FAFCFB;
     }
 
-    @@media(max-width: 800px) {
 
-        .profile-card {
-            align-items: flex-start;
-            flex-wrap: wrap;
+    .empty-icon {
+        width: 46px;
+        height: 46px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: #EAF5F5;
+        color: var(--sc-teal);
+    }
+
+
+    /* MARKETPLACE */
+
+    .ov-marketplace {
+        grid-column: span 5;
+        min-height: 245px;
+        padding: 27px;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #E7D38C;
+        border-radius: 22px;
+        color: var(--sc-dark);
+        text-decoration: none;
+        background: radial-gradient( circle at 90% 10%, rgba(243,210,122,.38), transparent 25% ), linear-gradient( 135deg, #FFF7D8, #FFFDF7 );
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+
+        .ov-marketplace:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 32px rgba(23,61,61,.08);
         }
 
-        .profile-actions {
-            width: 100%;
+
+    .marketplace-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+
+    .market-icon {
+        width: 46px;
+        height: 46px;
+        display: grid;
+        place-items: center;
+        border-radius: 13px;
+        background: #FFFFFF;
+        color: var(--sc-teal);
+        box-shadow: 0 6px 16px rgba(23,61,61,.06);
+    }
+
+
+    .market-pill {
+        padding: 7px 9px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.65);
+        color: #816518;
+        font-size: 10px;
+        font-weight: 850;
+    }
+
+
+    .ov-marketplace > div:nth-child(2) {
+        margin-top: auto;
+    }
+
+
+    .ov-marketplace h2 {
+        max-width: 420px;
+        margin: 6px 0 0;
+        color: var(--sc-dark);
+        font-size: 28px;
+        line-height: 1.03;
+        font-weight: 900;
+        letter-spacing: -.04em;
+    }
+
+
+        .ov-marketplace h2 em {
+            color: #A47C18;
+            font-family: Georgia, "Times New Roman", serif;
+            font-style: italic;
+            font-weight: 500;
+        }
+
+
+    .ov-marketplace p {
+        max-width: 440px;
+        margin: 8px 0 0;
+        color: #7A704B;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+
+    .ov-card-link {
+        margin-top: 17px;
+        color: var(--sc-teal-dark);
+        font-size: 12px;
+        font-weight: 850;
+    }
+
+
+    /* SMALL CARDS */
+    .ov-small-card {
+        min-height: 205px;
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        border-radius: 20px;
+        color: var(--sc-dark);
+        text-decoration: none;
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+        /*
+           CSS grid cannot literally use 2.5-column spans.
+           Put them explicitly in columns below.
+        */
+
+        .ov-small-card.care {
+            grid-column: 8 / span 2;
+            border: 1px solid #C7DFDB;
+            background: linear-gradient( 135deg, #EAF6F5, #FFFFFF );
+        }
+
+
+        .ov-small-card.community {
+            grid-column: 10 / span 3;
+            border: 1px solid #DDE7E4;
+            background: linear-gradient( 135deg, #F7F4EC, #FFFFFF );
+        }
+
+
+        .ov-small-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 13px 28px rgba(23,61,61,.07);
+        }
+
+
+    .small-icon {
+        width: 43px;
+        height: 43px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: #FFFFFF;
+        color: var(--sc-teal);
+        box-shadow: 0 6px 15px rgba(23,61,61,.05);
+    }
+
+
+    .ov-small-card > div {
+        margin-top: 17px;
+    }
+
+
+    .ov-small-card h3 {
+        margin: 5px 0 0;
+        color: var(--sc-dark);
+        font-size: 19px;
+        line-height: 1.15;
+        font-weight: 900;
+    }
+
+
+    .ov-small-card p {
+        margin: 6px 0 0;
+        color: #788984;
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+
+    .small-arrow {
+        margin-top: auto;
+        color: var(--sc-teal);
+        font-size: 18px;
+    }
+
+
+    /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+    @@media (max-width: 1180px) {
+
+        .ov-today {
+            grid-template-columns: 1fr;
+        }
+
+
+        .ov-metrics {
+            grid-template-columns: repeat( 2, minmax(0,1fr) );
+        }
+
+
+        .ov-bento {
+            grid-template-columns: repeat( 2, minmax(0,1fr) );
+            grid-template-rows: auto;
+        }
+
+
+        .ov-pet-hub,
+        .ov-marketplace,
+        .ov-small-card.care,
+        .ov-small-card.community {
+            grid-column: auto;
+            grid-row: auto;
+        }
+
+
+        .ov-pet-hub {
+            grid-column: 1 / -1;
+            min-height: 430px;
         }
     }
 
-    @@media(max-width: 575px) {
 
-        .panel-card {
-            padding: 20px;
+    @@media (max-width: 880px) {
+
+        .ov-hero {
+            grid-template-columns: 1fr;
         }
 
-        .pet-row {
+
+        .ov-membership {
+            max-width: 470px;
+        }
+    }
+
+
+    @@media (max-width: 680px) {
+
+        .ov-shell,
+        .ov-loading {
+            width: calc(100% - 24px);
+        }
+
+
+        .ov-hero {
+            padding: 28px 22px;
+        }
+
+
+        .ov-owner {
             align-items: flex-start;
             flex-direction: column;
         }
 
-        .pet-row-actions {
-            width: 100%;
+
+        .ov-owner-photo {
+            width: 68px;
+            height: 68px;
+            flex-basis: 68px;
         }
 
-        .edit-pet-button,
-        .delete-pet-button {
-            flex: 1;
+
+        .ov-owner h1 {
+            font-size: 42px;
         }
 
-        .appointment-row {
-            grid-template-columns: 50px 1fr;
+
+        .ov-metrics,
+        .ov-bento,
+        .ov-capabilities {
+            grid-template-columns: 1fr;
         }
 
-        .cancel-link {
-            grid-column: 2;
-            text-align: left;
-            padding: 0;
+
+        .ov-pet-hub {
+            grid-column: auto;
         }
 
-        .profile-photo-area {
-            width: 90px;
+
+        .ov-family {
+            align-items: flex-start;
+            flex-direction: column;
         }
     }
 </style>
 
+
 @code {
 
-    private string userName = "Pet Owner";
-    private string userEmail = string.Empty;
-    private string userRole = "Pet Owner";
-
-    private string message = string.Empty;
-    private bool messageIsError;
-
-    private bool isCheckingAuth = true;
-    private bool isAuthenticated;
-
-    private bool showPetForm;
-    private bool isEditingPet;
-    private bool isSavingPet;
-    private bool showUpgradePrompt;
-
-    private List<PetProfile> pets = new();
-    private List<ClinicAppointment> appointments = new();
-    private List<ClinicTenant> clinics = new();
-
-    private int inquiryCount;
-
-    private PetProfile petForm = new();
-
-    private string selectedWeight = string.Empty;
-
-    private string profilePhotoPreview = string.Empty;
-
-    private string petPhotoPreview = string.Empty;
-    private string selectedPetFileName = string.Empty;
-
-    private IBrowserFile? selectedPetFile;
+    private bool isReady;
 
 
-    // =========================================================
-    // BREEDS
-    // =========================================================
+    private string ownerPhotoUrl =
+        string.Empty;
 
-    private readonly Dictionary<string, List<string>> breedOptions =
-        new()
+
+    private List<PetProfile> pets =
+        new();
+
+
+    private List<ClinicAppointment> appointments =
+        new();
+
+
+    private int healthRecordCount;
+
+
+    private int activePetIdCount;
+
+
+    private string FirstName
+    {
+        get
         {
-            ["Dog"] = new()
-            {
-                "Shih Tzu",
-                "Labrador Retriever",
-                "Golden Retriever",
-                "Pomeranian",
-                "Beagle",
-                "Aspins / Mixed Breed",
-                "Other Dog Breed"
-            },
+            var name =
+                Auth.CurrentUser?
+                    .FullName?
+                    .Trim();
 
-            ["Cat"] = new()
-            {
-                "Persian",
-                "Siamese",
-                "British Shorthair",
-                "Domestic Shorthair",
-                "Puspin / Mixed Breed",
-                "Other Cat Breed"
-            },
 
-            ["Rabbit"] = new()
+            if (string.IsNullOrWhiteSpace(name))
             {
-                "Holland Lop",
-                "Lionhead",
-                "Netherland Dwarf",
-                "Mixed Breed Rabbit",
-                "Other Rabbit Breed"
-            },
-
-            ["Bird"] = new()
-            {
-                "Parakeet",
-                "Lovebird",
-                "Cockatiel",
-                "African Grey",
-                "Other Bird"
-            },
-
-            ["Other"] = new()
-            {
-                "Other"
+                return "Pet Owner";
             }
-        };
 
 
-    private IEnumerable<string> CurrentBreeds =>
-        breedOptions.TryGetValue(
-            petForm.Species ?? "Dog",
-            out var breeds)
-            ? breeds
-            : breedOptions["Other"];
+            return
+                name.Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries)
+                    .FirstOrDefault()
+                ??
+                "Pet Owner";
+        }
+    }
 
 
-    // =========================================================
-    // INITIAL LOAD
-    // =========================================================
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(
+        bool firstRender)
     {
         if (!firstRender)
             return;
 
-        if (!Auth.IsLoggedIn || Auth.CurrentUser is null)
+
+        await Auth.InitializeAsync();
+
+
+        if (!Auth.IsLoggedIn)
         {
-            Nav.NavigateTo("/login");
+            Nav.NavigateTo(
+                "/login");
+
             return;
         }
 
-        // 🎯 Redirect admins to their portal
-        if (Auth.IsAdmin)
+
+        if (!Auth.IsPetOwner)
         {
-            Nav.NavigateTo("/admin-portal", replace: true);
+            Nav.NavigateTo(
+                Auth.IsAdmin
+                    ? "/admin-portal"
+                    : Auth.IsClinicStaff
+                        ? "/clinic-portal"
+                        : "/home");
+
             return;
         }
 
-        // 🎯 Redirect clinic staff to their portal
-        if (Auth.IsClinicStaff)
-        {
-            Nav.NavigateTo("/clinic-portal", replace: true);
-            return;
-        }
 
-        isAuthenticated = true;
-        isCheckingAuth = false;
+        LoadDashboard();
 
-        LoadData();
 
-        // Load saved profile photo from wwwroot/uploads/users.
-        profilePhotoPreview =
+        isReady =
+            true;
+
+
+        await InvokeAsync(
+            StateHasChanged);
+    }
+
+
+    private void LoadDashboard()
+    {
+        var userId =
+            Auth.CurrentUser!.Id;
+
+
+        ownerPhotoUrl =
             FileStorage.GetImageUrl(
                 "users",
-                Auth.CurrentUser.Id)
-            ?? string.Empty;
+                userId)
+            ??
+            string.Empty;
 
-        await InvokeAsync(StateHasChanged);
-    }
-
-
-    private void LoadData()
-    {
-        if (Auth.CurrentUser is null)
-            return;
-
-        var user = Auth.CurrentUser;
-
-        userName =
-            user.FullName ?? "Pet Owner";
-
-        userEmail =
-            user.Email ?? string.Empty;
-
-        userRole =
-            string.IsNullOrWhiteSpace(user.Role)
-                ? "Pet Owner"
-                : user.Role;
 
         pets =
-            DbService.GetPetsByUser(user.Id);
+            DbService.GetPetsByUser(
+                userId)
+            ??
+            new List<PetProfile>();
 
-        inquiryCount =
-            DbService.GetInquiryCountByUser(user.Id);
+
+        healthRecordCount =
+            pets.Sum(
+                pet =>
+                    DbService
+                        .GetHealthRecords(
+                            pet.Id)
+                        .Count);
+
+
+        activePetIdCount =
+            pets.Count(
+                pet =>
+                    !string.IsNullOrWhiteSpace(
+                        pet.CardId));
+
 
         appointments =
-            DbService.GetAppointments(userId: user.Id)
-                .Where(a =>
-                    a.AppointmentDate >= DateTime.Now)
-                .OrderBy(a =>
-                    a.AppointmentDate)
+            DbService
+                .GetAppointments(
+                    userId: userId)
+                .Where(
+                    appointment =>
+                        appointment.AppointmentDate >=
+                            DateTime.Today
+                        &&
+                        !string.Equals(
+                            appointment.Status,
+                            "Cancelled",
+                            StringComparison.OrdinalIgnoreCase))
+                .OrderBy(
+                    appointment =>
+                        appointment.AppointmentDate)
+                .Take(3)
                 .ToList();
-
-        clinics =
-            DbService.GetAllClinics()
-            ?? new List<ClinicTenant>();
     }
 
-
-    // =========================================================
-    // PROFILE PHOTO
-    // =========================================================
-
-    private async Task HandleProfilePhotoSelected(
-        InputFileChangeEventArgs e)
-    {
-        var file = e.File;
-
-        if (file is null || Auth.CurrentUser is null)
-            return;
-
-        if (!IsValidImage(file))
-        {
-            ShowError(
-                "Please choose a JPG, PNG, or WEBP image up to 5 MB.");
-
-            return;
-        }
-
-        try
-        {
-            // Show immediate preview.
-            profilePhotoPreview =
-                await CreatePreview(file);
-
-            await InvokeAsync(StateHasChanged);
-
-            // Persist the image.
-            var savedUrl =
-                await FileStorage.SaveImageAsync(
-                    "users",
-                    Auth.CurrentUser.Id,
-                    file);
-
-            // Use the actual saved file URL.
-            profilePhotoPreview =
-                savedUrl;
-
-            ShowSuccess(
-                "Profile photo saved successfully.");
-
-            await InvokeAsync(StateHasChanged);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(
-                $"[Profile Photo Error] {ex}");
-
-            ShowError(
-                $"The profile photo could not be saved. {ex.Message}");
-
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
-
-    private string GetUserInitials()
-    {
-        if (string.IsNullOrWhiteSpace(userName))
-            return "U";
-
-        var parts =
-            userName.Split(
-                ' ',
-                StringSplitOptions.RemoveEmptyEntries);
-
-        if (parts.Length == 1)
-        {
-            return parts[0]
-                .Substring(
-                    0,
-                    Math.Min(
-                        2,
-                        parts[0].Length))
-                .ToUpperInvariant();
-        }
-
-        return (
-            parts[0].Substring(0, 1) +
-            parts[^1].Substring(0, 1)
-        ).ToUpperInvariant();
-    }
-
-
-    // =========================================================
-    // ADD PET
-    // =========================================================
-
-    private void OpenAddPetForm()
-    {
-        message = string.Empty;
-        messageIsError = false;
-        showUpgradePrompt = false;
-        isEditingPet = false;
-        isSavingPet = false;
-
-        petForm =
-            new PetProfile
-            {
-                Species = "Dog",
-                Breed = "Shih Tzu"
-            };
-
-        selectedWeight =
-            string.Empty;
-
-        selectedPetFile =
-            null;
-
-        petPhotoPreview =
-            string.Empty;
-
-        selectedPetFileName =
-            string.Empty;
-
-        showPetForm = true;
-    }
-
-
-    // =========================================================
-    // EDIT PET
-    // =========================================================
-
-    private void OpenEditPetForm(PetProfile pet)
-    {
-        message = string.Empty;
-        messageIsError = false;
-
-        isEditingPet = true;
-        isSavingPet = false;
-
-        petForm =
-            new PetProfile
-            {
-                Id = pet.Id,
-                UserId = pet.UserId,
-                PetName = pet.PetName,
-                Species = pet.Species,
-                Breed = pet.Breed,
-                Age = pet.Age,
-                WeightKg = pet.WeightKg,
-                Diet = pet.Diet,
-                CreatedAt = pet.CreatedAt
-            };
-
-        selectedWeight =
-            pet.WeightKg.HasValue
-                ? pet.WeightKg.Value.ToString("0")
-                : string.Empty;
-
-        selectedPetFile =
-            null;
-
-        selectedPetFileName =
-            string.Empty;
-
-        petPhotoPreview =
-            FileStorage.GetImageUrl(
-                "pets",
-                pet.Id)
-            ?? string.Empty;
-
-        showPetForm = true;
-    }
-
-
-    private void SpeciesChanged()
-    {
-        petForm.Breed =
-            CurrentBreeds.FirstOrDefault()
-            ?? "Other";
-    }
-
-
-    private void ClosePetForm()
-    {
-        if (isSavingPet)
-            return;
-
-        showPetForm = false;
-        isEditingPet = false;
-
-        selectedPetFile =
-            null;
-
-        selectedPetFileName =
-            string.Empty;
-
-        petPhotoPreview =
-            string.Empty;
-
-        petForm =
-            new PetProfile();
-
-        selectedWeight =
-            string.Empty;
-    }
-
-
-    // =========================================================
-    // PET PHOTO
-    // =========================================================
-
-    private async Task HandlePetPhotoSelected(
-        InputFileChangeEventArgs e)
-    {
-        var file = e.File;
-
-        if (file is null)
-            return;
-
-        if (!IsValidImage(file))
-        {
-            ShowError(
-                "Please choose a JPG, PNG, or WEBP image up to 5 MB.");
-
-            return;
-        }
-
-        try
-        {
-            // IMPORTANT:
-            // Keep the IBrowserFile so SavePet()
-            // can actually save it to disk.
-            selectedPetFile =
-                file;
-
-            selectedPetFileName =
-                file.Name;
-
-            // Immediate browser preview.
-            petPhotoPreview =
-                await CreatePreview(file);
-
-            ShowSuccess(
-                "Pet photo selected. Click Save Pet to upload it.");
-
-            await InvokeAsync(StateHasChanged);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(
-                $"[Pet Photo Error] {ex}");
-
-            ShowError(
-                "The pet photo could not be loaded.");
-        }
-    }
-
-
-    private static bool IsValidImage(
-        IBrowserFile file)
-    {
-        const long maxSize =
-            5 * 1024 * 1024;
-
-        var allowedTypes =
-            new[]
-            {
-                "image/jpeg",
-                "image/png",
-                "image/webp"
-            };
-
-        return file.Size <= maxSize
-            && allowedTypes.Contains(
-                file.ContentType,
-                StringComparer.OrdinalIgnoreCase);
-    }
-
-
-    private static async Task<string> CreatePreview(
-        IBrowserFile file)
-    {
-        const long maxSize =
-            5 * 1024 * 1024;
-
-        await using var stream =
-            file.OpenReadStream(maxSize);
-
-        using var memory =
-            new MemoryStream();
-
-        await stream.CopyToAsync(memory);
-
-        return
-            $"data:{file.ContentType};base64," +
-            Convert.ToBase64String(
-                memory.ToArray());
-    }
-
-
-    // =========================================================
-    // SAVE PET
-    // =========================================================
-
-    private async Task SavePet()
-    {
-        // Prevent double-click / duplicate records.
-        if (isSavingPet)
-            return;
-
-        message = string.Empty;
-        messageIsError = false;
-
-        if (Auth.CurrentUser is null)
-        {
-            ShowError(
-                "Your session has expired. Please log in again.");
-
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(petForm.PetName))
-        {
-            ShowError(
-                "Please enter your pet's name.");
-
-            return;
-        }
-
-        isSavingPet = true;
-
-        // Store this BEFORE changing isEditingPet.
-        bool wasEditing =
-            isEditingPet;
-
-        try
-        {
-            petForm.UserId =
-                Auth.CurrentUser.Id;
-
-            // Convert selected weight.
-            if (decimal.TryParse(
-                selectedWeight,
-                out var weight))
-            {
-                petForm.WeightKg =
-                    weight;
-            }
-            else
-            {
-                petForm.WeightKg =
-                    null;
-            }
-
-
-            int petId;
-
-
-            // =================================================
-            // UPDATE EXISTING PET
-            // =================================================
-
-            if (wasEditing)
-            {
-                bool updated =
-                    DbService.UpdatePet(
-                        petForm);
-
-                if (!updated)
-                {
-                    ShowError(
-                        "The pet could not be updated. Please try again.");
-
-                    return;
-                }
-
-                petId =
-                    petForm.Id;
-            }
-
-
-            // =================================================
-            // ADD NEW PET
-            // =================================================
-
-            else
-            {
-                petId =
-                    DbService.AddPet(
-                        petForm);
-            }
-
-
-            // =================================================
-            // SAVE PET PHOTO
-            // =================================================
-
-            if (selectedPetFile is not null)
-            {
-                await FileStorage.SaveImageAsync(
-                    "pets",
-                    petId,
-                    selectedPetFile);
-            }
-
-
-            var savedName =
-                petForm.PetName;
-
-
-            // =================================================
-            // RESET FORM
-            // =================================================
-
-            showPetForm = false;
-            isEditingPet = false;
-
-            petForm =
-                new PetProfile();
-
-            selectedWeight =
-                string.Empty;
-
-            selectedPetFile =
-                null;
-
-            selectedPetFileName =
-                string.Empty;
-
-            petPhotoPreview =
-                string.Empty;
-
-
-            // Reload actual database data.
-            LoadData();
-
-
-            // Correct message depending on operation.
-            if (wasEditing)
-            {
-                ShowSuccess(
-                    $"{savedName} was updated successfully.");
-            }
-            else
-            {
-                ShowSuccess(
-                    $"{savedName} was saved successfully.");
-            }
-
-            await InvokeAsync(StateHasChanged);
-        }
-        catch (InvalidOperationException ex)
-        {
-            // Premium paywall hit — show upgrade prompt
-            Console.WriteLine($"[Dashboard SavePet Error] {ex}");
-
-            message = ex.Message;
-            messageIsError = true;
-            showUpgradePrompt = true;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[Dashboard SavePet Error] {ex}");
-            ShowError("Something went wrong. Please try again.");
-        }
-        finally
-        {
-            isSavingPet = false;
-        }
-    }
-
-
-    // =========================================================
-    // DELETE PET
-    // =========================================================
-
-    private void DeletePet(
-        PetProfile pet)
-    {
-        if (isSavingPet)
-            return;
-
-        message = string.Empty;
-        messageIsError = false;
-
-        if (Auth.CurrentUser is null)
-        {
-            ShowError(
-                "Your session has expired. Please log in again.");
-
-            return;
-        }
-
-        try
-        {
-            bool deleted =
-                DbService.DeletePet(
-                    pet.Id,
-                    Auth.CurrentUser.Id);
-
-            if (!deleted)
-            {
-                ShowError(
-                    "The pet could not be deleted.");
-
-                return;
-            }
-
-
-            // Delete the corresponding image file.
-            FileStorage.DeleteImage(
-                "pets",
-                pet.Id);
-
-
-            // Close the edit form if this pet
-            // was currently being edited.
-            if (petForm.Id == pet.Id)
-            {
-                ClosePetForm();
-            }
-
-
-            // Reload from SQL Server.
-            LoadData();
-
-            ShowSuccess(
-                $"{pet.PetName} was deleted successfully.");
-        }
-        catch (Exception ex)
-        {
-            // Do NOT use SqlException here.
-            // Dashboard does not need Microsoft.Data.SqlClient.
-            Console.WriteLine(
-                $"[Dashboard DeletePet Error] {ex}");
-
-            ShowError(
-                $"The pet could not be deleted. {ex.Message}");
-        }
-    }
-
-
-    // =========================================================
-    // PET PHOTO DISPLAY
-    // =========================================================
 
     private string GetPetPhoto(
         int petId)
@@ -2126,80 +1734,84 @@
             FileStorage.GetImageUrl(
                 "pets",
                 petId)
-            ?? string.Empty;
+            ??
+            string.Empty;
     }
 
 
     private static string GetPetInitial(
         PetProfile pet)
     {
-        if (string.IsNullOrWhiteSpace(
-            pet.PetName))
+        return
+            string.IsNullOrWhiteSpace(
+                pet.PetName)
+                ? "P"
+                : pet.PetName[..1]
+                    .ToUpperInvariant();
+    }
+
+
+    private string GetPetFamilyHeadline()
+    {
+        if (pets.Count == 0)
         {
-            return "P";
+            return
+                "Your pet family starts here.";
         }
 
-        return pet.PetName
-            .Substring(0, 1)
-            .ToUpperInvariant();
-    }
 
-
-    // =========================================================
-    // APPOINTMENTS
-    // =========================================================
-
-    private string GetClinicName(
-        int clinicId)
-    {
-        return clinics
-            .FirstOrDefault(
-                c => c.Id == clinicId)
-            ?.ClinicName
-            ?? "Clinic";
-    }
-
-
-    private void CancelAppointment(
-        int appointmentId)
-    {
-        try
+        if (pets.Count == 1)
         {
-            DbService.CancelAppointment(
-                appointmentId);
-
-            ShowSuccess(
-                "Appointment cancelled.");
-
-            LoadData();
+            return
+                pets[0].PetName;
         }
-        catch (Exception ex)
+
+
+        if (pets.Count == 2)
         {
-            Console.WriteLine(
-                $"[Dashboard CancelAppointment Error] {ex}");
-
-            ShowError(
-                "The appointment could not be cancelled.");
+            return
+                $"{pets[0].PetName} & {pets[1].PetName}";
         }
+
+
+        return
+            $"{pets[0].PetName}, {pets[1].PetName} + {pets.Count - 2} more";
     }
 
 
-    // =========================================================
-    // MESSAGES
-    // =========================================================
-
-    private void ShowSuccess(
-        string text)
+    private string GetInitials()
     {
-        message = text;
-        messageIsError = false;
-    }
+        var name =
+            Auth.CurrentUser?
+                .FullName?
+                .Trim();
 
 
-    private void ShowError(
-        string text)
-    {
-        message = text;
-        messageIsError = true;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return "PO";
+        }
+
+
+        var parts =
+            name.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+
+        if (parts.Length == 1)
+        {
+            return
+                parts[0][..Math.Min(
+                    2,
+                    parts[0].Length)]
+                .ToUpperInvariant();
+        }
+
+
+        return
+            $"{parts[0][0]}{parts[^1][0]}"
+                .ToUpperInvariant();
     }
+
 }

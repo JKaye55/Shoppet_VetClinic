@@ -1,116 +1,806 @@
 ﻿@page "/premium"
+@rendermode InteractiveServer
+
 @inject AuthService Auth
 @inject DatabaseService Db
 @inject NavigationManager Nav
 @inject NotificationService Notify
 
-<PageTitle>Upgrade to Premium</PageTitle>
+<PageTitle>ShoppetCare Premium</PageTitle>
 
-<div class="container mt-4" style="max-width: 640px;">
 
-    <h2 class="mb-3"><i class="bi bi-star-fill"></i> Pet ID Virtual Card Premium</h2>
+<div class="sc-premium-page">
 
-    @if (!Auth.IsLoggedIn)
-    {
-        <div class="alert alert-warning">Please <a href="/login">log in</a> to upgrade.</div>
-    }
-    else if (Auth.IsPremium)
-    {
-        <div class="alert alert-success">
-            <i class="bi bi-check-circle-fill"></i> You are already a Premium member.
-            <div class="mt-2">
-                <small>
-                    Activated: @Auth.CurrentUser!.PremiumActivatedAt?.ToString("MMM d, yyyy")<br />
-                    Reference: <code>@Auth.CurrentUser.PremiumReference</code>
-                </small>
-            </div>
-        </div>
-        <a href="/my-pets" class="btn btn-primary">Go to My Pets</a>
-    }
-    else
-    {
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">What you get for ₱49 (one-time)</h5>
-                <ul>
-                    <li><i class="bi bi-check-circle-fill"></i> Unlimited pet profiles (free tier: 1 pet)</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Unlimited health records (free tier: 5 per pet)</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Exportable health records</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Premium badge on your Pet ID Cards</li>
-                </ul>
-            </div>
+    <section class="sc-premium-hero">
+
+        <div class="sc-premium-shell">
+
+            <span class="eyebrow">
+                SHOPPETCARE PREMIUM
+            </span>
+
+            <h1>
+                More room for
+                <em>every pet you love.</em>
+            </h1>
+
+            <p>
+                Expand your pet-management tools with
+                one simple lifetime upgrade.
+            </p>
+
         </div>
 
-        @if (isProcessing)
+    </section>
+
+
+    <main class="sc-premium-shell sc-premium-content">
+
+        @if (!isReady)
         {
-            <div class="alert alert-info">
-                <span class="spinner-border spinner-border-sm me-2"></span>
-                Processing payment...
+            <div class="sc-premium-loading">
+                Loading Premium...
             </div>
         }
-        else if (!string.IsNullOrEmpty(errorMessage))
+        else if (!Auth.IsLoggedIn)
         {
-            <div class="alert alert-danger">@errorMessage</div>
+            <section class="sc-premium-access">
+
+                <span>
+                    ACCOUNT REQUIRED
+                </span>
+
+                <h2>
+                    Sign in before upgrading.
+                </h2>
+
+                <p>
+                    Premium is attached to your
+                    ShoppetCare Pet Owner account.
+                </p>
+
+                <a href="/login">
+                    Sign In
+                </a>
+
+            </section>
+        }
+        else if (Auth.IsPremium)
+        {
+            <section class="sc-premium-active">
+
+                <div class="check">
+
+                    <svg>
+                        <use href="/icons/bootstrap-icons.svg#check-lg"></use>
+                    </svg>
+
+                </div>
+
+
+                <span>
+                    PREMIUM ACTIVE
+                </span>
+
+                <h2>
+                    Your lifetime Premium access is ready.
+                </h2>
+
+                <p>
+                    Unlimited pet profiles, unlimited
+                    health records, Premium Pet ID themes,
+                    and record export are unlocked.
+                </p>
+
+
+                <div class="sc-premium-reference">
+
+                    <div>
+
+                        <span>
+                            Activated
+                        </span>
+
+                        <strong>
+                            @Auth.CurrentUser?
+                            .PremiumActivatedAt?
+                            .ToString("MMM d, yyyy")
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Reference
+                        </span>
+
+                        <strong>
+                            @Auth.CurrentUser?
+                            .PremiumReference
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="sc-premium-actions">
+
+                    <a href="/my-pets"
+                       class="primary">
+
+                        Manage My Pets
+
+                    </a>
+
+                    <a href="/account"
+                       class="secondary">
+
+                        Account & Premium
+
+                    </a>
+
+                </div>
+
+            </section>
+        }
+        else
+        {
+            <section class="sc-premium-grid">
+
+                <div class="sc-premium-offer">
+
+                    <span class="offer-label">
+                        LIFETIME UPGRADE
+                    </span>
+
+                    <div class="price">
+
+                        <strong>
+                            ₱49
+                        </strong>
+
+                        <span>
+                            one-time payment
+                        </span>
+
+                    </div>
+
+
+                    <p>
+                        No monthly subscription.
+                        Premium remains active on your
+                        ShoppetCare account.
+                    </p>
+
+
+                    @if (!string.IsNullOrWhiteSpace(
+                        errorMessage))
+                    {
+                        <div class="error">
+                            @errorMessage
+                        </div>
+                    }
+
+
+                    <button type="button"
+                            disabled="@isProcessing"
+                            @onclick="PayNow">
+
+                        @(isProcessing
+                            ? "Processing Demo Payment..."
+                            : "Upgrade with GCash Demo")
+
+                    </button>
+
+
+                    <small class="demo">
+                        Pilot payment simulation only.
+                        A production release would connect
+                        to an authorized payment gateway.
+                    </small>
+
+                </div>
+
+
+                <div class="sc-premium-comparison">
+
+                    <span class="comparison-label">
+                        FREE VS PREMIUM
+                    </span>
+
+                    <h2>
+                        Simple limits.
+                        Clear upgrade.
+                    </h2>
+
+
+                    <div class="comparison-head">
+
+                        <span>
+                            Feature
+                        </span>
+
+                        <strong>
+                            Free
+                        </strong>
+
+                        <strong>
+                            Premium
+                        </strong>
+
+                    </div>
+
+
+                    <div class="comparison-row">
+
+                        <span>
+                            Pet profiles
+                        </span>
+
+                        <strong>
+                            1
+                        </strong>
+
+                        <strong class="premium">
+                            Unlimited
+                        </strong>
+
+                    </div>
+
+
+                    <div class="comparison-row">
+
+                        <span>
+                            Health records / pet
+                        </span>
+
+                        <strong>
+                            5
+                        </strong>
+
+                        <strong class="premium">
+                            Unlimited
+                        </strong>
+
+                    </div>
+
+
+                    <div class="comparison-row">
+
+                        <span>
+                            Digital Pet ID
+                        </span>
+
+                        <strong>
+                            Included
+                        </strong>
+
+                        <strong class="premium">
+                            Included
+                        </strong>
+
+                    </div>
+
+
+                    <div class="comparison-row">
+
+                        <span>
+                            Premium Pet ID themes
+                        </span>
+
+                        <strong>
+                            —
+                        </strong>
+
+                        <strong class="premium">
+                            Included
+                        </strong>
+
+                    </div>
+
+
+                    <div class="comparison-row">
+
+                        <span>
+                            Health-record export
+                        </span>
+
+                        <strong>
+                            —
+                        </strong>
+
+                        <strong class="premium">
+                            Included
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
         }
 
-        <button class="btn btn-warning btn-lg w-100"
-                disabled="@isProcessing"
-                @onclick="PayNow">
-            <i class="bi bi-credit-card"></i> Pay ₱49 with GCash (simulated)
-        </button>
-
-        <p class="text-muted mt-3 small">
-            <em>Demo mode:</em> This button simulates a GCash payment.
-            In production, we'd redirect to PayMongo's GCash gateway.
-        </p>
-    }
+    </main>
 
 </div>
 
-@code {
-    bool isProcessing;
-    string errorMessage = "";
 
-    protected override async Task OnParametersSetAsync()
-    {
-        await Auth.InitializeAsync();
+<style>
+
+    .sc-premium-page {
+        min-height: 100vh;
+        background: #FAF9F6;
+        color: #173D3D;
     }
 
-    async Task PayNow()
-    {
-        errorMessage = "";
-        isProcessing = true;
-        StateHasChanged();
 
-        await Task.Delay(2000);
+        .sc-premium-page svg {
+            width: 1em;
+            height: 1em;
+            fill: currentColor;
+        }
+
+
+    .sc-premium-shell {
+        width: min(1000px,calc(100% - 40px));
+        margin: 0 auto;
+    }
+
+
+    .sc-premium-hero {
+        padding: 55px 0;
+        background: radial-gradient( circle at 85% 15%, rgba(243,210,122,.19), transparent 27% ), linear-gradient( 135deg, #173D3D, #102E2D );
+        color: #FFFFFF;
+    }
+
+
+        .sc-premium-hero .eyebrow {
+            color: #9ADBDD;
+            font-size: .62rem;
+            font-weight: 900;
+            letter-spacing: .12em;
+        }
+
+
+        .sc-premium-hero h1 {
+            max-width: 720px;
+            margin: 8px 0 0;
+            font-size: clamp(2.7rem,5vw,4.5rem);
+            line-height: .96;
+            letter-spacing: -.055em;
+            font-weight: 900;
+        }
+
+
+            .sc-premium-hero h1 em {
+                display: block;
+                color: #F3D27A;
+                font-family: Georgia,serif;
+                font-weight: 500;
+            }
+
+
+        .sc-premium-hero p {
+            margin: 17px 0 0;
+            color: rgba(255,255,255,.66);
+        }
+
+
+    .sc-premium-content {
+        padding: 30px 0 80px;
+    }
+
+
+    .sc-premium-loading {
+        padding: 70px;
+        text-align: center;
+        color: #7D8B87;
+    }
+
+
+    .sc-premium-grid {
+        display: grid;
+        grid-template-columns: minmax(260px,.65fr) minmax(0,1.35fr);
+        gap: 16px;
+    }
+
+
+    .sc-premium-offer,
+    .sc-premium-comparison,
+    .sc-premium-active,
+    .sc-premium-access {
+        border: 1px solid #DDE7E4;
+        border-radius: 20px;
+        background: #FFFFFF;
+        box-shadow: 0 12px 35px rgba(23,61,61,.055);
+    }
+
+
+    .sc-premium-offer {
+        padding: 25px;
+        background: linear-gradient( 145deg, #FFF9E7, #FFFFFF );
+    }
+
+
+    .offer-label,
+    .comparison-label,
+    .sc-premium-active > span,
+    .sc-premium-access > span {
+        color: #9A7419;
+        font-size: .58rem;
+        font-weight: 900;
+        letter-spacing: .1em;
+    }
+
+
+    .price {
+        margin-top: 14px;
+    }
+
+
+        .price strong,
+        .price span {
+            display: block;
+        }
+
+
+        .price strong {
+            color: #173D3D;
+            font-size: 3.4rem;
+            font-weight: 950;
+            letter-spacing: -.06em;
+        }
+
+
+        .price span {
+            margin-top: -7px;
+            color: #7A6B40;
+            font-size: .65rem;
+        }
+
+
+    .sc-premium-offer > p {
+        margin: 16px 0;
+        color: #746943;
+        font-size: .69rem;
+        line-height: 1.55;
+    }
+
+
+    .sc-premium-offer button {
+        width: 100%;
+        min-height: 48px;
+        border: 0;
+        border-radius: 10px;
+        background: #173D3D;
+        color: #FFFFFF;
+        font-size: .68rem;
+        font-weight: 900;
+    }
+
+
+        .sc-premium-offer button:disabled {
+            opacity: .65;
+        }
+
+
+    .demo {
+        display: block;
+        margin-top: 10px;
+        color: #8C805D;
+        font-size: .56rem;
+        line-height: 1.45;
+    }
+
+
+    .error {
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 8px;
+        background: #FFF1F1;
+        color: #963D3D;
+        font-size: .62rem;
+    }
+
+
+    .sc-premium-comparison {
+        padding: 25px;
+    }
+
+
+        .sc-premium-comparison h2 {
+            margin: 5px 0 18px;
+            color: #173D3D;
+            font-size: 1.25rem;
+            font-weight: 900;
+        }
+
+
+    .comparison-head,
+    .comparison-row {
+        display: grid;
+        grid-template-columns: minmax(0,1fr) 105px 105px;
+        gap: 8px;
+        align-items: center;
+    }
+
+
+    .comparison-head {
+        padding: 8px 10px;
+        color: #788782;
+        font-size: .57rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+
+    .comparison-row {
+        min-height: 49px;
+        padding: 8px 10px;
+        border-top: 1px solid #EDF1EF;
+        font-size: .64rem;
+    }
+
+
+        .comparison-row > span {
+            color: #596A64;
+        }
+
+
+        .comparison-row strong,
+        .comparison-head strong {
+            text-align: center;
+        }
+
+
+        .comparison-row strong {
+            color: #66756F;
+            font-size: .61rem;
+        }
+
+
+            .comparison-row strong.premium {
+                color: #267C83;
+            }
+
+
+    .sc-premium-active,
+    .sc-premium-access {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 36px;
+        text-align: center;
+    }
+
+
+        .sc-premium-active .check {
+            width: 58px;
+            height: 58px;
+            margin: 0 auto 14px;
+            display: grid;
+            place-items: center;
+            border-radius: 17px;
+            background: #EAF5F5;
+            color: #2F9098;
+            font-size: 1.35rem;
+        }
+
+
+        .sc-premium-active h2,
+        .sc-premium-access h2 {
+            margin: 6px 0 0;
+            font-size: 1.5rem;
+            font-weight: 900;
+        }
+
+
+        .sc-premium-active > p,
+        .sc-premium-access > p {
+            max-width: 560px;
+            margin: 8px auto 0;
+            color: #74837E;
+            font-size: .7rem;
+            line-height: 1.55;
+        }
+
+
+    .sc-premium-reference {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+
+        .sc-premium-reference > div {
+            padding: 12px;
+            border-radius: 10px;
+            background: #F6F9F8;
+        }
+
+
+        .sc-premium-reference span,
+        .sc-premium-reference strong {
+            display: block;
+        }
+
+
+        .sc-premium-reference span {
+            color: #8A9792;
+            font-size: .54rem;
+        }
+
+
+        .sc-premium-reference strong {
+            margin-top: 3px;
+            color: #173D3D;
+            font-size: .64rem;
+        }
+
+
+    .sc-premium-actions {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+
+        .sc-premium-actions a,
+        .sc-premium-access a {
+            min-height: 42px;
+            padding: 0 14px;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 9px;
+            font-size: .64rem;
+            font-weight: 850;
+            text-decoration: none;
+        }
+
+
+        .sc-premium-actions .primary,
+        .sc-premium-access a {
+            background: #2F9098;
+            color: #FFFFFF;
+        }
+
+
+        .sc-premium-actions .secondary {
+            border: 1px solid #D5E0DC;
+            color: #566761;
+        }
+
+
+    @@media (max-width: 700px) {
+
+        .sc-premium-grid {
+            grid-template-columns: 1fr;
+        }
+
+
+        .comparison-head,
+        .comparison-row {
+            grid-template-columns: minmax(0,1fr) 80px 80px;
+        }
+    }
+
+</style>
+
+
+@code {
+
+    private bool isReady;
+
+    private bool isProcessing;
+
+    private string errorMessage =
+        string.Empty;
+
+
+    protected override async Task OnAfterRenderAsync(
+        bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+
+        await Auth.InitializeAsync();
+
+
+        isReady =
+            true;
+
+
+        await InvokeAsync(
+            StateHasChanged);
+    }
+
+
+    private async Task PayNow()
+    {
+        if (Auth.CurrentUser is null ||
+            isProcessing)
+        {
+            return;
+        }
+
+
+        errorMessage =
+            string.Empty;
+
+
+        isProcessing =
+            true;
+
 
         try
         {
-            var reference = "PP-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+            // Pilot payment experience.
+            await Task.Delay(
+                700);
 
-            var ok = Db.ActivatePremiumUpgrade(Auth.CurrentUser!.Id, reference);
 
-            if (!ok)
+            var reference =
+                "PP-" +
+                Guid.NewGuid()
+                    .ToString("N")[..8]
+                    .ToUpperInvariant();
+
+
+            var activated =
+                Db.ActivatePremiumUpgrade(
+                    Auth.CurrentUser.Id,
+                    reference);
+
+
+            if (!activated)
             {
-                errorMessage = "Payment could not be processed. Please try again.";
+                errorMessage =
+                    "Premium could not be activated. It may already be active.";
+
                 return;
             }
 
-            // 🔔 Send premium activated notification
-            Notify.PremiumActivated(Auth.CurrentUser!.Id, reference);
 
-            var refreshed = Db.GetUserById(Auth.CurrentUser.Id);
-            if (refreshed != null) Auth.RefreshUser(refreshed);
+            Notify.PremiumActivated(
+                Auth.CurrentUser.Id,
+                reference);
 
-            Nav.NavigateTo("/premium");
+
+            var refreshed =
+                Db.GetUserById(
+                    Auth.CurrentUser.Id);
+
+
+            if (refreshed is not null)
+            {
+                Auth.RefreshUser(
+                    refreshed);
+            }
+
+
+            await InvokeAsync(
+                StateHasChanged);
         }
         catch (Exception ex)
         {
-            errorMessage = "Error: " + ex.Message;
+            Console.WriteLine(
+                $"[Premium] {ex}");
+
+
+            errorMessage =
+                "Premium could not be activated right now. Please try again.";
         }
         finally
         {
-            isProcessing = false;
+            isProcessing =
+                false;
         }
     }
+
 }

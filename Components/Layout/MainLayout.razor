@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @implements IDisposable
-
+@inject FileStorageService FileStorage
 @using Shoppet_VetClinic.Services
 
 @inject AuthService Auth
@@ -628,6 +628,20 @@
         font-weight: 800;
     }
 
+    .sp-user-avatar {
+        overflow: hidden;
+    }
+
+        .sp-user-avatar.has-photo {
+            padding: 0;
+        }
+
+        .sp-user-avatar img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
 
     .sp-user-info {
         display: flex;
@@ -1038,14 +1052,28 @@
 
                         <NotificationBell />
 
-
                         <a href="@GetProfileDestination()"
                            class="sp-user-profile"
-                           title="Open My ShoppetCare">
+                           title="Open Account & Profile">
 
-                            <span class="sp-user-avatar">
-                                @GetUserInitials()
-                            </span>
+                            @if (!string.IsNullOrWhiteSpace(
+                                GetUserProfilePhotoUrl()))
+                            {
+                                <span class="sp-user-avatar has-photo">
+
+                                    <img src="@GetUserProfilePhotoUrl()"
+                                         alt="@GetUserDisplayName()" />
+
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="sp-user-avatar">
+
+                                    @GetUserInitials()
+
+                                </span>
+                            }
 
 
                             <span class="sp-user-info">
@@ -1062,7 +1090,6 @@
                             </span>
 
                         </a>
-
 
                         @if (Auth.IsAdmin)
                         {
@@ -1167,7 +1194,7 @@
 
     </header>
 
-  
+    <MyShoppetCareNav />
 
     <!-- =====================================================
          GUEST PREVIEW
@@ -1350,9 +1377,23 @@
         }
 
 
-        return "/dashboard";
+        return "/account";
     }
+    private string GetUserProfilePhotoUrl()
+    {
+        if (Auth.CurrentUser is null)
+        {
+            return string.Empty;
+        }
 
+
+        return
+            FileStorage.GetImageUrl(
+                "users",
+                Auth.CurrentUser.Id)
+            ??
+            string.Empty;
+    }
     /* =========================================================
        DISPLAY NAME
        ========================================================= */

@@ -523,17 +523,42 @@
 
                                     <footer class="sc-community-post-footer">
 
-                                        <span>
+                                        @if (Auth.IsLoggedIn && Auth.IsPetOwner)
+                                        {
+                                            <button type="button"
+                                                    class="@(likedPostIds.Contains(post.Id)
+                                                                ? "sc-community-like liked"
+                                                                : "sc-community-like")"
+                                                    @onclick="() => ToggleLike(post)">
 
-                                            <i class="bi bi-heart"
-                                               aria-hidden="true"></i>
+                                                <i class="@(likedPostIds.Contains(post.Id)
+                                                               ? "bi bi-heart-fill"
+                                                               : "bi bi-heart")"
+                                                   aria-hidden="true">
+                                                </i>
 
-                                            @post.LikeCount
-                                            @(post.LikeCount == 1
-                                                ? "like"
-                                                : "likes")
+                                                @post.LikeCount
+                                                @(post.LikeCount == 1
+                                                    ? "like"
+                                                    : "likes")
 
-                                        </span>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span>
+
+                                                <i class="bi bi-heart"
+                                                   aria-hidden="true">
+                                                </i>
+
+                                                @post.LikeCount
+                                                @(post.LikeCount == 1
+                                                    ? "like"
+                                                    : "likes")
+
+                                            </span>
+                                        }
 
 
                                         @if (!string.IsNullOrWhiteSpace(
@@ -648,6 +673,25 @@
 
 
 <style>
+    .sc-community-like {
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: 0;
+        background: transparent;
+        color: #75847F;
+        font: inherit;
+        cursor: pointer;
+    }
+
+        .sc-community-like:hover {
+            color: #2F9098;
+        }
+
+        .sc-community-like.liked {
+            color: #C65C68;
+        }
 
     .sc-community-page {
         min-height: 100vh;
@@ -1551,7 +1595,8 @@
 
     private List<PetProfile> myPets = new();
 
-
+    private HashSet<int> likedPostIds =
+    new();
     // =========================================================
     // COMPOSER
     // =========================================================
@@ -1647,12 +1692,72 @@
 
 
         LoadCurrentUserPets();
-
+        LoadLikeState();
 
         await InvokeAsync(
             StateHasChanged);
+
+    }
+    private void LoadLikeState()
+    {
+        if (Auth.CurrentUser is null ||
+            !Auth.IsPetOwner)
+        {
+            likedPostIds =
+                new HashSet<int>();
+
+            return;
+        }
+
+
+        try
+        {
+            likedPostIds =
+                Community.GetLikedPostIds(
+                    Auth.CurrentUser.Id);
+        }
+        catch
+        {
+            likedPostIds =
+                new HashSet<int>();
+        }
     }
 
+
+    private void ToggleLike(
+        CommunityPost post)
+    {
+        if (Auth.CurrentUser is null ||
+            !Auth.IsPetOwner)
+        {
+            Nav.NavigateTo(
+                "/login");
+
+            return;
+        }
+
+
+        try
+        {
+            Community.ToggleLike(
+                post.Id,
+                Auth.CurrentUser.Id);
+
+
+            LoadPosts();
+
+            LoadLikeState();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Community Like] {ex}");
+
+
+            ShowError(
+                "Your like could not be updated.");
+        }
+    }
 
     private void OnAuthStateChanged()
     {

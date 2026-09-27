@@ -92,7 +92,220 @@ namespace Shoppet_VetClinic.Services
             return posts;
         }
 
+        public HashSet<int> GetLikedPostIds(
+    int userId)
+        {
+            var ids =
+                new HashSet<int>();
 
+
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
+
+            conn.Open();
+
+
+            using var cmd =
+                new SqlCommand(@"
+            SELECT PostId
+
+            FROM CommunityLikes
+
+            WHERE UserId =
+                @UserId;",
+                    conn);
+
+
+            cmd.Parameters.AddWithValue(
+                "@UserId",
+                userId);
+
+
+            using var reader =
+                cmd.ExecuteReader();
+
+
+            while (reader.Read())
+            {
+                ids.Add(
+                    reader.GetInt32(0));
+            }
+
+
+            return ids;
+        }
+
+
+        public bool ToggleLike(
+            int postId,
+            int userId)
+        {
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
+
+            conn.Open();
+
+
+            using var transaction =
+                conn.BeginTransaction();
+
+
+            try
+            {
+                bool alreadyLiked;
+
+
+                using (var check =
+                    new SqlCommand(@"
+                SELECT COUNT(1)
+
+                FROM CommunityLikes
+
+                WHERE
+                    PostId = @PostId
+                    AND
+                    UserId = @UserId;",
+                        conn,
+                        transaction))
+                {
+                    check.Parameters.AddWithValue(
+                        "@PostId",
+                        postId);
+
+
+                    check.Parameters.AddWithValue(
+                        "@UserId",
+                        userId);
+
+
+                    alreadyLiked =
+                        Convert.ToInt32(
+                            check.ExecuteScalar()) > 0;
+                }
+
+
+                if (alreadyLiked)
+                {
+                    using var remove =
+                        new SqlCommand(@"
+                    DELETE FROM CommunityLikes
+
+                    WHERE
+                        PostId = @PostId
+                        AND
+                        UserId = @UserId;",
+                            conn,
+                            transaction);
+
+
+                    remove.Parameters.AddWithValue(
+                        "@PostId",
+                        postId);
+
+
+                    remove.Parameters.AddWithValue(
+                        "@UserId",
+                        userId);
+
+
+                    remove.ExecuteNonQuery();
+
+
+                    using var decrease =
+                        new SqlCommand(@"
+                    UPDATE CommunityPosts
+
+                    SET LikeCount =
+                        CASE
+                            WHEN LikeCount > 0
+                                THEN LikeCount - 1
+                            ELSE 0
+                        END
+
+                    WHERE Id =
+                        @PostId;",
+                            conn,
+                            transaction);
+
+
+                    decrease.Parameters.AddWithValue(
+                        "@PostId",
+                        postId);
+
+
+                    decrease.ExecuteNonQuery();
+                }
+                else
+                {
+                    using var add =
+                        new SqlCommand(@"
+                    INSERT INTO CommunityLikes
+                    (
+                        PostId,
+                        UserId
+                    )
+
+                    VALUES
+                    (
+                        @PostId,
+                        @UserId
+                    );",
+                            conn,
+                            transaction);
+
+
+                    add.Parameters.AddWithValue(
+                        "@PostId",
+                        postId);
+
+
+                    add.Parameters.AddWithValue(
+                        "@UserId",
+                        userId);
+
+
+                    add.ExecuteNonQuery();
+
+
+                    using var increase =
+                        new SqlCommand(@"
+                    UPDATE CommunityPosts
+
+                    SET LikeCount =
+                        LikeCount + 1
+
+                    WHERE Id =
+                        @PostId;",
+                            conn,
+                            transaction);
+
+
+                    increase.Parameters.AddWithValue(
+                        "@PostId",
+                        postId);
+
+
+                    increase.ExecuteNonQuery();
+                }
+
+
+                transaction.Commit();
+
+
+                return
+                    !alreadyLiked;
+            }
+            catch
+            {
+                transaction.Rollback();
+
+                throw;
+            }
+        }
         // =========================================================
         // CREATE POST
         // Returns the new Post ID so FileStorageService can save

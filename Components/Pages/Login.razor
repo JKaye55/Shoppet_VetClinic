@@ -154,6 +154,16 @@
 
                     </div>
 
+                    <div class="sc-auth-password-row">
+
+                        <span></span>
+
+                        <a href="/forgot-password">
+                            Forgot password?
+                        </a>
+
+                    </div>
+
 
                     <button type="button"
                             class="sc-auth-primary"
@@ -208,6 +218,22 @@
 
 
 <style>
+    .sc-auth-password-row {
+        margin-top: 6px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+        .sc-auth-password-row a {
+            color: #267C83;
+            font-size: .69rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+            .sc-auth-password-row a:hover {
+                text-decoration: underline;
+            }
 
     .sc-auth-page {
         min-height: calc(100vh - 74px);
@@ -540,7 +566,6 @@
 
 </style>
 
-
 @code {
 
     private string email =
@@ -566,21 +591,23 @@
 
 
         email =
-            email
-                .Trim()
-                .ToLowerInvariant();
+            AuthService.NormalizeEmail(
+                email);
 
 
-        if (string.IsNullOrWhiteSpace(email))
+        if (!AuthService
+            .IsValidEmailAddress(
+                email))
         {
             errorMessage =
-                "Please enter your email address.";
+                "Please enter a valid email address.";
 
             return;
         }
 
 
-        if (string.IsNullOrWhiteSpace(password))
+        if (string.IsNullOrWhiteSpace(
+            password))
         {
             errorMessage =
                 "Please enter your password.";
@@ -589,7 +616,8 @@
         }
 
 
-        isSigningIn = true;
+        isSigningIn =
+            true;
 
 
         try
@@ -611,13 +639,14 @@
 
             var role =
                 user.Role?.Trim()
-                ?? string.Empty;
+                ??
+                string.Empty;
 
 
             if (string.Equals(
-                    role,
-                    "Clinic Staff",
-                    StringComparison.OrdinalIgnoreCase)
+                role,
+                "Clinic Staff",
+                StringComparison.OrdinalIgnoreCase)
                 &&
                 !user.ClinicId.HasValue)
             {
@@ -628,30 +657,32 @@
             }
 
 
-            await Auth.LoginAsync(user);
+            await Auth.LoginAsync(
+                user);
 
 
             var destination =
                 role switch
                 {
-                    "Admin"
-                        => "/admin-portal",
+                    "Admin" =>
+                        "/admin-portal",
 
-                    "SuperAdmin"
-                        => "/admin-portal",
+                    "SuperAdmin" =>
+                        "/admin-portal",
 
-                    "Super Admin"
-                        => "/admin-portal",
+                    "Super Admin" =>
+                        "/admin-portal",
 
-                    "Clinic Staff"
-                        => "/clinic-portal",
+                    "Clinic Staff" =>
+                        "/clinic-portal",
 
-                    _
-                        => "/home"
+                    _ =>
+                        "/dashboard"
                 };
 
 
-            Nav.NavigateTo(destination);
+            Nav.NavigateTo(
+                destination);
         }
         catch (Exception ex)
         {
@@ -664,7 +695,8 @@
         }
         finally
         {
-            isSigningIn = false;
+            isSigningIn =
+                false;
         }
     }
 
@@ -678,7 +710,8 @@
         await Auth.EnterGuestModeAsync();
 
 
-        Nav.NavigateTo("/home");
+        Nav.NavigateTo(
+            "/home");
     }
 
 }

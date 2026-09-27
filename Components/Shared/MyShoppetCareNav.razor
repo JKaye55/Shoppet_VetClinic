@@ -1,4 +1,6 @@
-﻿@implements IDisposable
+﻿@using Microsoft.AspNetCore.Components.Routing
+
+@implements IDisposable
 
 @inject AuthService Auth
 @inject NavigationManager Nav
@@ -6,13 +8,14 @@
 
 @if (ShouldShow)
 {
-    <section class="sc-account-nav">
+    <section class="msc-nav">
 
-        <div class="sc-account-nav-inner">
+        <div class="msc-nav-inner">
 
-            <div class="sc-account-nav-brand">
+            <a href="/dashboard"
+               class="msc-nav-brand">
 
-                <span class="sc-account-nav-icon">
+                <span class="msc-brand-mark">
 
                     <svg aria-hidden="true">
                         <use href="/icons/bootstrap-icons.svg#person-heart"></use>
@@ -20,22 +23,23 @@
 
                 </span>
 
-                <span class="sc-account-nav-copy">
+
+                <span class="msc-brand-copy">
 
                     <strong>
                         My ShoppetCare
                     </strong>
 
                     <small>
-                        Your pets, records, ID cards, and account
+                        Your connected pet space
                     </small>
 
                 </span>
 
-            </div>
+            </a>
 
 
-            <nav class="sc-account-nav-links"
+            <nav class="msc-tabs"
                  aria-label="My ShoppetCare">
 
                 <a href="/dashboard"
@@ -75,36 +79,6 @@
 
             </nav>
 
-
-            <div class="sc-account-plan">
-
-                @if (Auth.IsPremium)
-                {
-                    <span class="premium">
-
-                        <svg aria-hidden="true">
-                            <use href="/icons/bootstrap-icons.svg#star-fill"></use>
-                        </svg>
-
-                        Premium
-
-                    </span>
-                }
-                else
-                {
-                    <a href="/premium">
-
-                        <svg aria-hidden="true">
-                            <use href="/icons/bootstrap-icons.svg#star"></use>
-                        </svg>
-
-                        Upgrade
-
-                    </a>
-                }
-
-            </div>
-
         </div>
 
     </section>
@@ -113,192 +87,154 @@
 
 <style>
 
-    .sc-account-nav {
+    .msc-nav {
         position: relative;
         z-index: 40;
         border-bottom: 1px solid #DDE7E4;
-        background: rgba(250,249,246,.98);
-        box-shadow: 0 3px 12px rgba(23,61,61,.035);
+        background: rgba(251,248,242,.97);
+        backdrop-filter: blur(16px);
     }
 
 
-    .sc-account-nav-inner {
-        width: min(1380px,100%);
-        min-height: 59px;
+        .msc-nav *,
+        .msc-nav *::before,
+        .msc-nav *::after {
+            box-sizing: border-box;
+        }
+
+
+    .msc-nav-inner {
+        width: min( 1480px, calc(100% - 48px) );
+        min-height: 72px;
         margin: 0 auto;
-        padding: 0 28px;
         display: flex;
         align-items: center;
-        gap: 22px;
+        gap: 40px;
     }
 
 
-    .sc-account-nav-brand {
-        display: flex;
-        align-items: center;
-        gap: 9px;
-        flex-shrink: 0;
+    .msc-nav a {
+        text-decoration: none;
     }
 
 
-    .sc-account-nav-icon {
-        width: 32px;
-        height: 32px;
+    .msc-nav-brand {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+    }
+
+
+    .msc-brand-mark {
+        width: 42px;
+        height: 42px;
         display: grid;
         place-items: center;
-        border-radius: 9px;
-        background: #EAF5F5;
+        border-radius: 13px;
+        background: linear-gradient( 135deg, #E4F4F2, #F1F8F6 );
         color: #2F9098;
     }
 
 
-        .sc-account-nav-icon svg {
-            width: 15px;
-            height: 15px;
+        .msc-brand-mark svg {
+            width: 18px;
+            height: 18px;
             fill: currentColor;
         }
 
 
-    .sc-account-nav-copy strong,
-    .sc-account-nav-copy small {
+    .msc-brand-copy strong,
+    .msc-brand-copy small {
         display: block;
     }
 
 
-    .sc-account-nav-copy strong {
+    .msc-brand-copy strong {
         color: #173D3D;
-        font-size: .7rem;
+        font-size: 14px;
         font-weight: 900;
     }
 
 
-    .sc-account-nav-copy small {
-        margin-top: 1px;
-        color: #85928E;
-        font-size: .52rem;
+    .msc-brand-copy small {
+        margin-top: 2px;
+        color: #899792;
+        font-size: 10px;
     }
 
 
-    .sc-account-nav-links {
+    .msc-tabs {
         flex: 1;
         display: flex;
-        align-items: stretch;
-        align-self: stretch;
-        gap: 3px;
+        align-items: center;
+        gap: 7px;
     }
 
 
-        .sc-account-nav-links a {
-            position: relative;
-            padding: 0 12px;
+        .msc-tabs a {
+            min-height: 42px;
+            padding: 0 15px;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            color: #687772;
-            font-size: .64rem;
+            gap: 7px;
+            border-radius: 999px;
+            color: #65756F;
+            font-size: 13px;
             font-weight: 800;
-            text-decoration: none;
+            white-space: nowrap;
+            transition: background .16s ease, color .16s ease, transform .16s ease;
         }
 
 
-            .sc-account-nav-links a::after {
-                content: "";
-                position: absolute;
-                left: 11px;
-                right: 11px;
-                bottom: 0;
-                height: 2px;
-                border-radius: 999px;
-                background: transparent;
-            }
-
-
-            .sc-account-nav-links a:hover {
+            .msc-tabs a:hover {
+                transform: translateY(-1px);
+                background: #EEF6F4;
                 color: #173D3D;
-                background: rgba(47,144,152,.035);
             }
 
 
-            .sc-account-nav-links a.active {
-                color: #267C83;
+            .msc-tabs a.active {
+                background: #DFF1EF;
+                color: #217D84;
+                box-shadow: inset 0 0 0 1px rgba(47,144,152,.12);
             }
 
 
-                .sc-account-nav-links a.active::after {
-                    background: #2F9098;
-                }
-
-
-        .sc-account-nav-links svg,
-        .sc-account-plan svg {
-            width: 13px;
-            height: 13px;
+        .msc-tabs svg {
+            width: 14px;
+            height: 14px;
             fill: currentColor;
         }
 
 
-    .sc-account-plan {
-        flex-shrink: 0;
-    }
+    @@media (max-width: 820px) {
 
-
-        .sc-account-plan > span,
-        .sc-account-plan > a {
-            min-height: 32px;
-            padding: 0 10px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            border-radius: 999px;
-            font-size: .57rem;
-            font-weight: 900;
-            text-decoration: none;
-        }
-
-
-        .sc-account-plan .premium {
-            border: 1px solid #E7D386;
-            background: #FFF4CF;
-            color: #806212;
-        }
-
-
-        .sc-account-plan > a {
-            border: 1px solid #D9E4E0;
-            background: #FFFFFF;
-            color: #267C83;
-        }
-
-
-    @@media (max-width: 850px) {
-
-        .sc-account-nav-inner {
-            padding: 0 14px;
+        .msc-nav-inner {
+            width: calc(100% - 24px);
+            gap: 17px;
             overflow-x: auto;
         }
 
 
-        .sc-account-nav-copy {
+        .msc-brand-copy small {
             display: none;
         }
 
 
-        .sc-account-nav-links {
+        .msc-tabs {
             min-width: max-content;
         }
     }
 
-    @@media (max-width: 560px) {
 
-        .sc-account-plan {
+    @@media (max-width: 540px) {
+
+        .msc-brand-copy {
             display: none;
         }
-
-        .sc-account-nav-links a {
-            padding: 0 9px;
-        }
     }
+
 </style>
 
 
@@ -311,15 +247,6 @@
     }
 
 
-    private bool IsPetOwner =>
-        Auth.CurrentUser is not null
-        &&
-        string.Equals(
-            Auth.CurrentUser.Role,
-            "Pet Owner",
-            StringComparison.OrdinalIgnoreCase);
-
-
     private string CurrentPath
     {
         get
@@ -330,8 +257,9 @@
 
 
             relative =
-                relative
-                    .Split('?', '#')[0];
+                relative.Split(
+                    '?',
+                    '#')[0];
 
 
             return
@@ -346,7 +274,7 @@
         get
         {
             if (!Auth.IsLoggedIn ||
-                !IsPetOwner)
+                !Auth.IsPetOwner)
             {
                 return false;
             }
@@ -366,15 +294,15 @@
                     StringComparison.OrdinalIgnoreCase)
                 ||
                 path.StartsWith(
+                    "/pet/",
+                    StringComparison.OrdinalIgnoreCase)
+                ||
+                path.StartsWith(
                     "/account",
                     StringComparison.OrdinalIgnoreCase)
                 ||
                 path.StartsWith(
                     "/premium",
-                    StringComparison.OrdinalIgnoreCase)
-                ||
-                path.StartsWith(
-                    "/pet/",
                     StringComparison.OrdinalIgnoreCase);
         }
     }
@@ -418,9 +346,10 @@
             };
 
 
-        return active
-            ? "active"
-            : string.Empty;
+        return
+            active
+                ? "active"
+                : string.Empty;
     }
 
 
