@@ -1,379 +1,457 @@
 @page "/clinic-portal"
-@using Shoppet_VetClinic.Models
-@using Shoppet_VetClinic.Services
-@inject DatabaseService DbService
-@inject AuthService Auth
-@inject NavigationManager Nav
 @rendermode InteractiveServer
 
-<style>
-    .desk-viewport {
-        background-color: #F8FAF9;
-        min-height: 100vh;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        color: #1F2824;
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+
+@inject AuthService Auth
+@inject DatabaseService Db
+@inject CommerceService Commerce
+@inject NavigationManager Nav
+
+<PageTitle>Clinic Dashboard | ShoppetCare</PageTitle>
+
+<div class="clinic-dashboard-page">
+    @if (!ready)
+    {
+        <div class="clinic-state">Loading clinic dashboard...</div>
     }
-
-    .desk-navbar {
-        background: #FFFFFF;
-        border-bottom: 2px solid #5C766D;
-        padding: 0.85rem 0;
+    else if (!Auth.IsLoggedIn || Auth.CurrentUser is null || !Auth.IsClinicStaff)
+    {
+        <main class="clinic-shell">
+            <section class="clinic-panel access-panel">
+                <span class="eyebrow">CLINIC ACCESS</span>
+                <h1>Clinic Owner access required.</h1>
+                <p>
+                    This dashboard is available after a clinic claim is reviewed and approved by the ShoppetCare Super Admin.
+                </p>
+                <div class="action-row">
+                    <a class="primary-link" href="/clinics">Find Your Clinic</a>
+                    <a class="secondary-link" href="/list-your-clinic">List Your Clinic</a>
+                </div>
+            </section>
+        </main>
     }
-
-    .desk-stat-card {
-        background: #FFFFFF;
-        border-radius: 16px;
-        border: 1px solid #E6EAE8;
-        padding: 1.5rem;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    else if (clinic is null)
+    {
+        <main class="clinic-shell">
+            <section class="clinic-panel access-panel">
+                <span class="eyebrow">CLINIC ACCESS</span>
+                <h1>No clinic is linked to this account yet.</h1>
+                <p>Submit a clinic claim from the directory or request a missing clinic listing.</p>
+                <div class="action-row">
+                    <a class="primary-link" href="/clinics">Browse Clinics</a>
+                    <a class="secondary-link" href="/list-your-clinic">Request Listing</a>
+                </div>
+            </section>
+        </main>
     }
-
-    .desk-tab-btn {
-        background: transparent;
-        border: none;
-        color: #53635C;
-        font-weight: 700;
-        font-size: 0.92rem;
-        padding: 0.5rem 1.2rem;
-        border-radius: 9999px;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-
-        .desk-tab-btn:hover {
-            background: #EEF4F1;
-            color: #1E2D27;
-        }
-
-        .desk-tab-btn.active {
-            background: #5C766D !important;
-            color: #FFFFFF !important;
-        }
-
-    .btn-verify {
-        background-color: #F7DD7D;
-        color: #2F423B;
-        font-weight: 800;
-        border: none;
-        border-radius: 9999px;
-        padding: 0.65rem 1.6rem;
-    }
-</style>
-
-<div class="desk-viewport">
-
-    <!-- Top Terminal Strip -->
-    <div class="px-4 py-2 text-white d-flex justify-content-between align-items-center small" style="background: #1E2D27;">
-        <div class="d-flex align-items-center gap-2">
-            <span style="width:8px;height:8px;background:#34D399;border-radius:50%;display:inline-block;"></span>
-            <strong>CLINICAL RECEPTION TERMINAL</strong>
-            @if (activeClinic is not null)
-            {
-                <span class="opacity-75"> — @activeClinic.ClinicName, @activeClinic.Branch</span>
-            }
-        </div>
-        @if (activeClinic is not null)
-        {
-            <div>
-                <span class="opacity-75">PRC License:</span> <strong class="text-warning">@activeClinic.PrcLicenseNo</strong>
-                <span class="mx-1">|</span>
-                <span class="opacity-75">PTR:</span> <strong>@activeClinic.PtrNumber</strong>
-            </div>
-        }
-    </div>
-
-    <!-- Desk Navigation -->
-    <header class="desk-navbar px-4 sticky-top">
-        <div class="container-xl d-flex justify-content-between align-items-center">
-            <a class="d-flex align-items-center gap-2 text-decoration-none" href="/clinic-portal">
-                <img src="/shoppetlogo.png" alt="Shoppet" style="height: 38px;" />
+    else
+    {
+        <header class="clinic-hero">
+            <div class="clinic-shell clinic-hero-inner">
                 <div>
-                    <h5 class="fw-bold mb-0 text-dark">Shoppet<span style="color: #059669;">Care Desk</span></h5>
-                    <small class="text-muted fw-bold" style="font-size: 0.62rem;">OPERATIONAL CLINIC PORTAL</small>
+                    <span class="eyebrow light">CLINIC OWNER DASHBOARD</span>
+                    <h1>@clinic.ClinicName</h1>
+                    <p>@clinic.Address</p>
                 </div>
-            </a>
 
-            <!-- Desk Navigation Tabs -->
-            <div class="d-flex gap-1">
-                <button type="button" class="desk-tab-btn @(activeTab == "queue" ? "active" : "")" @onclick='() => activeTab = "queue"'>
-                    Patient Queue
-                </button>
-                <button type="button" class="desk-tab-btn @(activeTab == "claim" ? "active" : "")" @onclick='() => activeTab = "claim"'>
-                    Counter Handoff
-                </button>
-                <button type="button" class="desk-tab-btn @(activeTab == "inventory" ? "active" : "")" @onclick='() => activeTab = "inventory"'>
-                    Clinic Stock
-                </button>
+                <div class="clinic-status-card @(verifiedActive ? "active" : "")">
+                    <span>@(verifiedActive ? "VERIFIED CLINIC" : "LISTED CLINIC")</span>
+                    <strong>@(verifiedActive ? "Subscription Active" : "Verification Inactive")</strong>
+                    <small>
+                        @(verifiedActive
+                            ? $"Active until {clinicSubscription?.ExpiresAt:MMM d, yyyy}"
+                            : "Activate Verified Clinic for ₱50/month")
+                    </small>
+                </div>
             </div>
+        </header>
 
-            <!-- Page Router Switcher -->
-            <div class="d-flex align-items-center gap-2">
-                <div class="btn-group">
-                    <button class="btn btn-sm rounded-pill px-3 fw-bold dropdown-toggle border" style="background:#ECFDF5;color:#065F46;border-color:#A7F3D0;" type="button" @onclick="() => showRoleMenu = !showRoleMenu">
-                        Clinic Staff Desk
-                    </button>
-                    @if (showRoleMenu)
-                    {
-                        <div class="dropdown-menu dropdown-menu-end show shadow-sm border mt-2 p-1 rounded-3">
-                            <button class="dropdown-item py-2 small" @onclick='() => Nav.NavigateTo("/")'>Customer / Pet Parent (Storefront)</button>
-                            <button class="dropdown-item py-2 small active fw-bold" @onclick='() => Nav.NavigateTo("/clinic-portal")'>Clinic Reception Desk</button>
-                            <button class="dropdown-item py-2 small" @onclick='() => Nav.NavigateTo("/admin-portal")'>Platform Admin Dashboard</button>
+        <main class="clinic-shell clinic-content">
+            @if (!string.IsNullOrWhiteSpace(message))
+            {
+                <div class="status-message @(isError ? "error" : "success")">@message</div>
+            }
+
+            <section class="clinic-overview-grid">
+                <article class="metric">
+                    <span>Listing Status</span>
+                    <strong>Listed</strong>
+                    <small>Visible in the public directory</small>
+                </article>
+                <article class="metric">
+                    <span>Verification</span>
+                    <strong>@(verifiedActive ? "Active" : "Inactive")</strong>
+                    <small>@(verifiedActive ? "Verified badge displayed" : "No verified badge")</small>
+                </article>
+                <article class="metric">
+                    <span>Services</span>
+                    <strong>@Services.Count</strong>
+                    <small>Public service capabilities</small>
+                </article>
+                <article class="metric">
+                    <span>Account Role</span>
+                    <strong>@Auth.CurrentUser.Role</strong>
+                    <small>Linked clinic representative</small>
+                </article>
+            </section>
+
+            <div class="clinic-main-grid">
+                <section class="clinic-panel">
+                    <div class="panel-head">
+                        <div>
+                            <span class="eyebrow">CLINIC PROFILE</span>
+                            <h2>Public listing information</h2>
                         </div>
-                    }
-                </div>
-
-                <a class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold text-decoration-none" href="/">
-                    Exit to Storefront
-                </a>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Desk Body -->
-    <main class="container-xl py-4">
-
-        @if (!string.IsNullOrWhiteSpace(accessMessage))
-        {
-            <div class="alert alert-warning rounded-4 border mb-4">@accessMessage</div>
-        }
-        else if (activeClinic is not null)
-        {
-            <div class="bg-white border rounded-4 px-4 py-3 mb-4 d-flex justify-content-between align-items-center">
-                <div><small class="text-muted text-uppercase fw-bold">Active Clinic</small><div class="fw-bold text-dark">@activeClinic.ClinicName — @activeClinic.Branch</div></div>
-                <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">Staff Access</span>
-            </div>
-        }
-
-        <div class="row g-4 mb-4">
-            <div class="col-md-4">
-                <div class="desk-stat-card">
-                    <small class="text-muted text-uppercase fw-bold">Incoming Appointments</small>
-                    <h2 class="fw-bold text-dark mb-0">@appointments.Count</h2>
-                    <small class="text-success fw-semibold">Consultations scheduled</small>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="desk-stat-card d-flex align-items-center gap-3">
-                    <div style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
-                        <img src="/vet_wpets.jpg" alt="Duty Veterinarian" style="width:100%;height:100%;object-fit:cover;" />
-                    </div>
-                    <div>
-                        <small class="text-muted text-uppercase fw-bold">Duty Veterinarian</small>
-                        <h6 class="fw-bold text-dark mb-0">Dr. Maria Santos, DVM</h6>
-                        <small class="text-muted font-monospace">PRC #008123 (Active)</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="desk-stat-card">
-                    <small class="text-muted text-uppercase fw-bold">Counter Fulfillment</small>
-                    <h5 class="fw-bold text-success mb-0 mt-1">Accepting In-Person Handoffs</h5>
-                    <small class="text-muted">Compliant with RA 11967</small>
-                </div>
-            </div>
-        </div>
-
-        @if (activeTab == "queue")
-        {
-            <div class="bg-white rounded-4 border p-4 shadow-sm">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-dark mb-0">Scheduled Consultations Queue</h5>
-                    <button class="btn btn-sm btn-outline-dark rounded-pill px-3" @onclick="RefreshData">Refresh Queue</button>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr class="small text-muted text-uppercase">
-                                <th>Patient ID & Photo</th>
-                                <th>Pet Parent</th>
-                                <th>Service Required</th>
-                                <th>Requested Schedule</th>
-                                <th>Contact Number</th>
-                                <th class="text-end">Desk Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var app in appointments)
-                            {
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div style="width: 44px; height: 44px; border-radius: 10px; overflow: hidden; background: #FAF9F6; flex-shrink: 0;">
-                                                <img src="@(app.PetName.Contains("Shih Tzu") ? "/premiumft.png" : (app.PetName.Contains("Cat") || app.PetName.Contains("Domestic") ? "/catft.jpg" : "/petvitna.jpg"))"
-                                                     alt="@app.PetName" style="width: 100%; height: 100%; object-fit: cover;" />
-                                            </div>
-                                            <div>
-                                                <strong class="text-dark">@app.PetName</strong>
-                                                <div class="text-muted small">Token: #@app.Id</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>@app.OwnerName</td>
-                                    <td><span class="badge bg-light text-dark border">@app.ServiceType</span></td>
-                                    <td class="font-monospace small">@app.AppointmentDate.ToString("MMM dd, yyyy - hh:mm tt")</td>
-                                    <td class="font-monospace small">@app.ContactNumber</td>
-                                    <td class="text-end">
-                                        <button class="btn btn-sm btn-dark rounded-pill px-3 py-1" @onclick="() => CheckInAppointment(app.Id)">@(app.Status == "Checked In" ? "Checked In" : "Check In")</button>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        }
-        else if (activeTab == "claim")
-        {
-            <div class="row justify-content-center">
-                <div class="col-lg-6">
-                    <div class="bg-white rounded-4 border p-5 shadow-sm text-center">
-                        <span class="fs-1 mb-2 d-block"></span>
-                        <h4 class="fw-bold text-dark mb-1">Click-and-Collect Voucher Redemption</h4>
-                        <p class="text-muted small mb-4">Enter customer's claim token code upon physical counter pickup or rider arrival.</p>
-
-                        <div class="mb-3 text-start">
-                            <label class="form-label small fw-bold text-muted">Claim Token Code</label>
-                            <input class="form-control form-control-lg text-center font-monospace fw-bold text-uppercase rounded-3"
-                                   placeholder="CLAIM-XXXX"
-                                   @bind="searchClaimToken" />
-                        </div>
-
-                        <button class="btn-verify w-100 py-3 mb-3" @onclick="VerifyClaimToken">
-                            Verify & Release Supplies
-                        </button>
-
-                        @if (!string.IsNullOrEmpty(voucherVerifyStatus))
+                        @if (!editingProfile)
                         {
-                            <div class="alert alert-success rounded-3 small p-3">
-                                @voucherVerifyStatus
-                            </div>
+                            <button class="outline-btn" @onclick="BeginEditProfile">Edit Profile</button>
                         }
                     </div>
-                </div>
+
+                    @if (editingProfile)
+                    {
+                        <div class="form-grid">
+                            <div class="field full">
+                                <label>Clinic Name</label>
+                                <input value="@clinic.ClinicName" disabled />
+                                <small>Clinic name changes are locked to protect listing identity.</small>
+                            </div>
+                            <div class="field">
+                                <label>Branch / City</label>
+                                <input maxlength="120" @bind="editClinic.Branch" />
+                            </div>
+                            <div class="field">
+                                <label>Facility Type</label>
+                                <input maxlength="120" @bind="editClinic.FacilityType" />
+                            </div>
+                            <div class="field full">
+                                <label>Address</label>
+                                <input maxlength="250" @bind="editClinic.Address" />
+                            </div>
+                            <div class="field">
+                                <label>Contact Number</label>
+                                <input maxlength="50" @bind="editClinic.ContactPhone" />
+                            </div>
+                            <div class="field">
+                                <label>Operating Hours</label>
+                                <input maxlength="150" @bind="editClinic.OperatingHours" />
+                            </div>
+                            <div class="field full">
+                                <label>Brands / Diets Carried</label>
+                                <input maxlength="500" @bind="editClinic.BrandsCarried" />
+                            </div>
+                            <div class="field full">
+                                <label>Messenger / Contact URL</label>
+                                <input maxlength="500" @bind="editClinic.MessengerUrl" />
+                            </div>
+                        </div>
+
+                        <div class="action-row">
+                            <button class="primary-btn" @onclick="SaveProfile">Save Profile</button>
+                            <button class="secondary-btn" @onclick="CancelEditProfile">Cancel</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="profile-view">
+                            <div><span>Branch / City</span><strong>@Display(clinic.Branch)</strong></div>
+                            <div><span>Facility Type</span><strong>@Display(clinic.FacilityType)</strong></div>
+                            <div class="wide"><span>Address</span><strong>@Display(clinic.Address)</strong></div>
+                            <div><span>Contact</span><strong>@Display(clinic.ContactPhone)</strong></div>
+                            <div><span>Hours</span><strong>@Display(clinic.OperatingHours)</strong></div>
+                            <div class="wide"><span>Brands &amp; Diets</span><strong>@Display(clinic.BrandsCarried)</strong></div>
+                        </div>
+                    }
+                </section>
+
+                <aside class="clinic-panel subscription-panel">
+                    <span class="eyebrow">VERIFIED CLINIC</span>
+                    <h2>₱50 <small>/ month</small></h2>
+                    <p>
+                        Verified badge, claimed-clinic management access, service management, and a stronger verified appearance in the directory.
+                    </p>
+
+                    @if (verifiedActive)
+                    {
+                        <div class="active-box">
+                            <i class="bi bi-patch-check-fill"></i>
+                            <div>
+                                <strong>Subscription active</strong>
+                                <span>Until @clinicSubscription?.ExpiresAt.ToString("MMM d, yyyy")</span>
+                            </div>
+                        </div>
+                        <a class="primary-link full-link" href="/checkout/ClinicSubscription">Extend Subscription</a>
+                    }
+                    else
+                    {
+                        <a class="primary-link full-link" href="/checkout/ClinicSubscription">Activate Verified Clinic</a>
+                    }
+
+                    <p class="microcopy">
+                        The project checkout is a payment simulation. No real funds are transferred.
+                    </p>
+                </aside>
             </div>
-        }
-        else if (activeTab == "inventory")
-        {
-            <div class="bg-white rounded-4 border p-4 shadow-sm">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-dark mb-0">Clinic Dispensary & Shelf Stock</h5>
-                    <span class="text-muted small">Real-time database sync</span>
+
+            <section class="clinic-panel services-panel">
+                <div class="panel-head">
+                    <div>
+                        <span class="eyebrow">SERVICES</span>
+                        <h2>Services offered</h2>
+                        <p>Manage the service capabilities shown on your public clinic listing.</p>
+                    </div>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light small text-muted text-uppercase">
-                            <tr>
-                                <th>Package</th>
-                                <th>Product Name</th>
-                                <th>Category</th>
-                                <th>Shelf Price</th>
-                                <th>Stock</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var prod in allProducts)
+                <div class="service-editor">
+                    <div class="service-list">
+                        @if (Services.Count == 0)
+                        {
+                            <div class="empty-service">No services added yet.</div>
+                        }
+                        else
+                        {
+                            @foreach (var service in Services)
                             {
-                                <tr>
-                                    <td style="width: 60px;">
-                                        <div style="width: 48px; height: 48px; border-radius: 8px; overflow: hidden; background: #FAF9F6; display:flex; align-items:center; justify-content:center; border: 1px solid #E6EAE8;">
-                                            <img src="/@prod.ImageSource" alt="@prod.Name" style="max-height: 85%; max-width: 85%; object-fit: contain;" />
-                                        </div>
-                                    </td>
-                                    <td class="fw-bold text-dark">@prod.Name</td>
-                                    <td><span class="badge bg-light text-muted border">@prod.Category</span></td>
-                                    <td class="fw-bold font-monospace">₱@prod.Price.ToString("N2")</td>
-                                    <td class="font-monospace">@prod.Stock</td>
-                                    <td>
-                                        <span class="badge rounded-pill px-3 py-1 @(prod.Stock > 5 ? "bg-success" : (prod.Stock > 0 ? "bg-warning text-dark" : "bg-danger"))">
-                                            @(prod.Stock > 0 ? "In Stock" : "Depleted")
-                                        </span>
-                                    </td>
-                                </tr>
+                                <div class="service-chip">
+                                    <span>@service</span>
+                                    <button title="Remove service" @onclick="() => RemoveService(service)">×</button>
+                                </div>
                             }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        }
+                        }
+                    </div>
 
-    </main>
+                    <div class="add-service">
+                        <input maxlength="120"
+                               @bind="newService"
+                               @onkeydown="HandleServiceKey"
+                               placeholder="Example: Vaccination" />
+                        <button class="primary-btn" @onclick="AddService">Add Service</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="clinic-panel preview-panel">
+                <div>
+                    <span class="eyebrow">PUBLIC LISTING PREVIEW</span>
+                    <h2>@clinic.ClinicName</h2>
+                    <p>@clinic.Address</p>
+                    <div class="preview-services">@string.Join(" · ", Services)</div>
+                </div>
+                <div class="preview-badge @(verifiedActive ? "verified" : "")">
+                    @(verifiedActive ? "Verified Clinic" : "Listed Clinic")
+                </div>
+            </section>
+        </main>
+    }
 </div>
 
+<style>
+    .clinic-dashboard-page{min-height:100vh;background:#FAF9F6;color:#1E2D27}.clinic-shell{width:min(1180px,calc(100% - 40px));margin:auto}.clinic-state{padding:90px;text-align:center;color:#6C7A74}
+    .clinic-hero{padding:48px 0;background:linear-gradient(145deg,#173D3D,#102E2D);color:#fff}.clinic-hero-inner{display:flex;justify-content:space-between;gap:24px;align-items:end}.eyebrow{color:#2F9098;font-size:.67rem;font-weight:900;letter-spacing:.12em}.eyebrow.light{color:#8ED8D9}.clinic-hero h1{margin:7px 0 6px;font-size:clamp(2.3rem,5vw,4rem);font-weight:900;letter-spacing:-.05em}.clinic-hero p{margin:0;color:rgba(255,255,255,.62)}
+    .clinic-status-card{min-width:250px;padding:16px;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:rgba(255,255,255,.06)}.clinic-status-card.active{background:rgba(47,144,152,.15)}.clinic-status-card span,.clinic-status-card strong,.clinic-status-card small{display:block}.clinic-status-card span{font-size:.62rem;font-weight:900;letter-spacing:.1em;color:#F3D27A}.clinic-status-card strong{margin-top:5px}.clinic-status-card small{margin-top:4px;color:rgba(255,255,255,.64)}
+    .clinic-content{padding:28px 0 60px}.status-message{margin-bottom:18px;padding:12px 14px;border-radius:11px;font-size:.75rem;font-weight:700}.status-message.success{background:#E9F7EE;color:#276840;border:1px solid #BFE3CB}.status-message.error{background:#FFF1F1;color:#982E2E;border:1px solid #F0B9B9}
+    .clinic-overview-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}.metric,.clinic-panel{border:1px solid #DDE7E4;border-radius:18px;background:#fff;box-shadow:0 10px 30px rgba(30,45,39,.045)}.metric{padding:18px}.metric span,.metric strong,.metric small{display:block}.metric span{color:#7E8B86;font-size:.64rem;text-transform:uppercase;font-weight:850}.metric strong{margin-top:7px;font-size:1.25rem}.metric small{margin-top:3px;color:#8A9691;font-size:.66rem}
+    .clinic-main-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.55fr);gap:18px}.clinic-panel{padding:26px}.panel-head{display:flex;justify-content:space-between;gap:18px;align-items:start}.clinic-panel h2{margin:5px 0 8px;font-weight:900;letter-spacing:-.035em}.clinic-panel p{margin:0;color:#6A7973;line-height:1.6}.outline-btn,.primary-btn,.secondary-btn{min-height:42px;padding:0 14px;border-radius:10px;font-weight:850;cursor:pointer}.outline-btn,.secondary-btn{border:1px solid #C9D9D5;background:#fff;color:#173D3D}.primary-btn{border:1px solid #2F9098;background:#2F9098;color:#fff}
+    .profile-view{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:20px}.profile-view>div{padding:12px;border:1px solid #E5EBE8;border-radius:11px;background:#FBFCFB}.profile-view .wide{grid-column:1/-1}.profile-view span,.profile-view strong{display:block}.profile-view span{font-size:.63rem;color:#84918C;text-transform:uppercase;font-weight:800}.profile-view strong{margin-top:4px;font-size:.78rem}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}.field.full{grid-column:1/-1}.field label{display:block;margin-bottom:5px;font-size:.69rem;font-weight:850}.field input{width:100%;min-height:44px;padding:0 11px;border:1px solid #CBD9D5;border-radius:9px;outline:none}.field small{display:block;margin-top:4px;color:#89958F;font-size:.62rem}.action-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
+    .subscription-panel h2{font-size:2rem}.subscription-panel h2 small{font-size:.8rem;color:#7D8984}.active-box{display:flex;gap:10px;align-items:center;margin:20px 0;padding:13px;border-radius:12px;background:#EAF6EF;color:#286A44}.active-box i{font-size:1.5rem}.active-box strong,.active-box span{display:block}.active-box span{font-size:.68rem}.primary-link,.secondary-link{min-height:44px;padding:0 16px;border-radius:10px;text-decoration:none;font-weight:850;display:inline-flex;align-items:center;justify-content:center}.primary-link{background:#2F9098;color:#fff}.secondary-link{border:1px solid #C9D9D5;background:#fff;color:#173D3D}.full-link{width:100%;margin-top:14px}.microcopy{margin-top:12px!important;font-size:.65rem!important}
+    .services-panel,.preview-panel{margin-top:18px}.service-list{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}.service-chip{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border-radius:999px;background:#EEF6F4;color:#245F61;font-size:.72rem;font-weight:800}.service-chip button{border:0;background:transparent;color:#65736D;font-size:1rem;cursor:pointer}.empty-service{color:#85918C;font-size:.75rem}.add-service{display:flex;gap:8px}.add-service input{flex:1;min-height:44px;padding:0 12px;border:1px solid #CBD9D5;border-radius:10px;outline:none}.preview-panel{display:flex;justify-content:space-between;align-items:center;gap:20px}.preview-services{margin-top:10px;color:#73817B;font-size:.72rem}.preview-badge{padding:9px 12px;border-radius:999px;background:#EFF2F1;color:#68756F;font-size:.69rem;font-weight:900}.preview-badge.verified{background:#EAF5F5;color:#267C83}
+    .access-panel{max-width:700px;margin:70px auto}.access-panel h1{font-size:2.4rem}.access-panel p{margin-top:8px}
+    @@media(max-width:900px){.clinic-overview-grid{grid-template-columns:1fr 1fr}.clinic-main-grid{grid-template-columns:1fr}.clinic-hero-inner{align-items:start;flex-direction:column}.clinic-status-card{width:100%}.profile-view,.form-grid{grid-template-columns:1fr}.profile-view .wide,.field.full{grid-column:auto}}
+    @@media(max-width:560px){.clinic-overview-grid{grid-template-columns:1fr}.add-service{flex-direction:column}.preview-panel{align-items:start;flex-direction:column}}
+</style>
+
 @code {
-    private string activeTab = "queue";
-    private bool showRoleMenu = false;
-    private string searchClaimToken = "";
-    private string voucherVerifyStatus = "";
+    private ClinicTenant? clinic;
+    private ClinicTenant editClinic = new();
+    private SubscriptionRecord? clinicSubscription;
+    private bool ready;
+    private bool verifiedActive;
+    private bool editingProfile;
+    private string newService = string.Empty;
+    private string message = string.Empty;
+    private bool isError;
 
-    private List<PetProduct> allProducts = new();
-    private List<ClinicAppointment> appointments = new();
-    private ClinicTenant? activeClinic;
-    private string accessMessage = string.Empty;
+    private List<string> Services =>
+        (clinic?.ServiceCapabilities ?? string.Empty)
+            .Split(new[] { ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x)
+            .ToList();
 
-    protected override void OnInitialized()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!Auth.IsLoggedIn)
-        {
-            Nav.NavigateTo("/login");
-            return;
-        }
+        if (!firstRender) return;
 
-        if (!string.Equals(Auth.CurrentUser!.Role, "Clinic Staff", StringComparison.OrdinalIgnoreCase))
-        {
-            Nav.NavigateTo(string.Equals(Auth.CurrentUser.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "/admin-portal" : "/dashboard");
-            return;
-        }
+        await Auth.InitializeAsync();
+        LoadClinic();
 
-        RefreshData();
+        ready = true;
+        await InvokeAsync(StateHasChanged);
     }
 
-    private void RefreshData()
+    private void LoadClinic()
     {
-        accessMessage = string.Empty;
-        activeClinic = Auth.CurrentUser?.ClinicId is int clinicId
-            ? DbService.GetClinicById(clinicId)
-            : DbService.GetClinicForUser(Auth.CurrentUser?.Id ?? 0);
-
-        if (activeClinic is null)
-        {
-            allProducts = new();
-            appointments = new();
-            accessMessage = "This clinic staff account is not assigned to a clinic yet. Ask an administrator to assign the account to a clinic.";
+        if (Auth.CurrentUser is null)
             return;
-        }
 
-        allProducts = DbService.GetProductsByClinic(activeClinic.Id);
-        appointments = DbService.GetAppointments(clinicId: activeClinic.Id);
+        clinic = Db.GetClinicForUser(Auth.CurrentUser.Id);
+
+        if (clinic is null)
+            return;
+
+        clinicSubscription =
+            Commerce.GetActiveSubscription(
+                CommerceService.ClinicType,
+                clinicId: clinic.Id);
+
+        verifiedActive = clinicSubscription is not null;
     }
 
-    private void CheckInAppointment(int appointmentId)
+    private void BeginEditProfile()
     {
-        if (activeClinic is null) return;
-        DbService.UpdateAppointmentStatus(appointmentId, "Checked In", activeClinic.Id);
-        RefreshData();
+        if (clinic is null) return;
+
+        editClinic = new ClinicTenant
+        {
+            Id = clinic.Id,
+            ClinicName = clinic.ClinicName,
+            Branch = clinic.Branch,
+            Address = clinic.Address,
+            PrcLicenseNo = clinic.PrcLicenseNo,
+            PtrNumber = clinic.PtrNumber,
+            SubscriptionPlan = clinic.SubscriptionPlan,
+            FacilityType = clinic.FacilityType,
+            HasClinic = clinic.HasClinic,
+            HasPetShop = clinic.HasPetShop,
+            ContactPhone = clinic.ContactPhone,
+            OperatingHours = clinic.OperatingHours,
+            BrandsCarried = clinic.BrandsCarried,
+            ServiceCapabilities = clinic.ServiceCapabilities,
+            MessengerUrl = clinic.MessengerUrl,
+            IsVerified = clinic.IsVerified,
+            VerifiedAt = clinic.VerifiedAt,
+            VerificationFee = clinic.VerificationFee,
+            VerificationReference = clinic.VerificationReference,
+            VerificationStatus = clinic.VerificationStatus
+        };
+
+        editingProfile = true;
     }
 
-    private void VerifyClaimToken()
+    private void CancelEditProfile()
     {
-        if (string.IsNullOrWhiteSpace(searchClaimToken))
+        editingProfile = false;
+        message = string.Empty;
+    }
+
+    private void SaveProfile()
+    {
+        if (clinic is null) return;
+
+        editClinic.ClinicName = clinic.ClinicName;
+        editClinic.ServiceCapabilities = clinic.ServiceCapabilities;
+
+        try
         {
-            voucherVerifyStatus = "Please enter a valid claim voucher code.";
+            if (!Db.UpdateClinic(editClinic))
+            {
+                ShowError("The clinic profile could not be updated.");
+                return;
+            }
+
+            clinic = Db.GetClinicById(clinic.Id);
+            editingProfile = false;
+            ShowSuccess("Clinic profile updated.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ClinicPortal] {ex}");
+            ShowError("The clinic profile could not be updated.");
+        }
+    }
+
+    private void AddService()
+    {
+        if (clinic is null) return;
+
+        var value = newService.Trim();
+
+        if (string.IsNullOrWhiteSpace(value))
+            return;
+
+        if (Services.Contains(value, StringComparer.OrdinalIgnoreCase))
+        {
+            ShowError("That service is already listed.");
             return;
         }
 
-        var token = searchClaimToken.Trim().ToUpperInvariant();
-        if (DbService.VerifyClaimToken(token) is null)
-        {
-            voucherVerifyStatus = "No pending order was found for that claim token.";
-            return;
-        }
+        var updated = Services;
+        updated.Add(value);
 
-        voucherVerifyStatus = DbService.MarkOrderClaimed(token)
-            ? $"Token {token} verified. The order is now marked as claimed."
-            : "The claim token could not be updated. Please refresh and try again.";
-        searchClaimToken = "";
+        SaveServices(updated);
+        newService = string.Empty;
+    }
+
+    private void RemoveService(string service)
+    {
+        if (clinic is null) return;
+
+        var updated =
+            Services
+                .Where(x => !string.Equals(x, service, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+        SaveServices(updated);
+    }
+
+    private void SaveServices(List<string> values)
+    {
+        if (clinic is null) return;
+
+        clinic.ServiceCapabilities =
+            string.Join(", ", values.OrderBy(x => x));
+
+        try
+        {
+            if (!Db.UpdateClinic(clinic))
+            {
+                ShowError("Services could not be updated.");
+                return;
+            }
+
+            clinic = Db.GetClinicById(clinic.Id);
+            ShowSuccess("Clinic services updated.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ClinicPortal Services] {ex}");
+            ShowError("Services could not be updated.");
+        }
+    }
+
+    private void HandleServiceKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            AddService();
+    }
+
+    private static string Display(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "Not provided" : value;
+
+    private void ShowSuccess(string value)
+    {
+        message = value;
+        isError = false;
+    }
+
+    private void ShowError(string value)
+    {
+        message = value;
+        isError = true;
     }
 }
