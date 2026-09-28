@@ -423,6 +423,23 @@
     }
 
 
+
+    .sp-contact-locked {
+        gap: 6px;
+        background: #EEF1F0;
+        color: #8A9591;
+        box-shadow: none;
+        cursor: not-allowed;
+        user-select: none;
+    }
+
+    .sp-contact-locked:hover {
+        transform: none;
+        background: #EEF1F0;
+        color: #8A9591;
+    }
+
+
     .sp-btn-login,
     .sp-btn-register,
     .sp-btn-exit-preview,
@@ -1026,12 +1043,27 @@
 
             <div class="sp-actions">
 
-                <a href="/list-your-clinic"
-                   class="sp-contact">
+                @if (Auth.IsGuest)
+                {
+                    <span class="sp-contact sp-contact-locked"
+                          title="Create an account or sign in to request a clinic listing">
 
-                    List Your Clinic
+                        <i class="bi bi-lock-fill"
+                           aria-hidden="true"></i>
 
-                </a>
+                        List Your Clinic
+
+                    </span>
+                }
+                else
+                {
+                    <a href="/list-your-clinic"
+                       class="sp-contact">
+
+                        List Your Clinic
+
+                    </a>
+                }
 
 
                 @if (Auth.IsLoggedIn)
