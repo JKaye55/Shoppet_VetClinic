@@ -94,17 +94,54 @@ namespace Shoppet_VetClinic.Services
                 "bi-heart-pulse-fill");
         }
 
-        // =========================================================
-        // BLUE CALENDAR — Appointment Reminders
-        // =========================================================
-        public void AppointmentReminder(int userId, string petName, DateTime when)
+        public void SellerActivated(int userId, DateTime expiresAt)
         {
             _db.CreateNotification(
                 userId,
-                "Appointment reminder",
-                $"{petName} has an appointment on {when:MMM d 'at' h:mm tt}. Don't forget!",
-                "/dashboard",
-                "bi-calendar-event");
+                "Verified Seller activated",
+                $"You can now create and manage marketplace listings until {expiresAt:MMM d, yyyy}.",
+                "/marketplace",
+                "bi-shop");
+        }
+
+        public void ClinicClaimApproved(int userId, int clinicId)
+        {
+            _db.CreateNotification(
+                userId,
+                "Clinic claim approved",
+                "Your clinic claim was approved. Complete the Verified Clinic subscription to activate the badge and clinic management benefits.",
+                "/clinic-portal",
+                "bi-building-check");
+        }
+
+        public void ClinicListingApproved(int userId, int clinicId)
+        {
+            _db.CreateNotification(
+                userId,
+                "Clinic listing approved",
+                "Your requested clinic was added to the ShoppetCare directory. You may now submit a claim for the listing.",
+                $"/claim-clinic/{clinicId}",
+                "bi-hospital");
+        }
+
+        public void ClinicRequestRejected(int userId, string kind)
+        {
+            _db.CreateNotification(
+                userId,
+                $"{kind} request update",
+                "Your request was reviewed but could not be approved. Open the clinic directory or contact ShoppetCare if you need to submit updated information.",
+                "/clinics",
+                "bi-info-circle");
+        }
+
+        public void ClinicSubscriptionActivated(int userId, int clinicId, DateTime expiresAt)
+        {
+            _db.CreateNotification(
+                userId,
+                "Verified Clinic activated",
+                $"Your clinic verification is active until {expiresAt:MMM d, yyyy}.",
+                "/clinic-portal",
+                "bi-patch-check-fill");
         }
 
         // =========================================================
