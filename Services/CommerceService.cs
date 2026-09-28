@@ -967,6 +967,37 @@ namespace Shoppet_VetClinic.Services
             return cmd.ExecuteNonQuery() > 0;
         }
 
+        public bool DeactivateSubscription(int subscriptionId)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+
+            using var cmd = new SqlCommand(@"
+                UPDATE Subscriptions
+                SET Status = 'Suspended'
+                WHERE Id = @Id
+                  AND Status = 'Active';",
+                conn);
+
+            cmd.Parameters.AddWithValue("@Id", subscriptionId);
+
+            return cmd.ExecuteNonQuery() > 0;
+        }
+
+        public int GetPendingClinicRequestCount()
+        {
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+
+            using var cmd = new SqlCommand(@"
+                SELECT
+                    (SELECT COUNT(*) FROM ClinicListingRequests WHERE Status = 'Pending')
+                  + (SELECT COUNT(*) FROM ClinicClaimRequests WHERE Status = 'Pending');",
+                conn);
+
+            return Convert.ToInt32(cmd.ExecuteScalar());
+        }
+
         private static SubscriptionRecord MapSubscription(
             SqlDataReader reader)
         {
