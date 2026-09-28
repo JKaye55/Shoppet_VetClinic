@@ -381,9 +381,20 @@ namespace Shoppet_VetClinic.Services
 
         public bool AddComment(int postId, int? userId, string authorName, string body, bool isGuest)
         {
-            authorName = string.IsNullOrWhiteSpace(authorName)
-                ? (isGuest ? "Guest" : "Pet Owner")
-                : authorName.Trim();
+            // Guest identity is intentionally fixed. A guest has no
+            // authenticated profile and must never be able to impersonate
+            // a named ShoppetCare member.
+            if (isGuest)
+            {
+                userId = null;
+                authorName = "Guest";
+            }
+            else
+            {
+                authorName = string.IsNullOrWhiteSpace(authorName)
+                    ? "Pet Owner"
+                    : authorName.Trim();
+            }
 
             body = (body ?? string.Empty).Trim();
 
