@@ -16,6 +16,17 @@
     {
         <div class="msc-loading">Loading My ShoppetCare...</div>
     }
+    else if (Auth.IsGuest)
+    {
+        <main class="msc-shell">
+            <section class="msc-panel access-panel">
+                <span class="eyebrow">GUEST MODE</span>
+                <h1>Open your Guest Dashboard.</h1>
+                <p>Try one temporary pet profile, browse Marketplace and Clinics, and comment in Community before creating an account.</p>
+                <a class="primary-link" href="/guest-dashboard">Open Guest Dashboard</a>
+            </section>
+        </main>
+    }
     else if (!Auth.IsLoggedIn || Auth.CurrentUser is null)
     {
         <main class="msc-shell">
@@ -29,6 +40,8 @@
     }
     else
     {
+        <MyShoppetCareNav />
+
         <section class="msc-hero">
             <div class="msc-shell hero-inner">
                 <div>
