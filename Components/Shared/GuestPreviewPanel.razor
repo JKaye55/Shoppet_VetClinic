@@ -27,7 +27,7 @@
 
                 <p>
                     Guest Mode can browse clinics and Marketplace,
-                    keep a temporary one-item pet preview, add Marketplace
+                    keep one temporary pet preview with a photo, add Marketplace
                     items to a session cart, and comment in Community.
 
                     Registration turns that preview into a persistent
@@ -70,13 +70,13 @@
 
             <article class="sp-guest-feature-card">
 
-                <span class="sp-guest-lock">
+                <span class="sp-guest-lock guest-available">
 
-                    <i class="bi bi-lock-fill"
+                    <i class="bi bi-check-circle-fill"
                        aria-hidden="true">
                     </i>
 
-                    Guest preview
+                    Available in Guest Mode
 
                 </span>
 
@@ -101,9 +101,10 @@
                 </p>
 
 
-                <span class="sp-guest-feature-link">
-                    1 temporary pet in Guest Mode
-                </span>
+                <a class="sp-guest-feature-link"
+                   href="/guest-dashboard">
+                    Open Guest Dashboard →
+                </a>
 
             </article>
 
@@ -395,6 +396,12 @@
         color: #267C83;
         font-size: .67rem;
         font-weight: 850;
+        text-decoration: none;
+    }
+
+    .sp-guest-lock.guest-available {
+        background: #E5F3EE;
+        color: #2F7C5A;
     }
 
 
