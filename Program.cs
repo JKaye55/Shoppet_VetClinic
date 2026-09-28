@@ -14,6 +14,7 @@ builder.Services.AddScoped<Microsoft.AspNetCore.Components.Server.ProtectedBrows
 builder.Services.AddScoped<Shoppet_VetClinic.Services.NotificationService>();
 builder.Services.AddScoped<MarketplaceService>();
 builder.Services.AddScoped<CommunityService>();
+builder.Services.AddScoped<CommerceService>();
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
