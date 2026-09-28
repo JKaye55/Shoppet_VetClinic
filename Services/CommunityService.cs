@@ -308,6 +308,75 @@ namespace Shoppet_VetClinic.Services
             }
         }
         // =========================================================
+        // COMMENTS
+        // =========================================================
+
+        public List<CommunityComment> GetComments(int postId)
+        {
+            var comments = new List<CommunityComment>();
+
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+
+            using var cmd = new SqlCommand(@"
+                SELECT Id, PostId, UserId, AuthorName, Body, IsGuest, CreatedAt
+                FROM CommunityComments
+                WHERE PostId = @PostId
+                ORDER BY CreatedAt ASC;", conn);
+
+            cmd.Parameters.AddWithValue("@PostId", postId);
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                comments.Add(new CommunityComment
+                {
+                    Id = reader.GetInt32(0),
+                    PostId = reader.GetInt32(1),
+                    UserId = reader.IsDBNull(2) ? null : reader.GetInt32(2),
+                    AuthorName = reader.GetString(3),
+                    Body = reader.GetString(4),
+                    IsGuest = reader.GetBoolean(5),
+                    CreatedAt = reader.GetDateTime(6)
+                });
+            }
+
+            return comments;
+        }
+
+        public bool AddComment(int postId, int? userId, string authorName, string body, bool isGuest)
+        {
+            authorName = string.IsNullOrWhiteSpace(authorName)
+                ? (isGuest ? "Guest" : "Pet Owner")
+                : authorName.Trim();
+
+            body = (body ?? string.Empty).Trim();
+
+            if (body.Length == 0 || body.Length > 300)
+                return false;
+
+            if (authorName.Length > 120)
+                authorName = authorName[..120];
+
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+
+            using var cmd = new SqlCommand(@"
+                INSERT INTO CommunityComments
+                (PostId, UserId, AuthorName, Body, IsGuest, CreatedAt)
+                SELECT @PostId, @UserId, @AuthorName, @Body, @IsGuest, SYSDATETIME()
+                WHERE EXISTS (SELECT 1 FROM CommunityPosts WHERE Id = @PostId);", conn);
+
+            cmd.Parameters.AddWithValue("@PostId", postId);
+            cmd.Parameters.AddWithValue("@UserId", userId.HasValue ? userId.Value : DBNull.Value);
+            cmd.Parameters.AddWithValue("@AuthorName", authorName);
+            cmd.Parameters.AddWithValue("@Body", body);
+            cmd.Parameters.AddWithValue("@IsGuest", isGuest);
+
+            return cmd.ExecuteNonQuery() > 0;
+        }
+
+        // =========================================================
         // CREATE POST
         // Returns the new Post ID so FileStorageService can save
         // the uploaded image using that ID.
