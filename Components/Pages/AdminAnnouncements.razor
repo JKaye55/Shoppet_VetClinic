@@ -1,137 +1,155 @@
-﻿@page "/admin/announcements"
+@page "/admin/announcements"
+@rendermode InteractiveServer
+
+@using Shoppet_VetClinic.Components.Shared
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+
 @inject AuthService Auth
 @inject DatabaseService Db
 @inject NotificationService Notify
 
-<PageTitle>Admin — Announcements</PageTitle>
+<PageTitle>Admin Announcements | ShoppetCare</PageTitle>
 
-<div class="container mt-4">
+@if (!ready)
+{
+    <div class="admin-state">Loading announcements...</div>
+}
+else if (!Auth.IsAdmin)
+{
+    <div class="admin-state">Administrator access required.</div>
+}
+else
+{
+    <AdminNav />
 
-    @if (!Auth.IsAdmin)
-    {
-        <div class="alert alert-danger">Admin access required.</div>
-    }
-    else
-    {
-        <h2 class="mb-3"><i class="bi bi-megaphone-fill"></i> Announcements</h2>
-
-        <div class="card mb-4">
-            <div class="card-header">Post a new announcement</div>
-            <div class="card-body">
-                <div class="mb-2">
-                    <input class="form-control" placeholder="Title"
-                           @bind="newTitle" maxlength="150" />
-                </div>
-                <div class="mb-2">
-                    <textarea class="form-control" rows="3" placeholder="Body"
-                              @bind="newBody" maxlength="2000"></textarea>
-                </div>
-                <div class="row g-2 mb-2">
-                    <div class="col-md-4">
-                        <select class="form-select" @bind="newCategory">
-                            <option>System</option>
-                            <option>Update</option>
-                            <option>Benefit</option>
-                            <option>Maintenance</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <select class="form-select" @bind="newPriority">
-                            <option>Low</option>
-                            <option>Normal</option>
-                            <option>High</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <input type="date" class="form-control" @bind="newExpiresAt" />
-                    </div>
-                </div>
-                <button class="btn btn-primary" @onclick="Post">Post</button>
-                @if (!string.IsNullOrEmpty(message))
-                {
-                    <div class="alert alert-info mt-2 mb-0">@message</div>
-                }
+    <main class="admin-shell">
+        <div class="page-head">
+            <div>
+                <span>ANNOUNCEMENTS</span>
+                <h1>Platform notices</h1>
+                <p>Create and manage announcements shown across ShoppetCare.</p>
             </div>
         </div>
 
-        <h5>All announcements</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th>Posted</th>
-                    <th>Title</th>
-                    <th>Category</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
+        <section class="compose-card">
+            <div class="field-grid">
+                <div class="field full">
+                    <label>Title</label>
+                    <input maxlength="150" @bind="newTitle" placeholder="Announcement title" />
+                </div>
+                <div class="field full">
+                    <label>Message</label>
+                    <textarea rows="4" maxlength="2000" @bind="newBody" placeholder="Write the announcement..."></textarea>
+                </div>
+                <div class="field">
+                    <label>Category</label>
+                    <select @bind="newCategory">
+                        <option>System</option>
+                        <option>Update</option>
+                        <option>Benefit</option>
+                        <option>Maintenance</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Priority</label>
+                    <select @bind="newPriority">
+                        <option>Low</option>
+                        <option>Normal</option>
+                        <option>High</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Expires</label>
+                    <input type="date" @bind="newExpiresAt" />
+                </div>
+            </div>
+
+            <button class="primary-btn" @onclick="Post">Post Announcement</button>
+
+            @if (!string.IsNullOrWhiteSpace(message))
+            {
+                <div class="message">@message</div>
+            }
+        </section>
+
+        <section class="list-card">
+            <div class="list-head">
+                <div>
+                    <span>ALL ANNOUNCEMENTS</span>
+                    <strong>@list.Count record@(list.Count == 1 ? "" : "s")</strong>
+                </div>
+            </div>
+
+            <div class="announcement-list">
                 @foreach (var a in list)
                 {
-                    <tr>
-                        <td>@a.PostedAt.ToString("MMM d")</td>
-                        <td>@a.Title</td>
-                        <td>@a.Category</td>
-                        <td>@a.Priority</td>
-                        <td>
-                            @if (a.IsActive)
+                    <article>
+                        <div class="announcement-main">
+                            <div class="meta">
+                                <span class="category">@a.Category</span>
+                                <span>@a.Priority priority</span>
+                                <span>@a.PostedAt.ToString("MMM d, yyyy h:mm tt")</span>
+                            </div>
+                            <h2>@a.Title</h2>
+                            <p>@a.Body</p>
+                            @if (a.ExpiresAt.HasValue)
                             {
-                                <span class="badge bg-success">Active</span>
+                                <small>Expires @a.ExpiresAt.Value.ToString("MMM d, yyyy")</small>
                             }
-                            else
-                            {
-                                <span class="badge bg-secondary">Inactive</span>
-                            }
-                        </td>
-                        <td>
-                            @if (a.IsActive)
-                            {
-                                <button class="btn btn-sm btn-outline-danger"
-                                        @onclick="() => Deactivate(a.Id)">
-                                    Deactivate
-                                </button>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
+                        </div>
 
-</div>
+                        <div class="announcement-actions">
+                            <span class="status @(a.IsActive ? "active" : "")">
+                                @(a.IsActive ? "Active" : "Inactive")
+                            </span>
+                            @if (a.IsActive)
+                            {
+                                <button @onclick="() => Deactivate(a.Id)">Deactivate</button>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+    </main>
+}
+
+<style>
+    .admin-shell{width:min(1050px,calc(100% - 36px));margin:auto;padding:32px 0 60px;color:#1E2D27}.page-head>div>span,.list-head span{color:#2F9098;font-size:.64rem;font-weight:900;letter-spacing:.1em}.page-head h1{margin:5px 0}.page-head p{margin:0;color:#75827D}.compose-card,.list-card{margin-top:18px;padding:22px;border:1px solid #DEE6E3;border-radius:16px;background:#fff}.field-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.field.full{grid-column:1/-1}.field label{display:block;margin-bottom:5px;font-size:.65rem;font-weight:850}.field input,.field select,.field textarea{width:100%;padding:10px 11px;border:1px solid #CFDAD6;border-radius:9px;background:#fff;outline:none}.field input,.field select{min-height:42px}.primary-btn{margin-top:12px;min-height:42px;padding:0 14px;border:1px solid #2F9098;border-radius:9px;background:#2F9098;color:#fff;font-size:.68rem;font-weight:900}.message{margin-top:11px;padding:10px;border-radius:9px;background:#EEF6F4;color:#286566;font-size:.68rem}.list-head{display:flex;justify-content:space-between}.list-head strong{display:block;margin-top:4px}.announcement-list{display:grid;gap:9px;margin-top:14px}.announcement-list article{display:flex;justify-content:space-between;gap:18px;padding:15px;border:1px solid #E4EBE8;border-radius:12px}.announcement-main{min-width:0;flex:1}.meta{display:flex;gap:8px;flex-wrap:wrap;color:#8A9691;font-size:.59rem}.category{color:#267C83;font-weight:850}.announcement-main h2{margin:7px 0 5px;font-size:.95rem}.announcement-main p{margin:0;color:#6F7C77;font-size:.68rem;line-height:1.5}.announcement-main small{display:block;margin-top:6px;color:#909A96}.announcement-actions{display:flex;align-items:flex-end;gap:8px;flex-direction:column}.status{padding:5px 8px;border-radius:999px;background:#F0F2F1;color:#66736E;font-size:.58rem;font-weight:900}.status.active{background:#EAF6EF;color:#2B714A}.announcement-actions button{padding:7px 9px;border:1px solid #F0B6B6;border-radius:8px;background:#FFF1F1;color:#963232;font-size:.62rem;font-weight:850}.admin-state{padding:80px;text-align:center;color:#6F7D77}
+    @@media(max-width:700px){.field-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.announcement-list article{flex-direction:column}.announcement-actions{align-items:flex-start}}
+</style>
 
 @code {
-    List<Shoppet_VetClinic.Models.Announcement> list = new();
+    private bool ready;
+    private List<Announcement> list = new();
+    private string newTitle = string.Empty;
+    private string newBody = string.Empty;
+    private string newCategory = "System";
+    private string newPriority = "Normal";
+    private DateTime? newExpiresAt;
+    private string message = string.Empty;
 
-    string newTitle = "";
-    string newBody = "";
-    string newCategory = "System";
-    string newPriority = "Normal";
-    DateTime? newExpiresAt;
-
-    string message = "";
-
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender) return;
         await Auth.InitializeAsync();
-        LoadList();
+        if (Auth.IsAdmin) LoadList();
+        ready = true;
+        await InvokeAsync(StateHasChanged);
     }
 
-    void LoadList()
-    {
-        list = Db.GetAllAnnouncementsForAdmin();
-    }
+    private void LoadList() => list = Db.GetAllAnnouncementsForAdmin();
 
-    void Post()
+    private void Post()
     {
         if (string.IsNullOrWhiteSpace(newTitle) || string.IsNullOrWhiteSpace(newBody))
         {
-            message = "Title and body are required.";
+            message = "Title and message are required.";
             return;
         }
 
-        var a = new Shoppet_VetClinic.Models.Announcement
+        var announcement = new Announcement
         {
             ClinicId = null,
             Title = newTitle.Trim(),
@@ -141,24 +159,22 @@
             ExpiresAt = newExpiresAt
         };
 
-        var ok = Db.PostAnnouncement(a);
-
-        if (ok)
+        if (!Db.PostAnnouncement(announcement))
         {
-            // 🔔 Notify all pet owners
-            Notify.NewAnnouncement(a);
+            message = "The announcement could not be posted.";
+            return;
+        }
 
-            message = "Posted successfully.";
-            newTitle = ""; newBody = ""; newExpiresAt = null;
-            LoadList();
-        }
-        else
-        {
-            message = "Could not post announcement.";
-        }
+        Notify.NewAnnouncement(announcement);
+
+        message = "Announcement posted and user notifications created.";
+        newTitle = string.Empty;
+        newBody = string.Empty;
+        newExpiresAt = null;
+        LoadList();
     }
 
-    void Deactivate(int id)
+    private void Deactivate(int id)
     {
         Db.DeactivateAnnouncement(id);
         LoadList();
