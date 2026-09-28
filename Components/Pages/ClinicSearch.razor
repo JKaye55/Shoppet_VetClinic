@@ -1,285 +1,271 @@
-﻿@page "/clinics"
+@page "/clinics"
+@rendermode InteractiveServer
+
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+
 @inject DatabaseService Db
 @inject NavigationManager Nav
 
+<PageTitle>Verified Clinics | ShoppetCare</PageTitle>
 
-<PageTitle>Find a Clinic — ShoppetCare</PageTitle>
-
-<div class="container mt-4" style="max-width: 1100px;">
-
-    <div class="text-center mb-4">
-        <h1>🏥 Find Pet Care Near You</h1>
-        <p class="text-muted">
-            Verified and listed pet-care providers in Lipa City, Tanauan & nearby Batangas.
-        </p>
-    </div>
-
-    @* =============== SEARCH & FILTERS =============== *@
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
-            <div class="row g-3">
-
-                <div class="col-md-5">
-                    <label class="form-label small fw-bold">Search</label>
-                    <input class="form-control"
-                           placeholder="Clinic or pet shop name…"
-                           @bind="searchText"
-                           @bind:event="oninput" />
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label small fw-bold">Location</label>
-                    <select class="form-select" @bind="locationFilter">
-                        <option value="">All locations</option>
-                        <option value="lipa">Lipa City</option>
-                        <option value="tanauan">Tanauan</option>
-                        <option value="batangas">Other Batangas</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold">Type</label>
-                    <select class="form-select" @bind="typeFilter">
-                        <option value="">All types</option>
-                        <option value="vet">Veterinary Clinic</option>
-                        <option value="petshop">Pet Shop</option>
-                        <option value="both">Clinic + Pet Shop</option>
-                        <option value="grooming">Grooming</option>
-                    </select>
-                </div>
-
+<div class="clinic-directory-page">
+    <section class="directory-hero">
+        <div class="directory-shell hero-inner">
+            <div>
+                <span class="eyebrow light">SHOPPETCARE CLINIC DIRECTORY</span>
+                <h1>Find trusted local pet care.</h1>
+                <p>
+                    Browse listed veterinary and pet-care providers in Lipa City, Tanauan, and nearby Batangas.
+                    A Verified Clinic badge means the claimed clinic has an active ShoppetCare verification subscription.
+                </p>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox"
-                           id="verifiedOnly" @bind="verifiedOnly" />
-                    <label class="form-check-label small" for="verifiedOnly">
-                        Show <strong>verified partners</strong> only
-                    </label>
-                </div>
-
-                <button class="btn btn-sm btn-outline-secondary"
-                        @onclick="ClearFilters">
-                    Clear filters
-                </button>
-            </div>
-
-        </div>
-    </div>
-
-    @* =============== RESULTS =============== *@
-    <div class="mb-3">
-        <span class="text-muted">
-            Showing <strong>@Filtered.Count</strong> of @allClinics.Count providers
-        </span>
-    </div>
-
-    @if (Filtered.Count == 0)
-    {
-        <div class="alert alert-light border text-center py-5">
-            <i class="bi bi-search fs-1 text-muted d-block mb-2"></i>
-            No providers match your filters.
-            <div class="mt-2">
-                <button class="btn btn-sm btn-outline-primary"
-                        @onclick="ClearFilters">
-                    Clear filters
-                </button>
+            <div class="hero-actions">
+                <a href="/list-your-clinic" class="secondary-link">List Your Clinic</a>
             </div>
         </div>
-    }
-    else
-    {
-        <div class="row g-3">
+    </section>
 
-            @foreach (var clinic in Filtered)
-            {
-                <div class="col-md-6">
-                    <div class="card h-100 border-0 shadow-sm clinic-card"
-                         @onclick="() => OpenClinic(clinic.Id)">
+    <main class="directory-shell directory-content">
+        <section class="search-card">
+            <div class="search-input">
+                <i class="bi bi-search"></i>
+                <input type="search"
+                       @bind="searchText"
+                       @bind:event="oninput"
+                       placeholder="Search clinic, service, brand, or location..." />
+            </div>
 
-                        <div class="card-body">
+            <select @bind="locationFilter">
+                <option value="">All locations</option>
+                <option value="Lipa">Lipa City</option>
+                <option value="Tanauan">Tanauan City</option>
+            </select>
 
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <div class="fw-bold fs-5 mb-1">
-                                        @clinic.ClinicName
-                                    </div>
-                                    @if (!string.IsNullOrEmpty(clinic.Branch))
+            <select @bind="providerFilter">
+                <option value="">All provider types</option>
+                <option value="vet">Veterinary Clinic</option>
+                <option value="petshop">Pet Shop</option>
+                <option value="both">Clinic + Pet Shop</option>
+            </select>
+
+            <label class="verified-toggle">
+                <input type="checkbox" @bind="verifiedOnly" />
+                <span>Verified only</span>
+            </label>
+
+            <button type="button" @onclick="ResetFilters">Reset</button>
+        </section>
+
+        <div class="result-head">
+            <div>
+                <span class="eyebrow">LOCAL CARE DIRECTORY</span>
+                <h2>@Filtered.Count provider@(Filtered.Count == 1 ? "" : "s") found</h2>
+            </div>
+
+            <div class="legend">
+                <span><i class="bi bi-patch-check-fill"></i> Active Verified Clinic</span>
+            </div>
+        </div>
+
+        @if (Filtered.Count == 0)
+        {
+            <section class="empty-state">
+                <i class="bi bi-hospital"></i>
+                <h3>No providers match those filters.</h3>
+                <p>Try another search, or request a clinic that is not yet listed.</p>
+                <a href="/list-your-clinic" class="primary-link">Request Clinic Listing</a>
+            </section>
+        }
+        else
+        {
+            <section class="clinic-grid">
+                @foreach (var clinic in Filtered)
+                {
+                    <article class="clinic-card">
+                        <div class="card-head">
+                            <div class="clinic-icon">
+                                <i class="bi bi-hospital"></i>
+                            </div>
+
+                            <div class="clinic-title">
+                                <div class="title-row">
+                                    <h3>@clinic.ClinicName</h3>
+                                    @if (clinic.IsVerified)
                                     {
-                                        <div class="text-muted small">
-                                            @clinic.Branch
-                                        </div>
+                                        <span class="verified-badge">
+                                            <i class="bi bi-patch-check-fill"></i>
+                                            Verified Clinic
+                                        </span>
                                     }
                                 </div>
 
-                                @if (clinic.IsVerified)
+                                @if (!string.IsNullOrWhiteSpace(clinic.Branch))
                                 {
-                                    <span class="badge bg-success-subtle text-success-emphasis border">
-                                        <i class="bi bi-patch-check-fill"></i> Verified
-                                    </span>
+                                    <span class="branch">@clinic.Branch</span>
                                 }
                             </div>
-
-                            <div class="text-muted small mb-2">
-                                <i class="bi bi-geo-alt"></i> @clinic.Address
-                            </div>
-
-                            @if (!string.IsNullOrEmpty(clinic.ContactPhone))
-                            {
-                                <div class="text-muted small mb-2">
-                                    <i class="bi bi-telephone"></i> @clinic.ContactPhone
-                                </div>
-                            }
-
-                            @if (!string.IsNullOrEmpty(clinic.OperatingHours))
-                            {
-                                <div class="text-muted small mb-2">
-                                    <i class="bi bi-clock"></i> @clinic.OperatingHours
-                                </div>
-                            }
-
-                            <div class="mt-3 d-flex flex-wrap gap-1">
-                                @if (clinic.HasClinic)
-                                {
-                                    <span class="badge bg-primary-subtle text-primary-emphasis">
-                                        Veterinary
-                                    </span>
-                                }
-                                @if (clinic.HasPetShop)
-                                {
-                                    <span class="badge bg-warning-subtle text-warning-emphasis">
-                                        Pet Shop
-                                    </span>
-                                }
-                                @if (!string.IsNullOrEmpty(clinic.FacilityType))
-                                {
-                                    <span class="badge bg-secondary-subtle text-secondary-emphasis">
-                                        @clinic.FacilityType
-                                    </span>
-                                }
-                            </div>
-
-                            @if (!string.IsNullOrEmpty(clinic.ServiceCapabilities))
-                            {
-                                <div class="mt-3 small text-muted">
-                                    <strong>Services:</strong>
-                                    @(clinic.ServiceCapabilities.Length > 100
-                                        ? clinic.ServiceCapabilities.Substring(0, 100) + "..."
-                                        : clinic.ServiceCapabilities)
-                                </div>
-                            }
-
                         </div>
 
-                        <div class="card-footer bg-transparent border-0 d-flex justify-content-between">
-                            <a class="btn btn-sm btn-success rounded-pill px-3"
-                               href="@($"/inquire?clinicId={clinic.Id}")">
-                                Contact Clinic
-                            </a>
-                            @if (!string.IsNullOrEmpty(clinic.MessengerUrl))
+                        <div class="clinic-info">
+                            <div><i class="bi bi-geo-alt"></i><span>@Display(clinic.Address)</span></div>
+                            <div><i class="bi bi-telephone"></i><span>@Display(clinic.ContactPhone)</span></div>
+                            <div><i class="bi bi-clock"></i><span>@Display(clinic.OperatingHours)</span></div>
+                        </div>
+
+                        <div class="provider-tags">
+                            @if (clinic.HasClinic)
                             {
-                                <a class="btn btn-sm btn-outline-primary rounded-pill px-3"
-                                   href="@clinic.MessengerUrl"
-                                   target="_blank">
-                                    Messenger
+                                <span>Veterinary Care</span>
+                            }
+                            @if (clinic.HasPetShop)
+                            {
+                                <span>Pet Shop</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(clinic.FacilityType))
+                            {
+                                <span>@clinic.FacilityType</span>
+                            }
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(clinic.ServiceCapabilities))
+                        {
+                            <div class="services">
+                                <strong>Services</strong>
+                                <p>@TrimText(clinic.ServiceCapabilities, 180)</p>
+                            </div>
+                        }
+
+                        <div class="card-actions">
+                            @if (!string.IsNullOrWhiteSpace(clinic.MessengerUrl))
+                            {
+                                <a href="@clinic.MessengerUrl"
+                                   target="_blank"
+                                   rel="noopener"
+                                   class="primary-link">
+                                    Contact Clinic
                                 </a>
                             }
+                            else if (!string.IsNullOrWhiteSpace(clinic.ContactPhone))
+                            {
+                                <a href="@($"tel:{clinic.ContactPhone}")"
+                                   class="primary-link">
+                                    Call Clinic
+                                </a>
+                            }
+
+                            @if (!clinic.IsClaimed)
+                            {
+                                <a href="@($"/claim-clinic/{clinic.Id}")"
+                                   class="secondary-link">
+                                    Claim This Clinic
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="claimed-label">
+                                    <i class="bi bi-person-check-fill"></i>
+                                    Claimed listing
+                                </span>
+                            }
                         </div>
+                    </article>
+                }
+            </section>
+        }
 
-                    </div>
-                </div>
-            }
-
-        </div>
-    }
-
+        <section class="clinic-owner-cta">
+            <div>
+                <span class="eyebrow">FOR CLINIC REPRESENTATIVES</span>
+                <h2>Already listed or missing from the directory?</h2>
+                <p>
+                    Existing clinics can be claimed by an authorized representative. Missing clinics can request a free
+                    directory listing before starting the claim process.
+                </p>
+            </div>
+            <a href="/list-your-clinic" class="primary-link">Request a Listing</a>
+        </section>
+    </main>
 </div>
 
 <style>
-    .clinic-card {
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-        .clinic-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(30, 45, 39, 0.12) !important;
-        }
+    .clinic-directory-page{min-height:100vh;background:#FAF9F6;color:#1E2D27}.directory-shell{width:min(1180px,calc(100% - 40px));margin:auto}.directory-hero{padding:54px 0;background:linear-gradient(145deg,#173D3D,#102E2D);color:#fff}.hero-inner{display:flex;align-items:end;justify-content:space-between;gap:30px}.eyebrow{color:#2F9098;font-size:.67rem;font-weight:900;letter-spacing:.12em}.eyebrow.light{color:#8DD6D8}.directory-hero h1{max-width:760px;margin:8px 0 12px;font-size:clamp(2.7rem,5vw,4.4rem);line-height:.98;font-weight:900;letter-spacing:-.055em}.directory-hero p{max-width:760px;margin:0;color:rgba(255,255,255,.67);line-height:1.68}.primary-link,.secondary-link{min-height:43px;padding:0 15px;border-radius:10px;text-decoration:none;font-size:.74rem;font-weight:850;display:inline-flex;align-items:center;justify-content:center}.primary-link{background:#2F9098;color:#fff}.secondary-link{border:1px solid #CAD9D5;background:#fff;color:#173D3D}
+    .directory-content{padding:28px 0 60px}.search-card{display:grid;grid-template-columns:minmax(280px,1.5fr) .7fr .8fr auto auto;gap:9px;padding:14px;border:1px solid #DDE7E4;border-radius:16px;background:#fff;box-shadow:0 10px 30px rgba(30,45,39,.045)}.search-card input,.search-card select{width:100%;min-height:44px;border:1px solid #D2DDD9;border-radius:10px;background:#fff;padding:0 11px;outline:none}.search-input{position:relative}.search-input i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#7D8A85}.search-input input{padding-left:37px}.verified-toggle{display:flex;align-items:center;gap:7px;padding:0 9px;white-space:nowrap;font-size:.7rem;font-weight:800}.search-card button{border:1px solid #D2DDD9;border-radius:10px;background:#F8FAF9;color:#4D5B55;font-size:.7rem;font-weight:850}
+    .result-head{margin:28px 0 16px;display:flex;align-items:end;justify-content:space-between;gap:20px}.result-head h2{margin:5px 0 0;font-weight:900;letter-spacing:-.035em}.legend{color:#65736D;font-size:.68rem}.legend i{color:#2F9098}.clinic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.clinic-card{padding:22px;border:1px solid #DDE7E4;border-radius:18px;background:#fff;box-shadow:0 10px 28px rgba(30,45,39,.045)}.card-head{display:flex;gap:13px}.clinic-icon{width:44px;height:44px;flex:0 0 44px;border-radius:12px;background:#EEF6F4;color:#267C83;display:grid;place-items:center}.clinic-title{min-width:0;flex:1}.title-row{display:flex;gap:8px;align-items:center;justify-content:space-between}.title-row h3{margin:0;font-size:1.08rem;font-weight:900}.branch{display:block;margin-top:4px;color:#82908A;font-size:.68rem}.verified-badge{display:inline-flex;gap:5px;align-items:center;padding:5px 8px;border-radius:999px;background:#EAF5F5;color:#267C83;font-size:.58rem;font-weight:900;white-space:nowrap}.clinic-info{display:grid;gap:7px;margin:18px 0}.clinic-info div{display:flex;gap:8px;color:#63716B;font-size:.72rem}.clinic-info i{color:#2F9098}.provider-tags{display:flex;flex-wrap:wrap;gap:6px}.provider-tags span{padding:5px 8px;border-radius:999px;background:#F2F5F4;color:#63716B;font-size:.61rem;font-weight:800}.services{margin-top:16px;padding-top:15px;border-top:1px solid #EBEFED}.services strong{font-size:.67rem}.services p{margin:5px 0 0;color:#76837E;font-size:.69rem;line-height:1.55}.card-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:18px}.claimed-label{display:inline-flex;gap:6px;align-items:center;color:#71807A;font-size:.67rem;font-weight:800}.empty-state{padding:55px;text-align:center;border:1px dashed #CBD8D4;border-radius:18px;background:#fff}.empty-state>i{font-size:2.3rem;color:#2F9098}.empty-state h3{margin:10px 0 5px}.empty-state p{color:#74817C}.clinic-owner-cta{margin-top:24px;padding:28px;border:1px solid #DDE7E4;border-radius:20px;background:linear-gradient(135deg,#fff,#F2F8F6);display:flex;align-items:center;justify-content:space-between;gap:24px}.clinic-owner-cta h2{margin:6px 0 7px;font-weight:900}.clinic-owner-cta p{max-width:760px;margin:0;color:#6D7B75;line-height:1.6}
+    @@media(max-width:950px){.search-card{grid-template-columns:1fr 1fr}.search-input{grid-column:1/-1}.clinic-grid{grid-template-columns:1fr}}@@media(max-width:650px){.hero-inner,.result-head,.clinic-owner-cta{align-items:flex-start;flex-direction:column}.search-card{grid-template-columns:1fr}.search-input{grid-column:auto}.title-row{align-items:flex-start;flex-direction:column}}
 </style>
 
 @code {
-    List<ClinicTenant> allClinics = new();
+    private List<ClinicTenant> allClinics = new();
+    private string searchText = string.Empty;
+    private string locationFilter = string.Empty;
+    private string providerFilter = string.Empty;
+    private bool verifiedOnly;
 
-    string searchText = "";
-    string locationFilter = "";
-    string typeFilter = "";
-    bool verifiedOnly = false;
-
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
         allClinics = Db.GetAllClinics();
     }
 
-    List<ClinicTenant> Filtered
+    private List<ClinicTenant> Filtered
     {
         get
         {
-            var q = allClinics.AsEnumerable();
+            IEnumerable<ClinicTenant> query = allClinics;
 
             if (!string.IsNullOrWhiteSpace(searchText))
             {
-                var s = searchText.Trim().ToLowerInvariant();
-                q = q.Where(c =>
-                    (c.ClinicName ?? "").ToLowerInvariant().Contains(s) ||
-                    (c.Branch ?? "").ToLowerInvariant().Contains(s));
+                var s = searchText.Trim();
+
+                query = query.Where(c =>
+                    Contains(c.ClinicName, s) ||
+                    Contains(c.Branch, s) ||
+                    Contains(c.Address, s) ||
+                    Contains(c.ServiceCapabilities, s) ||
+                    Contains(c.BrandsCarried, s));
             }
 
             if (!string.IsNullOrWhiteSpace(locationFilter))
             {
-                q = locationFilter switch
-                {
-                    "lipa" => q.Where(c => (c.Address ?? "").ToLowerInvariant().Contains("lipa")),
-                    "tanauan" => q.Where(c => (c.Address ?? "").ToLowerInvariant().Contains("tanauan")),
-                    "batangas" => q.Where(c => (c.Address ?? "").ToLowerInvariant().Contains("batangas")),
-                    _ => q
-                };
+                query = query.Where(c =>
+                    Contains(c.Address, locationFilter) ||
+                    Contains(c.Branch, locationFilter));
             }
 
-            if (!string.IsNullOrWhiteSpace(typeFilter))
+            query = providerFilter switch
             {
-                q = typeFilter switch
-                {
-                    "vet" => q.Where(c => c.HasClinic && !c.HasPetShop),
-                    "petshop" => q.Where(c => c.HasPetShop && !c.HasClinic),
-                    "both" => q.Where(c => c.HasClinic && c.HasPetShop),
-                    "grooming" => q.Where(c => (c.ServiceCapabilities ?? "").ToLowerInvariant().Contains("groom")),
-                    _ => q
-                };
-            }
+                "vet" => query.Where(c => c.HasClinic && !c.HasPetShop),
+                "petshop" => query.Where(c => c.HasPetShop && !c.HasClinic),
+                "both" => query.Where(c => c.HasClinic && c.HasPetShop),
+                _ => query
+            };
 
             if (verifiedOnly)
-            {
-                q = q.Where(c => c.IsVerified);
-            }
+                query = query.Where(c => c.IsVerified);
 
-            return q
+            return query
                 .OrderByDescending(c => c.IsVerified)
                 .ThenBy(c => c.ClinicName)
                 .ToList();
         }
     }
 
-    void ClearFilters()
+    private void ResetFilters()
     {
-        searchText = "";
-        locationFilter = "";
-        typeFilter = "";
+        searchText = string.Empty;
+        locationFilter = string.Empty;
+        providerFilter = string.Empty;
         verifiedOnly = false;
     }
 
-    void OpenClinic(int clinicId)
-    {
-        Nav.NavigateTo($"/inquire?clinicId={clinicId}");
-    }
+    private static bool Contains(string? source, string value) =>
+        !string.IsNullOrWhiteSpace(source)
+        && source.Contains(value, StringComparison.OrdinalIgnoreCase);
+
+    private static string Display(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "Not provided" : value;
+
+    private static string TrimText(string value, int length) =>
+        value.Length <= length ? value : value[..length] + "...";
 }
