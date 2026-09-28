@@ -24,5 +24,6 @@
         public decimal? VerificationFee { get; set; }
         public string? VerificationReference { get; set; }
         public string VerificationStatus { get; set; } = "Unverified";
+        public bool IsClaimed { get; set; }
     }
 }
