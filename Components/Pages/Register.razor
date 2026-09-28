@@ -98,12 +98,11 @@
                 <article>
 
                     <strong>
-                        Health Records
+                        Connected Pet Care
                     </strong>
 
                     <small>
-                        Organize important vaccination
-                        and health details.
+                        Mobile-managed vaccination and health information can connect to your ShoppetCare pet identity.
                     </small>
 
                 </article>
@@ -204,7 +203,7 @@
            disabled="@isRegistering" />
 
     <small>
-        Used as the owner contact for your Digital Pet ID.
+        Used for your private account and eligible Premium Pet ID views. It is not shown on the public QR Pet ID.
     </small>
 
 </div>
@@ -248,6 +247,18 @@
                                disabled="@isRegistering" />
                     </div>
 
+
+                    <label class="sc-register-consent">
+                        <input type="checkbox"
+                               @bind="acceptedTerms"
+                               disabled="@isRegistering" />
+                        <span>
+                            I agree to the
+                            <a href="/terms" target="_blank">Terms &amp; Conditions</a>
+                            and acknowledge the
+                            <a href="/privacy" target="_blank">Data Privacy Notice</a>.
+                        </span>
+                    </label>
 
                     <button type="button"
                             class="sc-register-primary"
@@ -543,6 +554,25 @@
         }
 
 
+    .sc-register-consent {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        color: #6D7B75;
+        font-size: .69rem;
+        line-height: 1.5;
+    }
+
+    .sc-register-consent input {
+        margin-top: 3px;
+    }
+
+    .sc-register-consent a {
+        color: #267C83;
+        font-weight: 850;
+        text-decoration: none;
+    }
+
     .sc-register-primary,
     .sc-register-guest {
         min-height: 50px;
@@ -673,6 +703,7 @@
         string.Empty;
 
     private bool isRegistering;
+    private bool acceptedTerms;
 
 
     private async Task HandleRegistrationAsync()
@@ -739,10 +770,15 @@
         // PASSWORD
         // =====================================================
 
-        if (password.Length < 8)
+        var passwordError =
+            AuthService.ValidateNewPassword(
+                password);
+
+        if (!string.IsNullOrWhiteSpace(
+                passwordError))
         {
             errorMessage =
-                "Please use a password with at least 8 characters.";
+                passwordError;
 
             return;
         }
@@ -755,6 +791,14 @@
         {
             errorMessage =
                 "The passwords do not match.";
+
+            return;
+        }
+
+        if (!acceptedTerms)
+        {
+            errorMessage =
+                "Please accept the Terms & Conditions and acknowledge the Data Privacy Notice.";
 
             return;
         }
@@ -864,5 +908,4 @@
             "/home");
     }
 
-}
 }
