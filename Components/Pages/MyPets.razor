@@ -359,7 +359,7 @@
                             <div class="field">
 
                                 <label>
-                                    Age
+                                     Age / Approximate Age
                                 </label>
 
                                 <select @bind="PetForm.Age">
@@ -378,7 +378,22 @@
                                 </select>
 
                             </div>
+                            <div class="field">
 
+    <label>
+        Birthdate
+    </label>
+
+    <input type="date"
+           max="@DateTime.Today.ToString("yyyy-MM-dd")"
+           @bind="PetForm.BirthDate"
+           @bind:format="yyyy-MM-dd" />
+
+    <small>
+        Optional. Used to calculate age on the Digital Pet ID.
+    </small>
+
+</div>
 
                             <div class="field">
 
@@ -612,39 +627,51 @@
                                 </p>
 
 
-                                <div class="pet-specs">
+                               <div class="pet-specs">
 
-                                    <div>
+    <div>
 
-                                        <span>
-                                            AGE
-                                        </span>
+        <span>
+            AGE
+        </span>
 
-                                        <strong>
-                                            @(string.IsNullOrWhiteSpace(
-                                                pet.Age)
-                                                ? "Not set"
-                                                : pet.Age)
-                                        </strong>
+        <strong>
+            @GetDisplayAge(pet)
+        </strong>
 
-                                    </div>
+    </div>
 
 
-                                    <div>
+    <div>
 
-                                        <span>
-                                            WEIGHT
-                                        </span>
+        <span>
+            BIRTHDATE
+        </span>
 
-                                        <strong>
-                                            @(pet.WeightKg.HasValue
-                                                ? $"{pet.WeightKg.Value:0.##} kg"
-                                                : "Not set")
-                                        </strong>
+        <strong>
+            @(pet.BirthDate.HasValue
+                ? pet.BirthDate.Value.ToString("MMM d, yyyy")
+                : "Not set")
+        </strong>
 
-                                    </div>
+    </div>
 
-                                </div>
+
+    <div>
+
+        <span>
+            WEIGHT
+        </span>
+
+        <strong>
+            @(pet.WeightKg.HasValue
+                ? $"{pet.WeightKg.Value:0.##} kg"
+                : "Not set")
+        </strong>
+
+    </div>
+
+</div>
 
 
                                 <div class="diet">
@@ -1421,11 +1448,11 @@
 
 
     .pet-specs {
-        margin-top: 15px;
-        display: grid;
-        grid-template-columns: repeat( 2, minmax(0,1fr) );
-        gap: 7px;
-    }
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: repeat( 3, minmax(0,1fr) );
+    gap: 7px;
+}
 
 
         .pet-specs > div,
@@ -1636,6 +1663,9 @@
 
 
     @@media (max-width: 600px) {
+        .pet-specs {
+    grid-template-columns: 1fr;
+}
 
         .pet-grid,
         .editor-fields {

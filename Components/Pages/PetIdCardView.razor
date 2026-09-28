@@ -5,7 +5,7 @@
     <article class="@CardClass">
 
         <!-- =====================================================
-             TOP IDENTITY BAR
+             HEADER
              ===================================================== -->
 
         <header class="sc-id-header">
@@ -51,7 +51,7 @@
                         <use href="/icons/bootstrap-icons.svg#person-vcard"></use>
                     </svg>
 
-                    DIGITAL PET ID
+                    BASIC PET ID
 
                 </div>
             }
@@ -65,7 +65,7 @@
 
         <section class="sc-id-main">
 
-            <!-- PET PHOTO -->
+            <!-- PHOTO -->
 
             <div class="sc-id-photo-column">
 
@@ -91,19 +91,14 @@
 
 
                 <div class="sc-id-active-status">
-
                     <span class="sc-id-active-dot"></span>
-
-                    <span>
-                        ACTIVE DIGITAL ID
-                    </span>
-
+                    ACTIVE DIGITAL ID
                 </div>
 
             </div>
 
 
-            <!-- PET DETAILS -->
+            <!-- PET INFORMATION -->
 
             <div class="sc-id-pet">
 
@@ -111,16 +106,20 @@
                     REGISTERED PET
                 </span>
 
+
                 <h2>
                     @Display(Pet.PetName)
                 </h2>
 
+
                 <p class="sc-id-pet-subtitle">
+
                     @Display(Pet.Species)
 
                     <span>•</span>
 
                     @Display(Pet.Breed)
+
                 </p>
 
 
@@ -128,7 +127,9 @@
 
                     <div class="sc-id-data-row">
 
-                        <span>Species</span>
+                        <span>
+                            Species
+                        </span>
 
                         <strong>
                             @Display(Pet.Species)
@@ -139,7 +140,9 @@
 
                     <div class="sc-id-data-row">
 
-                        <span>Breed</span>
+                        <span>
+                            Breed
+                        </span>
 
                         <strong>
                             @Display(Pet.Breed)
@@ -150,10 +153,12 @@
 
                     <div class="sc-id-data-row">
 
-                        <span>Age</span>
+                        <span>
+                            Age
+                        </span>
 
                         <strong>
-                            @Display(Pet.Age)
+                            @AgeDisplay
                         </strong>
 
                     </div>
@@ -161,12 +166,12 @@
 
                     <div class="sc-id-data-row">
 
-                        <span>Weight</span>
+                        <span>
+                            Birthdate
+                        </span>
 
                         <strong>
-                            @(Pet.WeightKg.HasValue
-                                ? $"{Pet.WeightKg.Value:0.##} kg"
-                                : "Not provided")
+                            @BirthDateDisplay
                         </strong>
 
                     </div>
@@ -215,27 +220,35 @@
 
 
         <!-- =====================================================
-             OWNER / REGISTRATION
+             REGISTRATION DETAILS
              ===================================================== -->
 
         <section class="sc-id-registration">
 
             <!-- OWNER -->
 
-            <div class="sc-id-registration-block sc-id-owner-block">
+            <div class="sc-id-registration-block">
 
                 <span class="sc-id-label">
                     REGISTERED OWNER
                 </span>
 
+
                 <strong class="sc-id-primary-value">
+
                     @(PublicMode
                         ? "Registered Pet Owner"
                         : Display(OwnerName))
+
                 </strong>
 
+
                 <small>
-                    Owner-managed ShoppetCare account
+
+                    @(PublicMode
+                        ? "Owner identity protected"
+                        : "Owner-managed ShoppetCare account")
+
                 </small>
 
             </div>
@@ -244,7 +257,7 @@
             <div class="sc-id-registration-divider"></div>
 
 
-            <!-- CONTACT -->
+            <!-- OWNER CONTACT -->
 
             <div class="sc-id-registration-block">
 
@@ -252,34 +265,35 @@
                     OWNER CONTACT
                 </span>
 
-                @if (CanShowOwnerPhone)
+
+                @if (PublicMode)
+                {
+                    <strong class="sc-id-primary-value">
+                        Protected
+                    </strong>
+
+                    <small>
+                        Private owner information
+                    </small>
+                }
+                else if (IsPremium)
                 {
                     <strong class="sc-id-primary-value sc-id-phone">
                         @FormattedOwnerPhone
                     </strong>
 
                     <small>
-                        Emergency / owner contact
-                    </small>
-                }
-                else if (PublicMode)
-                {
-                    <strong class="sc-id-primary-value">
-                        Contact via Pet ID
-                    </strong>
-
-                    <small>
-                        Mobile number kept private
+                        Premium emergency contact
                     </small>
                 }
                 else
                 {
-                    <strong class="sc-id-primary-value">
-                        Not provided
+                    <strong class="sc-id-primary-value sc-id-locked-text">
+                        Premium feature
                     </strong>
 
                     <small>
-                        Add a mobile number to your account
+                        Upgrade to show owner contact
                     </small>
                 }
 
@@ -289,7 +303,7 @@
             <div class="sc-id-registration-divider"></div>
 
 
-            <!-- PET ID -->
+            <!-- PET ID NUMBER -->
 
             <div class="sc-id-registration-block">
 
@@ -297,9 +311,11 @@
                     PET ID NUMBER
                 </span>
 
+
                 <strong class="sc-id-primary-value sc-id-mono">
                     @Display(Pet.CardId)
                 </strong>
+
 
                 <small>
                     Unique ShoppetCare identity
@@ -319,9 +335,11 @@
                     DATE ISSUED
                 </span>
 
+
                 <strong class="sc-id-primary-value">
                     @IssueDate
                 </strong>
+
 
                 <small>
                     Digital registry
@@ -333,93 +351,169 @@
 
 
         <!-- =====================================================
-             CARE INFORMATION
+             PREMIUM CARE INFORMATION
              ===================================================== -->
 
-        <section class="sc-id-care">
+        @if (!PublicMode)
+        {
+            @if (IsPremium)
+            {
+                <section class="sc-id-care">
 
-            <div class="sc-id-care-item">
+                    <!-- WEIGHT -->
 
-                <span class="sc-id-care-icon">
+                    <div class="sc-id-care-item">
 
-                    <svg aria-hidden="true">
-                        <use href="/icons/bootstrap-icons.svg#shield-check"></use>
-                    </svg>
+                        <span class="sc-id-care-icon">
 
-                </span>
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#speedometer2"></use>
+                            </svg>
 
-                <div>
+                        </span>
 
-                    <span class="sc-id-care-label">
-                        Vaccination
+
+                        <div>
+
+                            <span class="sc-id-care-label">
+                                Weight
+                            </span>
+
+                            <strong>
+                                @WeightDisplay
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- VACCINATION -->
+
+                    <div class="sc-id-care-item">
+
+                        <span class="sc-id-care-icon">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#shield-check"></use>
+                            </svg>
+
+                        </span>
+
+
+                        <div>
+
+                            <span class="sc-id-care-label">
+                                Vaccination
+                            </span>
+
+                            <strong>
+                                @Display(VaccinationStatus)
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- HEALTH RECORDS -->
+
+                    <div class="sc-id-care-item">
+
+                        <span class="sc-id-care-icon">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#clipboard2-pulse"></use>
+                            </svg>
+
+                        </span>
+
+
+                        <div>
+
+                            <span class="sc-id-care-label">
+                                Health Records
+                            </span>
+
+                            <strong>
+                                @HealthRecordCount
+                                @(HealthRecordCount == 1
+                                    ? "Record"
+                                    : "Records")
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CARE PROFILE -->
+
+                    <div class="sc-id-care-item">
+
+                        <span class="sc-id-care-icon">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#heart-pulse"></use>
+                            </svg>
+
+                        </span>
+
+
+                        <div>
+
+                            <span class="sc-id-care-label">
+                                Care Profile
+                            </span>
+
+                            <strong>
+                                @Display(Pet.Diet)
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
+            }
+            else
+            {
+                <section class="sc-id-premium-lock">
+
+                    <span class="sc-id-premium-lock-icon">
+
+                        <svg aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#lock-fill"></use>
+                        </svg>
+
                     </span>
 
-                    <strong>
-                        @Display(VaccinationStatus)
-                    </strong>
 
-                </div>
+                    <div>
 
-            </div>
+                        <span>
+                            PREMIUM CARE SNAPSHOT
+                        </span>
 
+                        <strong>
+                            More useful details when you need them.
+                        </strong>
 
-            <div class="sc-id-care-item">
+                        <small>
+                            Premium unlocks owner contact, weight,
+                            vaccination status, health-record summary
+                            and care-profile information on the private Pet ID.
+                        </small>
 
-                <span class="sc-id-care-icon">
+                    </div>
 
-                    <svg aria-hidden="true">
-                        <use href="/icons/bootstrap-icons.svg#clipboard2-pulse"></use>
-                    </svg>
-
-                </span>
-
-                <div>
-
-                    <span class="sc-id-care-label">
-                        Health Records
-                    </span>
-
-                    <strong>
-                        @HealthRecordCount
-                        @(HealthRecordCount == 1
-                            ? "Record"
-                            : "Records")
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <div class="sc-id-care-item sc-id-care-diet">
-
-                <span class="sc-id-care-icon">
-
-                    <svg aria-hidden="true">
-                        <use href="/icons/bootstrap-icons.svg#heart-pulse"></use>
-                    </svg>
-
-                </span>
-
-                <div>
-
-                    <span class="sc-id-care-label">
-                        Usual Diet / Care Profile
-                    </span>
-
-                    <strong>
-                        @Display(Pet.Diet)
-                    </strong>
-
-                </div>
-
-            </div>
-
-        </section>
+                </section>
+            }
+        }
 
 
         <!-- =====================================================
-             OFFICIAL CARD FOOTER
+             FOOTER
              ===================================================== -->
 
         <footer class="sc-id-footer">
@@ -468,10 +562,6 @@
 
 <style>
 
-    /* =========================================================
-       BASE CARD
-       ========================================================= */
-
     .sc-pet-id,
     .sc-pet-id *,
     .sc-pet-id *::before,
@@ -482,19 +572,21 @@
 
     .sc-pet-id {
         --id-accent: #F3D27A;
-        --id-accent-text: #FFE99E;
 
         position: relative;
 
         width: 100%;
-        min-height: 520px;
+        min-height: 510px;
 
         display: flex;
         flex-direction: column;
 
         overflow: hidden;
 
-        border: 1px solid rgba(255,255,255,.18);
+        border:
+            1px solid
+            rgba(255, 255, 255, .18);
+
         border-radius: 23px;
 
         color: #FFFFFF;
@@ -502,19 +594,18 @@
         background:
             radial-gradient(
                 circle at 91% 8%,
-                rgba(255,255,255,.18),
+                rgba(255, 255, 255, .16),
                 transparent 24%
             ),
             linear-gradient(
                 135deg,
-                #183E3E 0%,
-                #235E5D 55%,
-                #2A7779 100%
+                #173D3D,
+                #276C6D
             );
 
         box-shadow:
             0 24px 55px
-            rgba(23,61,61,.18);
+            rgba(23, 61, 61, .18);
     }
 
 
@@ -529,8 +620,9 @@
         right: -160px;
         top: -210px;
 
-        border: 1px solid
-            rgba(255,255,255,.07);
+        border:
+            1px solid
+            rgba(255, 255, 255, .07);
 
         border-radius: 50%;
 
@@ -549,8 +641,9 @@
         right: -95px;
         top: -145px;
 
-        border: 1px solid
-            rgba(255,255,255,.055);
+        border:
+            1px solid
+            rgba(255, 255, 255, .055);
 
         border-radius: 50%;
 
@@ -574,7 +667,7 @@
         background:
             radial-gradient(
                 circle at 91% 8%,
-                rgba(255,255,255,.16),
+                rgba(255, 255, 255, .16),
                 transparent 24%
             ),
             linear-gradient(
@@ -589,7 +682,7 @@
         background:
             radial-gradient(
                 circle at 91% 8%,
-                rgba(255,255,255,.18),
+                rgba(255, 255, 255, .18),
                 transparent 24%
             ),
             linear-gradient(
@@ -604,7 +697,7 @@
         background:
             radial-gradient(
                 circle at 91% 8%,
-                rgba(255,255,255,.16),
+                rgba(255, 255, 255, .16),
                 transparent 24%
             ),
             linear-gradient(
@@ -619,7 +712,7 @@
         background:
             radial-gradient(
                 circle at 91% 8%,
-                rgba(255,255,255,.17),
+                rgba(255, 255, 255, .17),
                 transparent 24%
             ),
             linear-gradient(
@@ -634,14 +727,14 @@
         background:
             radial-gradient(
                 circle at 88% 6%,
-                rgba(255,255,255,.22),
+                rgba(255, 255, 255, .22),
                 transparent 24%
             ),
             linear-gradient(
                 135deg,
-                #292244 0%,
+                #292244,
                 #3B315E 55%,
-                #514274 100%
+                #514274
             );
     }
 
@@ -654,16 +747,18 @@
         position: relative;
         z-index: 2;
 
-        min-height: 76px;
+        min-height: 74px;
 
-        padding: 17px 26px;
+        padding:
+            16px
+            25px;
 
         display: grid;
 
         grid-template-columns:
-            minmax(210px,1fr)
+            minmax(210px, 1fr)
             auto
-            minmax(180px,1fr);
+            minmax(180px, 1fr);
 
         align-items: center;
 
@@ -671,7 +766,7 @@
 
         border-bottom:
             1px solid
-            rgba(255,255,255,.13);
+            rgba(255, 255, 255, .13);
     }
 
 
@@ -692,8 +787,6 @@
         display: grid;
         place-items: center;
 
-        overflow: hidden;
-
         border-radius: 11px;
 
         background: #FFFFFF;
@@ -709,8 +802,6 @@
 
 
     .sc-id-brand-copy {
-        min-width: 0;
-
         display: flex;
         flex-direction: column;
     }
@@ -719,16 +810,14 @@
     .sc-id-brand-copy strong {
         font-size: 1rem;
         font-weight: 950;
-
-        letter-spacing: -.025em;
     }
 
 
     .sc-id-brand-copy span {
-        margin-top: 1px;
+        margin-top: 2px;
 
         color:
-            rgba(255,255,255,.54);
+            rgba(255, 255, 255, .53);
 
         font-size: .45rem;
         font-weight: 900;
@@ -756,16 +845,14 @@
         font-size: .42rem;
         font-weight: 950;
 
-        letter-spacing: .19em;
+        letter-spacing: .18em;
     }
 
 
     .sc-id-title strong {
         margin-top: 3px;
 
-        color: #FFFFFF;
-
-        font-size: .55rem;
+        font-size: .54rem;
         font-weight: 950;
 
         letter-spacing: .12em;
@@ -777,7 +864,9 @@
 
         min-height: 31px;
 
-        padding: 0 11px;
+        padding:
+            0
+            11px;
 
         display: inline-flex;
         align-items: center;
@@ -786,15 +875,15 @@
 
         border:
             1px solid
-            rgba(255,255,255,.2);
+            rgba(255, 255, 255, .20);
 
         border-radius: 999px;
 
         background:
-            rgba(255,255,255,.08);
+            rgba(255, 255, 255, .08);
 
         color:
-            rgba(255,255,255,.82);
+            rgba(255, 255, 255, .78);
 
         font-size: .46rem;
         font-weight: 950;
@@ -805,31 +894,32 @@
 
     .sc-id-plan.premium {
         border-color:
-            rgba(243,210,122,.58);
+            rgba(243, 210, 122, .58);
 
         background:
-            rgba(243,210,122,.12);
+            rgba(243, 210, 122, .12);
 
-        color:
-            #FFE18A;
+        color: #FFE18A;
     }
 
 
     /* =========================================================
-       MAIN PET
+       MAIN IDENTITY
        ========================================================= */
 
     .sc-id-main {
         position: relative;
         z-index: 1;
 
-        padding: 26px 30px;
+        padding:
+            25px
+            30px;
 
         display: grid;
 
         grid-template-columns:
             155px
-            minmax(0,1fr)
+            minmax(0, 1fr)
             155px;
 
         align-items: center;
@@ -837,8 +927,6 @@
         gap: 28px;
     }
 
-
-    /* PHOTO */
 
     .sc-id-photo-column {
         min-width: 0;
@@ -854,16 +942,16 @@
 
         border:
             4px solid
-            rgba(255,255,255,.96);
+            rgba(255, 255, 255, .96);
 
         border-radius: 50%;
 
         background:
-            rgba(255,255,255,.12);
+            rgba(255, 255, 255, .12);
 
         box-shadow:
             0 14px 32px
-            rgba(0,0,0,.17);
+            rgba(0, 0, 0, .17);
     }
 
 
@@ -912,15 +1000,14 @@
 
         border-radius: 50%;
 
-        background: #F3D27A;
-
-        box-shadow:
-            0 0 0 3px
-            rgba(243,210,122,.13);
+        background: var(--id-accent);
     }
 
 
-    /* PET INFO */
+    .sc-id-pet {
+        min-width: 0;
+    }
+
 
     .sc-id-kicker {
         color: var(--id-accent);
@@ -933,12 +1020,17 @@
 
 
     .sc-id-pet h2 {
-        margin: 5px 0 0;
-
-        color: #FFFFFF;
+        margin:
+            5px
+            0
+            0;
 
         font-size:
-            clamp(2.15rem,3.4vw,3.55rem);
+            clamp(
+                2.15rem,
+                3.4vw,
+                3.55rem
+            );
 
         line-height: .94;
 
@@ -949,10 +1041,13 @@
 
 
     .sc-id-pet-subtitle {
-        margin: 7px 0 0;
+        margin:
+            7px
+            0
+            0;
 
         color:
-            rgba(255,255,255,.8);
+            rgba(255, 255, 255, .8);
 
         font-size: .67rem;
         font-weight: 800;
@@ -960,7 +1055,9 @@
 
 
     .sc-id-pet-subtitle span {
-        margin: 0 5px;
+        margin:
+            0
+            5px;
 
         color: var(--id-accent);
     }
@@ -972,23 +1069,29 @@
         display: grid;
 
         grid-template-columns:
-            repeat(2,minmax(0,1fr));
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
 
-        column-gap: 24px;
-        row-gap: 1px;
+        gap:
+            1px
+            24px;
     }
 
 
     .sc-id-data-row {
         min-width: 0;
 
-        padding: 8px 0;
+        padding:
+            8px
+            0;
 
         display: grid;
 
         grid-template-columns:
-            61px
-            minmax(0,1fr);
+            68px
+            minmax(0, 1fr);
 
         align-items: center;
 
@@ -996,29 +1099,27 @@
 
         border-bottom:
             1px solid
-            rgba(255,255,255,.11);
+            rgba(255, 255, 255, .11);
     }
 
 
     .sc-id-data-row span {
         color:
-            rgba(255,255,255,.47);
+            rgba(255, 255, 255, .46);
 
-        font-size: .43rem;
+        font-size: .42rem;
         font-weight: 900;
 
-        text-transform: uppercase;
-
         letter-spacing: .06em;
+
+        text-transform: uppercase;
     }
 
 
     .sc-id-data-row strong {
         overflow: hidden;
 
-        color: #FFFFFF;
-
-        font-size: .6rem;
+        font-size: .59rem;
         font-weight: 850;
 
         white-space: nowrap;
@@ -1027,7 +1128,9 @@
     }
 
 
-    /* QR */
+    /* =========================================================
+       QR
+       ========================================================= */
 
     .sc-id-qr-column {
         text-align: center;
@@ -1039,7 +1142,9 @@
 
         aspect-ratio: 1;
 
-        margin: 0 auto;
+        margin:
+            0
+            auto;
 
         padding: 10px;
 
@@ -1048,7 +1153,7 @@
 
         border:
             2px solid
-            rgba(243,210,122,.8);
+            rgba(243, 210, 122, .8);
 
         border-radius: 15px;
 
@@ -1056,7 +1161,7 @@
 
         box-shadow:
             0 15px 30px
-            rgba(0,0,0,.16);
+            rgba(0, 0, 0, .16);
     }
 
 
@@ -1080,8 +1185,6 @@
 
         margin-top: 8px;
 
-        color: #FFFFFF;
-
         font-size: .45rem;
         font-weight: 950;
 
@@ -1095,31 +1198,35 @@
         margin-top: 2px;
 
         color:
-            rgba(255,255,255,.44);
+            rgba(255, 255, 255, .44);
 
         font-size: .4rem;
     }
 
 
     /* =========================================================
-       OWNER / REGISTRATION
+       REGISTRATION
        ========================================================= */
 
     .sc-id-registration {
-        margin: 0 30px;
+        margin:
+            0
+            30px;
 
-        padding: 14px 0;
+        padding:
+            14px
+            0;
 
         display: grid;
 
         grid-template-columns:
-            minmax(0,1.35fr)
+            minmax(0, 1.35fr)
             1px
-            minmax(0,1fr)
+            minmax(0, 1fr)
             1px
-            minmax(0,1fr)
+            minmax(0, 1fr)
             1px
-            minmax(0,.8fr);
+            minmax(0, .8fr);
 
         align-items: center;
 
@@ -1127,11 +1234,11 @@
 
         border-top:
             1px solid
-            rgba(255,255,255,.14);
+            rgba(255, 255, 255, .14);
 
         border-bottom:
             1px solid
-            rgba(255,255,255,.14);
+            rgba(255, 255, 255, .14);
     }
 
 
@@ -1144,12 +1251,12 @@
         display: block;
 
         color:
-            rgba(255,255,255,.44);
+            rgba(255, 255, 255, .43);
 
         font-size: .4rem;
         font-weight: 950;
 
-        letter-spacing: .1em;
+        letter-spacing: .10em;
 
         text-transform: uppercase;
     }
@@ -1161,8 +1268,6 @@
         margin-top: 4px;
 
         overflow: hidden;
-
-        color: #FFFFFF;
 
         font-size: .59rem;
         font-weight: 900;
@@ -1181,7 +1286,7 @@
         overflow: hidden;
 
         color:
-            rgba(255,255,255,.4);
+            rgba(255, 255, 255, .39);
 
         font-size: .38rem;
 
@@ -1193,6 +1298,12 @@
 
     .sc-id-phone {
         color: #FFE69A;
+    }
+
+
+    .sc-id-locked-text {
+        color:
+            rgba(255, 255, 255, .56);
     }
 
 
@@ -1211,23 +1322,27 @@
         height: 34px;
 
         background:
-            rgba(255,255,255,.14);
+            rgba(255, 255, 255, .14);
     }
 
 
     /* =========================================================
-       CARE STRIP
+       PREMIUM CARE SNAPSHOT
        ========================================================= */
 
     .sc-id-care {
-        margin: 12px 30px 0;
+        margin:
+            12px
+            30px
+            0;
 
         display: grid;
 
         grid-template-columns:
-            .8fr
-            .8fr
-            1.4fr;
+            repeat(
+                4,
+                minmax(0, 1fr)
+            );
 
         gap: 8px;
     }
@@ -1237,7 +1352,9 @@
         min-width: 0;
         min-height: 54px;
 
-        padding: 9px 11px;
+        padding:
+            9px
+            11px;
 
         display: flex;
         align-items: center;
@@ -1246,12 +1363,12 @@
 
         border:
             1px solid
-            rgba(255,255,255,.1);
+            rgba(255, 255, 255, .10);
 
         border-radius: 10px;
 
         background:
-            rgba(255,255,255,.07);
+            rgba(255, 255, 255, .07);
     }
 
 
@@ -1259,7 +1376,10 @@
         width: 30px;
         height: 30px;
 
-        flex: 0 0 30px;
+        flex:
+            0
+            0
+            30px;
 
         display: grid;
         place-items: center;
@@ -1267,11 +1387,9 @@
         border-radius: 8px;
 
         background:
-            rgba(243,210,122,.12);
+            rgba(243, 210, 122, .12);
 
         color: var(--id-accent);
-
-        font-size: .72rem;
     }
 
 
@@ -1284,14 +1402,14 @@
         display: block;
 
         color:
-            rgba(255,255,255,.44);
+            rgba(255, 255, 255, .43);
 
-        font-size: .39rem;
+        font-size: .38rem;
         font-weight: 850;
 
-        text-transform: uppercase;
+        letter-spacing: .04em;
 
-        letter-spacing: .045em;
+        text-transform: uppercase;
     }
 
 
@@ -1302,9 +1420,7 @@
 
         overflow: hidden;
 
-        color: #FFFFFF;
-
-        font-size: .54rem;
+        font-size: .52rem;
         font-weight: 850;
 
         white-space: nowrap;
@@ -1314,7 +1430,96 @@
 
 
     /* =========================================================
-       OFFICIAL FOOTER
+       BASIC / LOCKED PREMIUM SECTION
+       ========================================================= */
+
+    .sc-id-premium-lock {
+        margin:
+            12px
+            30px
+            0;
+
+        min-height: 63px;
+
+        padding:
+            11px
+            14px;
+
+        display: grid;
+
+        grid-template-columns:
+            auto
+            minmax(0, 1fr);
+
+        align-items: center;
+
+        gap: 11px;
+
+        border:
+            1px solid
+            rgba(243, 210, 122, .25);
+
+        border-radius: 11px;
+
+        background:
+            rgba(243, 210, 122, .07);
+    }
+
+
+    .sc-id-premium-lock-icon {
+        width: 35px;
+        height: 35px;
+
+        display: grid;
+        place-items: center;
+
+        border-radius: 9px;
+
+        background:
+            rgba(243, 210, 122, .14);
+
+        color: var(--id-accent);
+    }
+
+
+    .sc-id-premium-lock span,
+    .sc-id-premium-lock strong,
+    .sc-id-premium-lock small {
+        display: block;
+    }
+
+
+    .sc-id-premium-lock div > span {
+        color: var(--id-accent);
+
+        font-size: .4rem;
+        font-weight: 950;
+
+        letter-spacing: .08em;
+    }
+
+
+    .sc-id-premium-lock strong {
+        margin-top: 2px;
+
+        font-size: .56rem;
+    }
+
+
+    .sc-id-premium-lock small {
+        margin-top: 2px;
+
+        color:
+            rgba(255, 255, 255, .46);
+
+        font-size: .39rem;
+
+        line-height: 1.4;
+    }
+
+
+    /* =========================================================
+       FOOTER
        ========================================================= */
 
     .sc-id-footer {
@@ -1322,14 +1527,16 @@
 
         margin-top: auto;
 
-        padding: 0 30px;
+        padding:
+            0
+            30px;
 
         display: grid;
 
         grid-template-columns:
-            minmax(0,1fr)
+            minmax(0, 1fr)
             auto
-            minmax(0,1fr);
+            minmax(0, 1fr);
 
         align-items: center;
 
@@ -1337,10 +1544,10 @@
 
         border-top:
             1px solid
-            rgba(255,255,255,.1);
+            rgba(255, 255, 255, .10);
 
         background:
-            rgba(0,0,0,.1);
+            rgba(0, 0, 0, .10);
     }
 
 
@@ -1364,7 +1571,7 @@
 
     .sc-id-footer-status strong {
         color:
-            rgba(255,255,255,.74);
+            rgba(255, 255, 255, .73);
 
         font-size: .4rem;
         font-weight: 950;
@@ -1378,23 +1585,17 @@
         align-items: center;
 
         gap: 6px;
-
-        color: #FFFFFF;
     }
 
 
     .sc-id-website svg {
         color: var(--id-accent);
-
-        font-size: .65rem;
     }
 
 
     .sc-id-website strong {
         font-size: .56rem;
         font-weight: 900;
-
-        letter-spacing: .025em;
     }
 
 
@@ -1407,10 +1608,9 @@
         gap: 5px;
 
         color:
-            rgba(255,255,255,.48);
+            rgba(255, 255, 255, .46);
 
         font-size: .4rem;
-        font-weight: 700;
     }
 
 
@@ -1439,25 +1639,25 @@
 
         .sc-id-main {
             grid-template-columns:
-                130px
-                minmax(0,1fr)
-                130px;
+                125px
+                minmax(0, 1fr)
+                125px;
 
             gap: 18px;
 
             padding:
-                24px
+                23px
                 20px;
         }
 
 
         .sc-id-photo {
-            width: 120px;
+            width: 115px;
         }
 
 
         .sc-id-qr-frame {
-            width: 116px;
+            width: 112px;
         }
 
 
@@ -1467,7 +1667,10 @@
                 20px;
 
             grid-template-columns:
-                repeat(2,minmax(0,1fr));
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
 
             gap: 12px;
         }
@@ -1479,6 +1682,20 @@
 
 
         .sc-id-care {
+            margin:
+                12px
+                20px
+                0;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+        }
+
+
+        .sc-id-premium-lock {
             margin:
                 12px
                 20px
@@ -1500,13 +1717,6 @@
 
     @@media (max-width: 650px) {
 
-        .sc-pet-id {
-            min-height: 0;
-
-            border-radius: 17px;
-        }
-
-
         .sc-id-header {
             padding:
                 14px
@@ -1514,36 +1724,16 @@
         }
 
 
-        .sc-id-logo {
-            width: 36px;
-            height: 36px;
-        }
-
-
-        .sc-id-brand-copy strong {
-            font-size: .84rem;
-        }
-
-
-        .sc-id-plan {
-            padding:
-                0
-                8px;
-
-            font-size: .38rem;
-        }
-
-
         .sc-id-main {
             grid-template-columns:
                 105px
-                minmax(0,1fr);
-
-            gap: 15px;
+                minmax(0, 1fr);
 
             padding:
                 20px
                 16px;
+
+            gap: 15px;
         }
 
 
@@ -1562,34 +1752,29 @@
         }
 
 
-        .sc-id-data-row {
-            grid-template-columns:
-                58px
-                minmax(0,1fr);
-        }
-
-
         .sc-id-qr-column {
-            grid-column: 1 / -1;
-
-            margin-top: 6px;
+            grid-column:
+                1
+                /
+                -1;
 
             display: grid;
 
             grid-template-columns:
                 88px
-                minmax(0,1fr);
+                minmax(0, 1fr);
 
             align-items: center;
-
-            column-gap: 12px;
 
             text-align: left;
         }
 
 
         .sc-id-qr-frame {
-            grid-row: 1 / 3;
+            grid-row:
+                1
+                /
+                3;
 
             width: 82px;
 
@@ -1608,26 +1793,15 @@
                 16px;
 
             grid-template-columns: 1fr;
-
-            gap: 12px;
-
-            padding: 14px 0;
         }
 
 
         .sc-id-registration-block {
-            padding-bottom: 9px;
+            padding-bottom: 8px;
 
             border-bottom:
                 1px solid
-                rgba(255,255,255,.08);
-        }
-
-
-        .sc-id-registration-block:last-child {
-            padding-bottom: 0;
-
-            border-bottom: 0;
+                rgba(255, 255, 255, .08);
         }
 
 
@@ -1635,9 +1809,17 @@
             margin:
                 12px
                 16px
-                17px;
+                16px;
 
             grid-template-columns: 1fr;
+        }
+
+
+        .sc-id-premium-lock {
+            margin:
+                12px
+                16px
+                16px;
         }
 
 
@@ -1659,44 +1841,18 @@
         }
     }
 
-
-    @@media (max-width: 430px) {
-
-        .sc-id-plan svg {
-            display: none;
-        }
-
-
-        .sc-id-main {
-            grid-template-columns: 1fr;
-        }
-
-
-        .sc-id-photo-column {
-            display: flex;
-            align-items: center;
-
-            gap: 12px;
-        }
-
-
-        .sc-id-active-status {
-            margin: 0;
-        }
-
-
-        .sc-id-website strong {
-            font-size: .48rem;
-        }
-    }
-
 </style>
 
 
 @code {
 
+    // =========================================================
+    // PARAMETERS
+    // =========================================================
+
     [Parameter, EditorRequired]
-    public PetProfile Pet { get; set; } = default!;
+    public PetProfile Pet { get; set; } =
+        default!;
 
 
     [Parameter]
@@ -1736,70 +1892,219 @@
     public bool PublicMode { get; set; }
 
 
-    /*
-        Keep false for now.
+    // =========================================================
+    // CARD THEME
+    // =========================================================
 
-        Later, if you add a privacy toggle to the
-        owner's account/public Pet ID settings,
-        pass true only when the owner explicitly
-        allows their phone number to appear publicly.
-    */
-    [Parameter]
-    public bool ShowOwnerPhoneInPublic { get; set; }
+    private string CardClass
+    {
+        get
+        {
+            /*
+                Premium themes are only rendered while
+                Premium is active.
+
+                We do NOT erase the saved theme when Premium
+                expires. The card simply falls back to Classic.
+            */
+
+            var theme =
+                IsPremium
+                    ? Pet.CardTheme
+                    : "Classic";
 
 
-    private bool CanShowOwnerPhone =>
-        !string.IsNullOrWhiteSpace(OwnerPhone)
-        &&
+            var normalized =
+                string.IsNullOrWhiteSpace(theme)
+                    ? "classic"
+                    : theme
+                        .Trim()
+                        .ToLowerInvariant();
+
+
+            return
+                $"sc-pet-id theme-{normalized}";
+        }
+    }
+
+
+    // =========================================================
+    // ISSUE DATE
+    // =========================================================
+
+    private string IssueDate =>
         (
-            !PublicMode
-            ||
-            ShowOwnerPhoneInPublic
-        );
+            Pet.CardIssuedAt
+            ??
+            Pet.CreatedAt
+        )
+        .ToString(
+            "MMM dd, yyyy");
 
+
+    // =========================================================
+    // BIRTHDATE
+    // =========================================================
+
+    private string BirthDateDisplay =>
+        Pet.BirthDate?
+            .ToString(
+                "MMM dd, yyyy")
+        ??
+        "Not provided";
+
+
+    // =========================================================
+    // AGE
+    // =========================================================
+
+    private string AgeDisplay
+    {
+        get
+        {
+            /*
+                New pets should use BirthDate.
+
+                Existing records may still only have the old
+                Age text, so we retain that as a fallback.
+            */
+
+            if (!Pet.BirthDate.HasValue)
+            {
+                return
+                    Display(
+                        Pet.Age);
+            }
+
+
+            var birthDate =
+                Pet.BirthDate
+                    .Value
+                    .Date;
+
+
+            var today =
+                DateTime.Today;
+
+
+            if (birthDate > today)
+            {
+                return "Invalid date";
+            }
+
+
+            var years =
+                today.Year
+                -
+                birthDate.Year;
+
+
+            if (birthDate >
+                today.AddYears(
+                    -years))
+            {
+                years--;
+            }
+
+
+            if (years >= 1)
+            {
+                return
+                    years == 1
+                        ? "1 year"
+                        : $"{years} years";
+            }
+
+
+            var months =
+                (
+                    today.Year
+                    -
+                    birthDate.Year
+                )
+                *
+                12
+                +
+                today.Month
+                -
+                birthDate.Month;
+
+
+            if (today.Day <
+                birthDate.Day)
+            {
+                months--;
+            }
+
+
+            months =
+                Math.Max(
+                    months,
+                    0);
+
+
+            if (months == 0)
+            {
+                var days =
+                    (
+                        today
+                        -
+                        birthDate
+                    )
+                    .Days;
+
+
+                return
+                    days == 1
+                        ? "1 day"
+                        : $"{days} days";
+            }
+
+
+            return
+                months == 1
+                    ? "1 month"
+                    : $"{months} months";
+        }
+    }
+
+
+    // =========================================================
+    // WEIGHT
+    // =========================================================
+
+    private string WeightDisplay =>
+        Pet.WeightKg.HasValue
+            ? $"{Pet.WeightKg.Value:0.##} kg"
+            : "Not provided";
+
+
+    // =========================================================
+    // OWNER PHONE
+    // =========================================================
 
     private string FormattedOwnerPhone =>
         FormatPhilippinePhone(
             OwnerPhone);
 
 
-    private string CardClass
-    {
-        get
-        {
-            var theme =
-                string.IsNullOrWhiteSpace(
-                    Pet.CardTheme)
-                    ? "classic"
-                    : Pet.CardTheme
-                        .Trim()
-                        .ToLowerInvariant();
-
-
-            return
-                $"sc-pet-id theme-{theme}";
-        }
-    }
-
-
-    private string IssueDate =>
-        (Pet.CardIssuedAt
-            ??
-            Pet.CreatedAt)
-        .ToString(
-            "MMM dd, yyyy");
-
+    // =========================================================
+    // SAFE DISPLAY
+    // =========================================================
 
     private static string Display(
         string? value)
     {
         return
-            string.IsNullOrWhiteSpace(
-                value)
+            string.IsNullOrWhiteSpace(value)
                 ? "Not provided"
                 : value.Trim();
     }
 
+
+    // =========================================================
+    // PH MOBILE FORMAT
+    // =========================================================
 
     private static string FormatPhilippinePhone(
         string? value)
@@ -1824,18 +2129,20 @@
 
         /*
             09171234567
+
             becomes
+
             +63 917 123 4567
         */
 
-        if (digits.Length == 11
-            &&
+        if (digits.Length == 11 &&
             digits.StartsWith(
                 "09",
                 StringComparison.Ordinal))
         {
             return
-                $"+63 {digits.Substring(1, 3)} " +
+                $"+63 " +
+                $"{digits.Substring(1, 3)} " +
                 $"{digits.Substring(4, 3)} " +
                 $"{digits.Substring(7, 4)}";
         }
@@ -1843,18 +2150,20 @@
 
         /*
             639171234567
+
             becomes
+
             +63 917 123 4567
         */
 
-        if (digits.Length == 12
-            &&
+        if (digits.Length == 12 &&
             digits.StartsWith(
                 "63",
                 StringComparison.Ordinal))
         {
             return
-                $"+63 {digits.Substring(2, 3)} " +
+                $"+63 " +
+                $"{digits.Substring(2, 3)} " +
                 $"{digits.Substring(5, 3)} " +
                 $"{digits.Substring(8, 4)}";
         }

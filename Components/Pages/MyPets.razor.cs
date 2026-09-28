@@ -278,7 +278,8 @@ public partial class MyPets
 
 
         IsPremium =
-            Auth.IsPremium;
+      Db.IsUserPremium(
+          Auth.CurrentUser.Id);
 
 
         CanAddMorePets =
@@ -377,6 +378,8 @@ public partial class MyPets
 
                 Age =
                     pet.Age,
+                BirthDate =
+    pet.BirthDate,
 
                 WeightKg =
                     pet.WeightKg,
@@ -536,6 +539,15 @@ public partial class MyPets
         if (IsSaving)
             return;
 
+        if (PetForm.BirthDate.HasValue &&
+    PetForm.BirthDate.Value.Date >
+    DateTime.Today)
+        {
+            ShowError(
+                "Pet birthdate cannot be in the future.");
+
+            return;
+        }
 
         if (Auth.CurrentUser is null)
         {
@@ -950,6 +962,118 @@ public partial class MyPets
         };
     }
 
+    // =========================================================
+    // DISPLAY AGE
+    // =========================================================
+
+    public string GetDisplayAge(
+        PetProfile pet)
+    {
+        /*
+            BirthDate is the preferred source because it keeps
+            the displayed age accurate automatically.
+
+            The old Age field is retained as a fallback for
+            existing pet profiles that do not yet have a
+            BirthDate.
+        */
+
+        if (!pet.BirthDate.HasValue)
+        {
+            return
+                string.IsNullOrWhiteSpace(
+                    pet.Age)
+
+                    ? "Not set"
+                    : pet.Age;
+        }
+
+
+        var birthDate =
+            pet.BirthDate.Value.Date;
+
+
+        var today =
+            DateTime.Today;
+
+
+        if (birthDate > today)
+        {
+            return "Not set";
+        }
+
+
+        var years =
+            today.Year -
+            birthDate.Year;
+
+
+        if (birthDate >
+            today.AddYears(-years))
+        {
+            years--;
+        }
+
+
+        /*
+            For pets under one year old, showing months is much
+            more useful than simply displaying "0 years".
+        */
+
+        if (years <= 0)
+        {
+            var months =
+                (
+                    (today.Year - birthDate.Year) * 12
+                )
+                +
+                today.Month
+                -
+                birthDate.Month;
+
+
+            if (today.Day < birthDate.Day)
+            {
+                months--;
+            }
+
+
+            months =
+                Math.Max(
+                    0,
+                    months);
+
+
+            if (months == 0)
+            {
+                var days =
+                    Math.Max(
+                        0,
+                        (today - birthDate).Days);
+
+
+                return
+                    days == 1
+
+                        ? "1 day"
+                        : $"{days} days";
+            }
+
+
+            return
+                months == 1
+
+                    ? "1 month"
+                    : $"{months} months";
+        }
+
+
+        return
+            years == 1
+
+                ? "1 year"
+                : $"{years} years";
+    }
 
     // =========================================================
     // INITIAL

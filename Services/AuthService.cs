@@ -576,7 +576,6 @@ namespace Shoppet_VetClinic.Services
             }
         }
 
-
         // =========================================================
         // REFRESH
         // =========================================================
@@ -584,6 +583,12 @@ namespace Shoppet_VetClinic.Services
         public void RefreshUser(
             UserAccount updated)
         {
+            if (updated is null)
+            {
+                return;
+            }
+
+
             CurrentUser =
                 updated;
 
@@ -595,6 +600,52 @@ namespace Shoppet_VetClinic.Services
             NotifyStateChanged();
         }
 
+
+        /// <summary>
+        /// Reloads the currently authenticated user directly
+        /// from the database.
+        ///
+        /// Use this after account changes such as:
+        /// - Premium activation
+        /// - Premium renewal
+        /// - Profile updates
+        /// - Mobile-number updates
+        ///
+        /// This prevents pages from relying on stale
+        /// CurrentUser information.
+        /// </summary>
+        public bool RefreshCurrentUser()
+        {
+            if (CurrentUser is null)
+            {
+                return false;
+            }
+
+
+            var refreshed =
+                _db.GetUserById(
+                    CurrentUser.Id);
+
+
+            if (refreshed is null)
+            {
+                return false;
+            }
+
+
+            CurrentUser =
+                refreshed;
+
+
+            IsGuest =
+                false;
+
+
+            NotifyStateChanged();
+
+
+            return true;
+        }
 
         // =========================================================
         // ROLE ACCESS

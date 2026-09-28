@@ -81,6 +81,7 @@
 
                 </div>
 
+
                 <div class="petid-header-actions">
 
                     <a href="/pet/@PetId">
@@ -113,25 +114,26 @@
 
 
             <!-- =====================================================
-                 PRODUCT WORKSPACE
+                 PET ID + PLAN PANEL
                  ===================================================== -->
 
             <section class="petid-workspace">
 
-                <!-- ACTUAL CARD -->
+                <!-- =================================================
+                     DIGITAL PET ID
+                     ================================================= -->
 
                 <div class="petid-card-column">
 
                     <PetIdCardView Pet="@pet"
-               OwnerName="@ownerName"
-               OwnerPhone="@ownerPhone"
-               PhotoUrl="@photoUrl"
-               QrDataUri="@qrDataUri"
-               IsPremium="@isPremium"
-               VaccinationStatus="@vaccinationStatus"
-               HealthRecordCount="@healthRecords.Count"
-               PublicMode="false"
-               ShowOwnerPhoneInPublic="@showOwnerPhoneInPublic" />
+                                   OwnerName="@ownerName"
+                                   OwnerPhone="@ownerPhone"
+                                   PhotoUrl="@photoUrl"
+                                   QrDataUri="@qrDataUri"
+                                   IsPremium="@isPremium"
+                                   VaccinationStatus="@vaccinationStatus"
+                                   HealthRecordCount="@healthRecords.Count"
+                                   PublicMode="false" />
 
 
                     <div class="petid-public-bar">
@@ -144,6 +146,7 @@
 
                         </span>
 
+
                         <div>
 
                             <strong>
@@ -151,13 +154,14 @@
                             </strong>
 
                             <p>
-                                Anyone scanning the QR code sees
-                                a privacy-safe version of this identity.
-                                Owner details and private health
-                                information remain protected.
+                                Anyone scanning the QR code sees a
+                                privacy-safe version of this identity.
+                                Owner contact and private care information
+                                remain protected.
                             </p>
 
                         </div>
+
 
                         <a href="/pet/card/@pet.CardId"
                            target="_blank">
@@ -172,81 +176,77 @@
 
 
                 <!-- =================================================
-                     VALUE PANEL
+                     PLAN / VALUE PANEL
                      ================================================= -->
 
                 <aside class="petid-value-panel">
 
-                    <!-- PLAN STATUS -->
+               <div class="premium-plan-head">
 
-                    <div class="premium-plan-head">
+    <div>
 
-                        <div>
+        <span class="@(isPremium
+            ? "plan-label premium"
+            : "plan-label")">
 
-                            <span class="@(isPremium
-                                ? "plan-label premium"
-                                : "plan-label")">
+            @(isPremium
+                ? "PREMIUM PET ID"
+                : "BASIC PET ID")
 
-                                @(isPremium
-                                    ? "PREMIUM PLAN ACTIVE"
-                                    : "BASIC PET ID")
+        </span>
 
-                            </span>
+        <h2>
+            @pet.PetName
+        </h2>
 
-                            @if (isPremium)
-                            {
-                                <h2>
-                                    A better identity for
-                                    <em>@pet.PetName.</em>
-                                </h2>
-                            }
-                            else
-                            {
-                                <h2>
-                                    More than a profile.
-                                    <em>A connected pet identity.</em>
-                                </h2>
-                            }
+        <p class="plan-status-line">
 
-                        </div>
+            @if (isPremium)
+            {
+                <span>
+                    Active until @PremiumEndDisplay
+                </span>
+            }
+            else
+            {
+                <span>
+                    Standard Digital Pet ID
+                </span>
+            }
 
-                        @if (isPremium)
-                        {
-                            <div class="premium-active-mark">
+        </p>
 
-                                <svg aria-hidden="true">
-                                    <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
-                                </svg>
-
-                            </div>
-                        }
-
-                    </div>
+    </div>
 
 
-                    <p class="premium-intro">
+    @if (isPremium)
+    {
+        <div class="premium-active-mark">
 
-                        @if (isPremium)
-                        {
-                            <span>
-                                @pet.PetName's Digital Pet ID is using
-                                the Premium experience connected to your
-                                active ShoppetCare subscription.
-                            </span>
-                        }
-                        else
-                        {
-                            <span>
-                                Every pet receives a Digital Pet ID.
-                                Premium adds expanded management tools,
-                                personalization, and higher account limits.
-                            </span>
-                        }
+            <svg aria-hidden="true">
+                <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
+            </svg>
 
-                    </p>
+        </div>
+    }
+
+</div>
 
 
-                    <!-- SUBSCRIPTION SUMMARY -->
+@if (isPremium)
+{
+    <div class="premium-active-mark">
+
+        <svg aria-hidden="true">
+            <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
+        </svg>
+
+    </div>
+}
+
+                    <!-- =================================================
+                         SUBSCRIPTION SUMMARY
+                         ================================================= -->
 
                     <div class="petid-subscription">
 
@@ -275,10 +275,14 @@
                                     Status
                                 </span>
 
-                                <strong class="active-text">
+                                <strong class="@(isPremium
+                                    ? "active-text"
+                                    : "")">
+
                                     @(isPremium
                                         ? "Active"
                                         : "Upgrade Available")
+
                                 </strong>
 
                             </div>
@@ -317,7 +321,9 @@
                     </div>
 
 
-                    <!-- WHY PET ID -->
+                  @*   <!-- =================================================
+                         DIGITAL PET ID VALUE
+                         ================================================= -->
 
                     <div class="petid-feature-section">
 
@@ -337,6 +343,7 @@
                                     </svg>
 
                                 </span>
+
 
                                 <div>
 
@@ -364,6 +371,7 @@
 
                                 </span>
 
+
                                 <div>
 
                                     <strong>
@@ -371,8 +379,9 @@
                                     </strong>
 
                                     <small>
-                                        Useful pet information can be shared
-                                        without exposing private owner details.
+                                        Public scanning does not expose
+                                        the owner's private mobile number
+                                        or private health information.
                                     </small>
 
                                 </div>
@@ -390,6 +399,7 @@
 
                                 </span>
 
+
                                 <div>
 
                                     <strong>
@@ -397,8 +407,9 @@
                                     </strong>
 
                                     <small>
-                                        Jump from the Pet ID directly to
-                                        @pet.PetName's health records.
+                                        The owner can jump from the Pet ID
+                                        directly to @pet.PetName's
+                                        health records.
                                     </small>
 
                                 </div>
@@ -407,10 +418,12 @@
 
                         </div>
 
-                    </div>
+                    </div> *@
 
 
-                    <!-- PREMIUM VALUE -->
+                    <!-- =================================================
+                         PREMIUM BENEFITS
+                         ================================================= -->
 
                     <section class="petid-benefits">
 
@@ -432,7 +445,51 @@
                         <div class="benefit">
 
                             <svg aria-hidden="true">
-                                <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
+                                <use href="/icons/bootstrap-icons.svg#telephone-fill"></use>
+                            </svg>
+
+                            Owner mobile contact on the private Pet ID
+
+                        </div>
+
+
+                        <div class="benefit">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#speedometer2"></use>
+                            </svg>
+
+                            Pet weight in the Premium care snapshot
+
+                        </div>
+
+
+                        <div class="benefit">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#shield-check"></use>
+                            </svg>
+
+                            Vaccination status on the private Pet ID
+
+                        </div>
+
+
+                        <div class="benefit">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#clipboard2-pulse"></use>
+                            </svg>
+
+                            Health-record summary and care profile
+
+                        </div>
+
+
+                        <div class="benefit">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#palette-fill"></use>
                             </svg>
 
                             Premium Digital Pet ID themes
@@ -465,7 +522,7 @@
                         <div class="benefit">
 
                             <svg aria-hidden="true">
-                                <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
+                                <use href="/icons/bootstrap-icons.svg#file-earmark-arrow-down-fill"></use>
                             </svg>
 
                             Health-record export while Premium is active
@@ -480,7 +537,9 @@
 
                                 Get 3 Months of Premium
 
-                                <span>→</span>
+                                <span>
+                                    →
+                                </span>
 
                             </a>
                         }
@@ -491,7 +550,9 @@
 
                                 View Subscription Details
 
-                                <span>→</span>
+                                <span>
+                                    →
+                                </span>
 
                             </a>
                         }
@@ -499,13 +560,16 @@
                     </section>
 
 
-                    <!-- PET MANAGEMENT -->
+                    <!-- =================================================
+                         PET MANAGEMENT
+                         ================================================= -->
 
                     <div class="petid-management">
 
                         <span class="petid-eyebrow">
                             MANAGE @pet.PetName.ToUpperInvariant()
                         </span>
+
 
                         <div>
 
@@ -540,7 +604,7 @@
 
 
             <!-- =====================================================
-                 THEMES
+                 PET ID THEMES
                  ===================================================== -->
 
             <section class="petid-themes">
@@ -551,15 +615,17 @@
                         PET ID APPEARANCE
                     </span>
 
+
                     <h2>
                         Make their identity
                         <em>feel like theirs.</em>
                     </h2>
 
+
                     <p>
                         Classic is included with every Pet ID.
-                        Premium members can personalize
-                        the card with additional visual themes.
+                        Premium members can personalize the
+                        card with additional visual themes.
                     </p>
 
                 </div>
@@ -601,6 +667,7 @@
                                 <span>
                                     @theme
                                 </span>
+
 
                                 @if (locked)
                                 {
@@ -651,14 +718,27 @@
         box-sizing: border-box;
     }
 
+    .plan-status-line {
+    margin:
+        6px
+        0
+        0;
+
+    color: #71827C;
+
+    font-size: 11px;
+    line-height: 1.45;
+}
 
     .petid-page {
         min-height: 100vh;
+
         color: var(--petid-dark);
+
         background:
             radial-gradient(
                 circle at 93% 5%,
-                rgba(47,144,152,.09),
+                rgba(47, 144, 152, .09),
                 transparent 23%
             ),
             var(--petid-cream);
@@ -668,28 +748,43 @@
     .petid-page svg {
         width: 1em;
         height: 1em;
+
         fill: currentColor;
     }
 
 
     .petid-shell {
-        width: min(1420px, calc(100% - 48px));
-        margin: 0 auto;
+        width:
+            min(
+                1420px,
+                calc(100% - 48px)
+            );
+
+        margin:
+            0
+            auto;
     }
 
 
     .petid-loading {
-        padding: 80px 0;
+        padding:
+            80px
+            0;
+
         color: var(--petid-muted);
+
         text-align: center;
     }
 
 
     .petid-eyebrow {
         display: block;
+
         color: var(--petid-teal);
+
         font-size: 10px;
         font-weight: 950;
+
         letter-spacing: .13em;
     }
 
@@ -699,8 +794,14 @@
        ========================================================= */
 
     .petid-header {
-        padding: 33px 0;
-        border-bottom: 1px solid var(--petid-border);
+        padding:
+            33px
+            0;
+
+        border-bottom:
+            1px solid
+            var(--petid-border);
+
         background:
             linear-gradient(
                 135deg,
@@ -712,58 +813,114 @@
 
     .petid-header-inner {
         display: flex;
+
         align-items: flex-end;
         justify-content: space-between;
+
         gap: 30px;
     }
 
 
     .petid-header h1 {
-        margin: 7px 0 0;
+        margin:
+            7px
+            0
+            0;
+
         color: var(--petid-dark);
-        font-size: clamp(34px, 4vw, 54px);
-        line-height: .95;
+
+        font-size:
+            clamp(
+                34px,
+                4vw,
+                52px
+            );
+
+        line-height: .98;
+
         font-weight: 950;
-        letter-spacing: -.05em;
+
+        letter-spacing: -.055em;
     }
 
 
     .petid-header h1 em {
         color: var(--petid-teal);
-        font-family: Georgia, "Times New Roman", serif;
+
+        font-family:
+            Georgia,
+            "Times New Roman",
+            serif;
+
         font-style: italic;
         font-weight: 500;
     }
 
 
     .petid-header p {
-        max-width: 720px;
-        margin: 10px 0 0;
+        max-width: 620px;
+
+        margin:
+            11px
+            0
+            0;
+
         color: var(--petid-muted);
-        font-size: 13px;
-        line-height: 1.55;
+
+        font-size: 12px;
+        line-height: 1.6;
     }
 
 
     .petid-header-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 7px;
+
+        gap: 8px;
     }
 
 
     .petid-header-actions a {
-        min-height: 40px;
-        padding: 0 12px;
+        min-height: 39px;
+
+        padding:
+            0
+            14px;
+
         display: inline-flex;
+
         align-items: center;
-        border: 1px solid #CFDDD9;
+        justify-content: center;
+
+        border:
+            1px solid
+            #CBDCD8;
+
         border-radius: 9px;
+
         background: #FFFFFF;
-        color: #53665F;
+
+        color: var(--petid-dark);
+
         font-size: 11px;
         font-weight: 850;
+
         text-decoration: none;
+
+        transition:
+            border-color .16s ease,
+            background .16s ease,
+            transform .16s ease;
+    }
+
+
+    .petid-header-actions a:hover {
+        border-color: #A9CCC5;
+
+        background: #F4FAF8;
+
+        transform:
+            translateY(-1px);
     }
 
 
@@ -772,18 +929,32 @@
        ========================================================= */
 
     .petid-content {
-        padding: 28px 0 76px;
+        padding:
+            28px
+            0
+            70px;
     }
 
 
     .petid-message {
-        margin-bottom: 13px;
-        padding: 12px 14px;
-        border: 1px solid #B7DBCE;
-        border-radius: 10px;
-        background: #EFFAF5;
-        color: #28664D;
-        font-size: 12px;
+        margin-bottom: 14px;
+
+        padding:
+            12px
+            15px;
+
+        border:
+            1px solid
+            #C9E1DC;
+
+        border-radius: 11px;
+
+        background: #F1F9F7;
+
+        color: #31675F;
+
+        font-size: 11px;
+        font-weight: 750;
     }
 
 
@@ -791,14 +962,17 @@
        WORKSPACE
        ========================================================= */
 
-    .petid-workspace {
-        display: grid;
-        grid-template-columns:
-            minmax(0, 1.8fr)
-            minmax(330px, .7fr);
-        gap: 16px;
-        align-items: stretch;
-    }
+   .petid-workspace {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        320px;
+
+    align-items: start;
+
+    gap: 24px;
+}
 
 
     .petid-card-column {
@@ -807,49 +981,73 @@
 
 
     /* =========================================================
-       PUBLIC CARD BAR
+       PUBLIC BAR
        ========================================================= */
 
     .petid-public-bar {
         margin-top: 12px;
-        padding: 14px 16px;
+
+        padding:
+            14px
+            16px;
+
         display: grid;
+
         grid-template-columns:
             auto
             minmax(0, 1fr)
             auto;
+
         align-items: center;
+
         gap: 13px;
-        border: 1px solid var(--petid-border);
+
+        border:
+            1px solid
+            var(--petid-border);
+
         border-radius: 13px;
+
         background: #FFFFFF;
+
         box-shadow:
             0 7px 20px
-            rgba(23,61,61,.035);
+            rgba(23, 61, 61, .035);
     }
 
 
     .public-icon {
         width: 42px;
         height: 42px;
+
         display: grid;
         place-items: center;
+
         border-radius: 11px;
+
         background: #EAF5F5;
+
         color: var(--petid-teal);
     }
 
 
     .petid-public-bar strong {
         color: var(--petid-dark);
+
         font-size: 12px;
     }
 
 
     .petid-public-bar p {
         max-width: 600px;
-        margin: 3px 0 0;
+
+        margin:
+            3px
+            0
+            0;
+
         color: #83918C;
+
         font-size: 10px;
         line-height: 1.45;
     }
@@ -857,9 +1055,12 @@
 
     .petid-public-bar > a {
         color: var(--petid-teal-dark);
+
         font-size: 11px;
         font-weight: 900;
+
         text-decoration: none;
+
         white-space: nowrap;
     }
 
@@ -868,30 +1069,40 @@
        VALUE PANEL
        ========================================================= */
 
-    .petid-value-panel {
-        min-height: 100%;
-        padding: 26px;
-        display: flex;
-        flex-direction: column;
-        border: 1px solid var(--petid-border);
+   .petid-value-panel {
+    min-height: 0;
+
+    padding: 22px;
+
+    display: flex;
+    flex-direction: column;
+
+        border:
+            1px solid
+            var(--petid-border);
+
         border-radius: 22px;
+
         background:
             radial-gradient(
                 circle at 94% 4%,
-                rgba(243,210,122,.25),
+                rgba(243, 210, 122, .25),
                 transparent 26%
             ),
             #FFFFFF;
+
         box-shadow:
             0 12px 32px
-            rgba(23,61,61,.055);
+            rgba(23, 61, 61, .055);
     }
 
 
     .plan-label {
         color: var(--petid-teal);
+
         font-size: 10px;
         font-weight: 950;
+
         letter-spacing: .12em;
     }
 
@@ -901,22 +1112,272 @@
     }
 
 
-    .petid-value-list {
-        margin-top: 22px;
+    /* =========================================================
+       PREMIUM HEADER
+       ========================================================= */
+
+    .premium-plan-head {
+        display: flex;
+
+        align-items: flex-start;
+        justify-content: space-between;
+
+        gap: 16px;
+    }
+
+
+   .premium-plan-head h2 {
+    margin:
+        6px
+        0
+        0;
+
+    color: #173D3D;
+
+    font-size: 24px;
+    line-height: 1;
+
+    font-weight: 950;
+
+    letter-spacing: -.035em;
+}
+
+    .premium-plan-head h2 em {
+        display: block;
+
+        margin-top: 3px;
+
+        color: #A17819;
+
+        font-family:
+            Georgia,
+            "Times New Roman",
+            serif;
+
+        font-style: italic;
+        font-weight: 500;
+    }
+
+
+    .premium-active-mark {
+        width: 44px;
+        height: 44px;
+
+        flex:
+            0
+            0
+            44px;
+
         display: grid;
+        place-items: center;
+
+        border-radius: 13px;
+
+        background: #173D3D;
+
+        color: #F3D27A;
+
+        box-shadow:
+            0 10px 22px
+            rgba(23, 61, 61, .15);
+    }
+
+
+    .premium-intro {
+        margin:
+            13px
+            0
+            0;
+
+        color: #71827C;
+
+        font-size: .72rem;
+        line-height: 1.65;
+    }
+
+
+    /* =========================================================
+       SUBSCRIPTION
+       ========================================================= */
+
+   .petid-subscription {
+    margin-top: 16px;
+
+        display: grid;
+
+        grid-template-columns:
+            .7fr
+            1.3fr;
+
+        overflow: hidden;
+
+        border:
+            1px solid
+            #E1CC7E;
+
+        border-radius: 15px;
+
+        background: #FFFDF7;
+    }
+
+
+    .subscription-price {
+        padding: 18px;
+
+        display: flex;
+        flex-direction: column;
+
+        justify-content: center;
+
+        background:
+            linear-gradient(
+                145deg,
+                #173D3D,
+                #245B56
+            );
+
+        color: #FFFFFF;
+    }
+
+
+    .subscription-price small {
+        color: #F3D27A;
+
+        font-size: .51rem;
+        font-weight: 950;
+
+        letter-spacing: .13em;
+    }
+
+
+   .subscription-price strong {
+    margin-top: 4px;
+    font-size: 1.7rem;
+        line-height: 1;
+
+        font-weight: 950;
+
+        letter-spacing: -.045em;
+    }
+
+
+    .subscription-price span {
+        margin-top: 4px;
+
+        color:
+            rgba(255, 255, 255, .68);
+
+        font-size: .58rem;
+        font-weight: 750;
+    }
+
+
+    .subscription-details {
+        padding: 11px;
+
+        display: grid;
+
+        grid-template-columns:
+            1fr
+            1fr;
+
+        gap: 7px;
+    }
+
+
+    .subscription-details > div {
+        padding: 10px;
+
+        border-radius: 9px;
+
+        background: #FFFFFF;
+    }
+
+
+    .subscription-details .wide {
+        grid-column:
+            1
+            /
+            -1;
+    }
+
+
+    .subscription-details span,
+    .subscription-details strong {
+        display: block;
+    }
+
+
+    .subscription-details span {
+        color: #8B9793;
+
+        font-size: .5rem;
+        font-weight: 850;
+
+        letter-spacing: .06em;
+
+        text-transform: uppercase;
+    }
+
+
+    .subscription-details strong {
+        margin-top: 3px;
+
+        color: #173D3D;
+
+        font-size: .62rem;
+        font-weight: 900;
+    }
+
+
+    .subscription-details strong.active-text {
+        color: #24815D;
+    }
+
+
+    /* =========================================================
+       DIGITAL PET ID VALUE
+       ========================================================= */
+
+    .petid-feature-section {
+        margin-top: 20px;
+    }
+
+
+    .section-label {
+        color: #2F9098;
+
+        font-size: .55rem;
+        font-weight: 950;
+
+        letter-spacing: .12em;
+    }
+
+
+    .petid-value-list {
+        margin-top: 12px;
+
+        display: grid;
+
         gap: 8px;
     }
 
 
     .petid-value-list > div {
         padding: 11px;
+
         display: grid;
+
         grid-template-columns:
             auto
-            minmax(0,1fr);
+            minmax(0, 1fr);
+
         align-items: center;
+
         gap: 10px;
+
         border-radius: 11px;
+
         background: #F6F9F8;
     }
 
@@ -924,10 +1385,14 @@
     .petid-value-list > div > span {
         width: 36px;
         height: 36px;
+
         display: grid;
         place-items: center;
+
         border-radius: 9px;
+
         background: #E2F2EF;
+
         color: var(--petid-teal);
     }
 
@@ -940,206 +1405,35 @@
 
     .petid-value-list strong {
         color: var(--petid-dark);
+
         font-size: 11px;
     }
 
 
     .petid-value-list small {
         margin-top: 2px;
+
         color: #81908B;
+
         font-size: 9px;
         line-height: 1.45;
     }
 
 
     /* =========================================================
-       PREMIUM HEADER
+       PREMIUM BENEFITS
        ========================================================= */
 
-    .premium-plan-head {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 16px;
-    }
+.petid-benefits {
+    margin-top: 16px;
+    padding: 15px;
 
+        border:
+            1px solid
+            #E7D38B;
 
-    .premium-plan-head h2 {
-        margin: 8px 0 0;
-        color: #173D3D;
-        font-size: clamp(1.7rem, 2.4vw, 2.35rem);
-        line-height: .96;
-        font-weight: 950;
-        letter-spacing: -.045em;
-    }
-
-
-    .premium-plan-head h2 em {
-        display: block;
-        margin-top: 3px;
-        color: #A17819;
-        font-family: Georgia, "Times New Roman", serif;
-        font-style: italic;
-        font-weight: 500;
-    }
-
-
-    .premium-active-mark {
-        width: 44px;
-        height: 44px;
-        flex: 0 0 44px;
-        display: grid;
-        place-items: center;
-        border-radius: 13px;
-        background: #173D3D;
-        color: #F3D27A;
-        box-shadow:
-            0 10px 22px
-            rgba(23,61,61,.15);
-    }
-
-
-    .premium-intro {
-        margin: 13px 0 0;
-        color: #71827C;
-        font-size: .72rem;
-        line-height: 1.65;
-    }
-
-
-    /* =========================================================
-       SUBSCRIPTION
-       ========================================================= */
-
-    .petid-subscription {
-        margin-top: 20px;
-        display: grid;
-        grid-template-columns:
-            .7fr
-            1.3fr;
-        overflow: hidden;
-        border: 1px solid #E1CC7E;
-        border-radius: 15px;
-        background: #FFFDF7;
-    }
-
-
-    .subscription-price {
-        padding: 18px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        background:
-            linear-gradient(
-                145deg,
-                #173D3D,
-                #245B56
-            );
-        color: #FFFFFF;
-    }
-
-
-    .subscription-price small {
-        color: #F3D27A;
-        font-size: .51rem;
-        font-weight: 950;
-        letter-spacing: .13em;
-    }
-
-
-    .subscription-price strong {
-        margin-top: 5px;
-        font-size: 2.15rem;
-        line-height: 1;
-        font-weight: 950;
-        letter-spacing: -.045em;
-    }
-
-
-    .subscription-price span {
-        margin-top: 4px;
-        color: rgba(255,255,255,.68);
-        font-size: .58rem;
-        font-weight: 750;
-    }
-
-
-    .subscription-details {
-        padding: 11px;
-        display: grid;
-        grid-template-columns:
-            1fr
-            1fr;
-        gap: 7px;
-    }
-
-
-    .subscription-details > div {
-        padding: 10px;
-        border-radius: 9px;
-        background: #FFFFFF;
-    }
-
-
-    .subscription-details .wide {
-        grid-column: 1 / -1;
-    }
-
-
-    .subscription-details span,
-    .subscription-details strong {
-        display: block;
-    }
-
-
-    .subscription-details span {
-        color: #8B9793;
-        font-size: .5rem;
-        font-weight: 850;
-        letter-spacing: .06em;
-        text-transform: uppercase;
-    }
-
-
-    .subscription-details strong {
-        margin-top: 3px;
-        color: #173D3D;
-        font-size: .62rem;
-        font-weight: 900;
-    }
-
-
-    .subscription-details strong.active-text {
-        color: #24815D;
-    }
-
-
-    /* =========================================================
-       PET ID FEATURES
-       ========================================================= */
-
-    .petid-feature-section {
-        margin-top: 20px;
-    }
-
-
-    .section-label {
-        color: #2F9098;
-        font-size: .55rem;
-        font-weight: 950;
-        letter-spacing: .12em;
-    }
-
-
-    /* =========================================================
-       BENEFITS
-       ========================================================= */
-
-    .petid-benefits {
-        margin-top: 20px;
-        padding: 16px;
-        border: 1px solid #E7D38B;
         border-radius: 14px;
+
         background:
             linear-gradient(
                 135deg,
@@ -1151,72 +1445,114 @@
 
     .benefits-heading {
         margin-bottom: 11px;
+
         display: flex;
+
         align-items: center;
         justify-content: space-between;
+
         gap: 12px;
     }
 
 
     .benefits-heading > span {
         color: #8A6918;
+
         font-size: 9px;
         font-weight: 950;
+
         letter-spacing: .09em;
     }
 
 
     .benefits-heading > strong {
         color: var(--petid-dark);
+
         font-size: 13px;
     }
 
 
-    .benefit {
-        margin-top: 8px;
+.benefit {
+    margin-top: 7px;
+
         display: flex;
         align-items: center;
+
         gap: 7px;
+
         color: #665A36;
+
         font-size: 10px;
         font-weight: 750;
+
+        line-height: 1.35;
     }
 
 
     .benefit svg {
+        flex:
+            0
+            0
+            auto;
+
         color: var(--petid-teal);
     }
 
 
     .upgrade-button {
         min-height: 42px;
+
         margin-top: 14px;
-        padding: 0 12px;
+
+        padding:
+            0
+            12px;
+
         display: flex;
+
         align-items: center;
         justify-content: space-between;
+
         border-radius: 9px;
+
         background: var(--petid-dark);
+
         color: #FFFFFF;
+
         font-size: 11px;
         font-weight: 900;
+
         text-decoration: none;
     }
 
 
     .manage-plan-link {
         min-height: 42px;
+
         margin-top: 14px;
-        padding: 0 12px;
+
+        padding:
+            0
+            12px;
+
         display: flex;
+
         align-items: center;
         justify-content: space-between;
-        border: 1px solid #C8DBD6;
+
+        border:
+            1px solid
+            #C8DBD6;
+
         border-radius: 9px;
+
         background: #FFFFFF;
+
         color: #173D3D;
+
         font-size: .63rem;
         font-weight: 900;
+
         text-decoration: none;
     }
 
@@ -1225,40 +1561,65 @@
        MANAGEMENT
        ========================================================= */
 
-    .petid-management {
-        margin-top: auto;
-        padding-top: 20px;
-    }
+   .petid-management {
+    margin-top: 18px;
+    padding-top: 16px;
+
+    border-top:
+        1px solid
+        var(--petid-border);
+}
 
 
     .petid-management > div {
         margin-top: 8px;
+
         display: grid;
+
         grid-template-columns:
-            repeat(2, minmax(0,1fr));
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+
         gap: 7px;
     }
 
 
     .petid-management a {
         min-height: 42px;
-        padding: 0 9px;
+
+        padding:
+            0
+            9px;
+
         display: flex;
+
         align-items: center;
         justify-content: center;
+
         gap: 6px;
-        border: 1px solid #D6E1DE;
+
+        border:
+            1px solid
+            #D6E1DE;
+
         border-radius: 9px;
+
         color: #566A63;
+
         font-size: 10px;
         font-weight: 850;
+
         text-decoration: none;
     }
 
 
     .petid-management a:hover {
         border-color: #BBD5D0;
+
         background: #F4FAF8;
+
         color: var(--petid-teal-dark);
     }
 
@@ -1267,43 +1628,91 @@
        THEMES
        ========================================================= */
 
-    .petid-themes {
-        margin-top: 32px;
-        padding: 26px;
-        display: grid;
-        grid-template-columns:
-            minmax(240px,.45fr)
-            minmax(0,1.55fr);
-        gap: 28px;
-        align-items: center;
-        border: 1px solid var(--petid-border);
-        border-radius: 20px;
-        background: #FFFFFF;
-    }
+   .petid-themes {
+    margin-top: 24px;
 
+    padding: 28px;
+
+    display: block;
+
+    border:
+        1px solid
+        var(--petid-border);
+
+    border-radius: 20px;
+
+    background: #FFFFFF;
+
+    box-shadow:
+        0 10px 28px
+        rgba(23, 61, 61, .035);
+}
+
+
+.theme-intro {
+    max-width: 620px;
+}
+
+
+.theme-intro h2 em {
+    display: inline;
+}
+
+
+.theme-grid {
+    margin-top: 22px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            5,
+            minmax(0, 1fr)
+        );
+
+    gap: 12px;
+}
 
     .theme-intro h2 {
-        margin: 7px 0 0;
+        margin:
+            7px
+            0
+            0;
+
         color: var(--petid-dark);
+
         font-size: 26px;
         line-height: 1;
+
         font-weight: 950;
+
         letter-spacing: -.04em;
     }
 
 
     .theme-intro h2 em {
         display: block;
+
         color: var(--petid-teal);
-        font-family: Georgia, "Times New Roman", serif;
+
+        font-family:
+            Georgia,
+            "Times New Roman",
+            serif;
+
         font-style: italic;
         font-weight: 500;
     }
 
 
     .theme-intro p {
-        margin: 10px 0 0;
+        margin:
+            10px
+            0
+            0;
+
         color: #7E8D88;
+
         font-size: 11px;
         line-height: 1.55;
     }
@@ -1311,19 +1720,31 @@
 
     .theme-grid {
         display: grid;
+
         grid-template-columns:
-            repeat(5, minmax(0,1fr));
+            repeat(
+                5,
+                minmax(0, 1fr)
+            );
+
         gap: 8px;
     }
 
-
     .theme-option {
-        padding: 7px;
-        border: 1px solid #DCE5E2;
+    padding: 8px;
+
+        border:
+            1px solid
+            #DCE5E2;
+
         border-radius: 11px;
+
         background: #FFFFFF;
+
         text-align: left;
+
         cursor: pointer;
+
         transition:
             transform .16s ease,
             border-color .16s ease;
@@ -1331,15 +1752,18 @@
 
 
     .theme-option:hover {
-        transform: translateY(-2px);
+        transform:
+            translateY(-2px);
     }
 
 
     .theme-option.selected {
-        border-color: var(--petid-teal);
+        border-color:
+            var(--petid-teal);
+
         box-shadow:
             0 0 0 2px
-            rgba(47,144,152,.09);
+            rgba(47, 144, 152, .09);
     }
 
 
@@ -1348,13 +1772,29 @@
     }
 
 
-    .theme-preview {
-        height: 91px;
+    
+     .theme-preview {
+    height: 126px;
+
         padding: 10px;
+
         display: flex;
         flex-direction: column;
+
         justify-content: space-between;
+
         border-radius: 8px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #F7FFFF,
+                #DDF3F1
+            );
+    }
+
+
+    .theme-preview.theme-classic {
         background:
             linear-gradient(
                 135deg,
@@ -1412,26 +1852,32 @@
 
     .theme-preview strong {
         color: var(--petid-dark);
+
         font-size: 13px;
     }
 
 
     .theme-preview small {
         color: #6F817A;
+
         font-size: 8px;
     }
 
 
     .theme-footer {
         margin-top: 6px;
+
         display: flex;
+
         justify-content: space-between;
+
         gap: 5px;
     }
 
 
     .theme-footer > span {
         color: #52655E;
+
         font-size: 10px;
         font-weight: 850;
     }
@@ -1439,6 +1885,7 @@
 
     .theme-footer small {
         color: var(--petid-teal);
+
         font-size: 8px;
         font-weight: 800;
     }
@@ -1455,11 +1902,21 @@
 
     .petid-error {
         max-width: 600px;
-        margin: 65px auto;
+
+        margin:
+            65px
+            auto;
+
         padding: 42px;
+
         text-align: center;
-        border: 1px solid var(--petid-border);
+
+        border:
+            1px solid
+            var(--petid-border);
+
         border-radius: 20px;
+
         background: #FFFFFF;
     }
 
@@ -1467,17 +1924,28 @@
     .petid-error-icon {
         width: 52px;
         height: 52px;
-        margin: 0 auto;
+
+        margin:
+            0
+            auto;
+
         display: grid;
         place-items: center;
+
         border-radius: 14px;
+
         background: #EAF5F5;
+
         color: var(--petid-teal);
     }
 
 
     .petid-error h2 {
-        margin: 14px 0 0;
+        margin:
+            14px
+            0
+            0;
+
         font-size: 24px;
     }
 
@@ -1489,6 +1957,7 @@
 
     .petid-error a {
         color: var(--petid-teal-dark);
+
         font-weight: 850;
     }
 
@@ -1497,23 +1966,26 @@
        RESPONSIVE
        ========================================================= */
 
-    @@media (max-width: 1050px) {
-
+@@media (max-width: 1100px){
         .petid-workspace {
             grid-template-columns: 1fr;
         }
+
 
         .petid-value-panel {
             min-height: auto;
         }
 
+
         .petid-management {
             margin-top: 20px;
         }
 
+
         .petid-themes {
             grid-template-columns: 1fr;
         }
+
     }
 
 
@@ -1521,36 +1993,67 @@
 
         .theme-grid {
             grid-template-columns:
-                repeat(3, minmax(0,1fr));
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
         }
+
     }
 
 
     @@media (max-width: 650px) {
 
         .petid-shell {
-            width: calc(100% - 24px);
+            width:
+                calc(
+                    100% - 24px
+                );
         }
+
 
         .petid-header-inner {
             align-items: flex-start;
+
             flex-direction: column;
         }
+
+
+        .petid-header h1 {
+            font-size: 34px;
+        }
+
+
+        .petid-header-actions {
+            width: 100%;
+        }
+
+
+        .petid-header-actions a {
+            flex: 1;
+        }
+
 
         .petid-public-bar {
             grid-template-columns:
                 auto
-                minmax(0,1fr);
+                minmax(0, 1fr);
         }
+
 
         .petid-public-bar > a {
             grid-column: 2;
         }
 
+
         .theme-grid {
             grid-template-columns:
-                repeat(2, minmax(0,1fr));
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
         }
+
     }
 
 
@@ -1559,6 +2062,27 @@
         .petid-subscription {
             grid-template-columns: 1fr;
         }
+
+
+        .subscription-details {
+            grid-template-columns: 1fr;
+        }
+
+
+        .subscription-details .wide {
+            grid-column: auto;
+        }
+
+
+        .petid-value-panel {
+            padding: 18px;
+        }
+
+
+        .petid-themes {
+            padding: 18px;
+        }
+
     }
 
 </style>
@@ -1566,24 +2090,22 @@
 
 @code {
 
+    // =========================================================
+    // ROUTE
+    // =========================================================
+
     [Parameter]
     public int PetId { get; set; }
 
 
-    private DateTime? PremiumEndsAt =>
-        Auth.CurrentUser?
-            .PremiumActivatedAt?
-            .AddMonths(3);
-
-
-    private string PremiumEndDisplay =>
-        PremiumEndsAt?
-            .ToString("MMM dd, yyyy")
-        ??
-        "—";
-
+    // =========================================================
+    // PAGE STATE
+    // =========================================================
 
     private PetProfile? pet;
+
+
+    private UserAccount? ownerAccount;
 
 
     private List<PetHealthRecord> healthRecords =
@@ -1591,14 +2113,11 @@
 
 
     private string ownerName =
-    "Pet Owner";
+        "Pet Owner";
 
 
-private string ownerPhone =
-    string.Empty;
-
-
-private bool showOwnerPhoneInPublic;
+    private string ownerPhone =
+        string.Empty;
 
 
     private string photoUrl =
@@ -1623,23 +2142,88 @@ private bool showOwnerPhoneInPublic;
         string.Empty;
 
 
+    // =========================================================
+    // PREMIUM EXPIRATION
+    // =========================================================
+
+    private DateTime? PremiumEndsAt =>
+        ownerAccount?
+            .PremiumActivatedAt?
+            .AddMonths(3);
+
+
+    private string PremiumEndDisplay =>
+        PremiumEndsAt?
+            .ToString(
+                "MMM dd, yyyy")
+        ??
+        "—";
+
+
+    // =========================================================
+    // LOAD PET CARD
+    // =========================================================
+
     protected override async Task OnParametersSetAsync()
     {
+        /*
+            Always put the page back into loading state when
+            navigating from one pet card to another.
+        */
+
+        isReady =
+            false;
+
+
+        message =
+            string.Empty;
+
+
+        pet =
+            null;
+
+
+        ownerAccount =
+            null;
+
+
+        ownerName =
+            "Pet Owner";
+
+
+        ownerPhone =
+            string.Empty;
+
+
+        photoUrl =
+            string.Empty;
+
+
+        qrDataUri =
+            string.Empty;
+
+
+        vaccinationStatus =
+            "No Record";
+
+
+        healthRecords =
+            new List<PetHealthRecord>();
+
+
+        isPremium =
+            false;
+
+
+        // =====================================================
+        // AUTHENTICATION
+        // =====================================================
+
         await Auth.InitializeAsync();
-var owner =
-    Db.GetUserById(
-        pet.UserId);
 
-ownerName =
-    string.IsNullOrWhiteSpace(owner?.FullName)
-        ? "Pet Owner"
-        : owner.FullName;
 
-ownerPhone =
-    Db.GetUserMobileNumber(
-        pet.UserId);
-
-        if (!Auth.IsLoggedIn)
+        if (!Auth.IsLoggedIn ||
+            Auth.CurrentUser is null)
         {
             Nav.NavigateTo(
                 "/login");
@@ -1648,11 +2232,14 @@ ownerPhone =
         }
 
 
-        var userId =
-            Auth.CurrentUser?.Id
-            ??
-            0;
+        var currentUserId =
+            Auth.CurrentUser.Id;
 
+
+        // =====================================================
+        // IMPORTANT:
+        // LOAD PET BEFORE TRYING TO READ pet.UserId
+        // =====================================================
 
         pet =
             Db.GetPetById(
@@ -1660,40 +2247,78 @@ ownerPhone =
 
 
         if (pet is null ||
-            pet.UserId != userId)
+            pet.UserId != currentUserId)
         {
             pet =
                 null;
 
+
             isReady =
                 true;
+
 
             return;
         }
 
 
-        isPremium =
-            Auth.IsPremium;
+        // =====================================================
+        // LOAD OWNER FROM DATABASE
+        // =====================================================
+
+        ownerAccount =
+            Db.GetUserById(
+                pet.UserId);
 
 
         ownerName =
             string.IsNullOrWhiteSpace(
-                Auth.CurrentUser?.FullName)
+                ownerAccount?.FullName)
                 ? "Pet Owner"
-                : Auth.CurrentUser!.FullName;
-
-                ownerPhone =
-    Auth.CurrentUser?.MobileNumber
-    ??
-    string.Empty;
+                : ownerAccount!.FullName;
 
 
-showOwnerPhoneInPublic =
-    Auth.CurrentUser?
-        .ShowMobileOnPublicPetId
-    ==
-    true;
+        /*
+            IMPORTANT:
 
+            The mobile number is deliberately loaded directly
+            from UserAccounts.
+
+            Do NOT replace this with:
+
+                Auth.CurrentUser.MobileNumber
+
+            The current shared user mapping in the pushed branch
+            does not populate MobileNumber consistently on every
+            authentication query.
+
+            This direct database call is what keeps the Pet ID
+            synchronized with the number saved in UserAccounts.
+        */
+
+        ownerPhone =
+            Db.GetUserMobileNumber(
+                pet.UserId);
+
+
+        // =====================================================
+        // PREMIUM STATUS
+        // =====================================================
+
+        /*
+            Use the database premium check rather than relying
+            only on the cached Auth user.
+
+            This matters after activating or expiring Premium.
+        */
+
+        isPremium =
+            Db.IsUserPremium(
+                pet.UserId);
+
+
+        // =====================================================
+        // PET PHOTO
+        // =====================================================
 
         photoUrl =
             FileStorage.GetImageUrl(
@@ -1702,6 +2327,10 @@ showOwnerPhoneInPublic =
             ??
             string.Empty;
 
+
+        // =====================================================
+        // HEALTH RECORDS
+        // =====================================================
 
         healthRecords =
             Db.GetHealthRecords(
@@ -1714,16 +2343,28 @@ showOwnerPhoneInPublic =
             GetVaccinationStatus();
 
 
+        // =====================================================
+        // QR CODE
+        // =====================================================
+
         qrDataUri =
             Cards.GenerateQrDataUri(
                 pet.CardId,
                 Nav.BaseUri.TrimEnd('/'));
 
 
+        // =====================================================
+        // FINISHED
+        // =====================================================
+
         isReady =
             true;
     }
 
+
+    // =========================================================
+    // VACCINATION SUMMARY
+    // =========================================================
 
     private string GetVaccinationStatus()
     {
@@ -1747,22 +2388,21 @@ showOwnerPhoneInPublic =
         }
 
 
-        if (vaccination.NextDueDate.HasValue)
+        if (vaccination.NextDueDate.HasValue &&
+            vaccination.NextDueDate.Value.Date <
+            DateTime.Today)
         {
-            if (vaccination.NextDueDate.Value.Date <
-                DateTime.Today)
-            {
-                return "Due";
-            }
-
-
-            return "Recorded";
+            return "Due";
         }
 
 
         return "Recorded";
     }
 
+
+    // =========================================================
+    // SELECT CARD THEME
+    // =========================================================
 
     private void SelectTheme(
         string theme)
@@ -1774,12 +2414,18 @@ showOwnerPhoneInPublic =
         }
 
 
+        /*
+            CardService determines whether the selected theme
+            is allowed for the current account.
+        */
+
         if (!Cards.IsThemeAllowed(
             theme,
             isPremium))
         {
             message =
-                "This card theme is available while ShoppetCare Premium is active.";
+                "This Pet ID theme is available with ShoppetCare Premium.";
+
 
             return;
         }
@@ -1797,6 +2443,7 @@ showOwnerPhoneInPublic =
             message =
                 "The Pet ID theme could not be changed.";
 
+
             return;
         }
 
@@ -1810,14 +2457,28 @@ showOwnerPhoneInPublic =
     }
 
 
+    // =========================================================
+    // CURRENT THEME
+    // =========================================================
+
     private bool IsCurrentTheme(
         string theme)
     {
+        /*
+            If Premium expires, the visual card returns to
+            Classic.
+
+            We intentionally leave the saved Premium theme in
+            the database so it can return if Premium is renewed.
+        */
+
         var current =
-            string.IsNullOrWhiteSpace(
-                pet?.CardTheme)
+            !isPremium
                 ? "Classic"
-                : pet!.CardTheme!;
+                : string.IsNullOrWhiteSpace(
+                    pet?.CardTheme)
+                    ? "Classic"
+                    : pet!.CardTheme!;
 
 
         return
@@ -1828,6 +2489,10 @@ showOwnerPhoneInPublic =
     }
 
 
+    // =========================================================
+    // THEME BUTTON CSS
+    // =========================================================
+
     private string GetThemeButtonClass(
         string theme,
         bool locked)
@@ -1836,7 +2501,8 @@ showOwnerPhoneInPublic =
             "theme-option";
 
 
-        if (IsCurrentTheme(theme))
+        if (IsCurrentTheme(
+            theme))
         {
             css +=
                 " selected";
@@ -1854,11 +2520,16 @@ showOwnerPhoneInPublic =
     }
 
 
+    // =========================================================
+    // THEME PREVIEW CSS
+    // =========================================================
+
     private string GetThemePreviewClass(
         string theme)
     {
         return
-            "theme-preview " +
+            "theme-preview "
+            +
             Cards.GetThemeCssClass(
                 theme);
     }

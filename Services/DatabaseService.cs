@@ -504,14 +504,20 @@ namespace Shoppet_VetClinic.Services
 
                 using var cmd = new SqlCommand(@"
                     SELECT
-                        Id, FullName, Email, PasswordHash, Role,
-                        ClinicId, CreatedAt,
-                        ISNULL(IsPremium, 0),
-                        PremiumActivatedAt,
-                        PremiumReference,
-                        ApiToken,
-                        ApiTokenExpiresAt
-                    FROM UserAccounts",
+    Id,
+    FullName,
+    Email,
+    PasswordHash,
+    Role,
+    ClinicId,
+    CreatedAt,
+    ISNULL(IsPremium, 0) AS IsPremium,
+    PremiumActivatedAt,
+    PremiumReference,
+    ApiToken,
+    ApiTokenExpiresAt,
+    MobileNumber
+FROM UserAccounts",
                     conn);
 
                 using var reader = cmd.ExecuteReader();
@@ -531,83 +537,128 @@ namespace Shoppet_VetClinic.Services
         }
 
         private static UserAccount MapUser(
- SqlDataReader reader)
+    SqlDataReader reader)
         {
             return new UserAccount
             {
                 Id =
-                    reader.GetInt32(0),
+                    reader.GetInt32(
+                        reader.GetOrdinal("Id")),
 
                 FullName =
-                    reader.IsDBNull(1)
+                    reader.IsDBNull(
+                        reader.GetOrdinal("FullName"))
                         ? string.Empty
-                        : reader.GetString(1),
+                        : reader.GetString(
+                            reader.GetOrdinal("FullName")),
 
                 Email =
-                    reader.IsDBNull(2)
+                    reader.IsDBNull(
+                        reader.GetOrdinal("Email"))
                         ? string.Empty
-                        : reader.GetString(2),
+                        : reader.GetString(
+                            reader.GetOrdinal("Email")),
 
-                // Never expose the stored hash through the model.
                 Password =
-                    string.Empty,
+                    reader.IsDBNull(
+                        reader.GetOrdinal("PasswordHash"))
+                        ? string.Empty
+                        : reader.GetString(
+                            reader.GetOrdinal("PasswordHash")),
 
                 Role =
-                    reader.IsDBNull(4)
-                        ? string.Empty
-                        : reader.GetString(4),
+                    reader.IsDBNull(
+                        reader.GetOrdinal("Role"))
+                        ? "Pet Owner"
+                        : reader.GetString(
+                            reader.GetOrdinal("Role")),
 
                 ClinicId =
-                    reader.IsDBNull(5)
+                    reader.IsDBNull(
+                        reader.GetOrdinal("ClinicId"))
                         ? null
-                        : reader.GetInt32(5),
+                        : reader.GetInt32(
+                            reader.GetOrdinal("ClinicId")),
 
                 CreatedAt =
-                    reader.IsDBNull(6)
+                    reader.IsDBNull(
+                        reader.GetOrdinal("CreatedAt"))
                         ? DateTime.Now
-                        : reader.GetDateTime(6),
+                        : reader.GetDateTime(
+                            reader.GetOrdinal("CreatedAt")),
 
                 IsPremium =
-                    !reader.IsDBNull(7)
+                    !reader.IsDBNull(
+                        reader.GetOrdinal("IsPremium"))
                     &&
-                    reader.GetBoolean(7),
+                    reader.GetBoolean(
+                        reader.GetOrdinal("IsPremium")),
 
                 PremiumActivatedAt =
-                    reader.IsDBNull(8)
+                    reader.IsDBNull(
+                        reader.GetOrdinal("PremiumActivatedAt"))
                         ? null
-                        : reader.GetDateTime(8),
+                        : reader.GetDateTime(
+                            reader.GetOrdinal("PremiumActivatedAt")),
 
                 PremiumReference =
-                    reader.IsDBNull(9)
+                    reader.IsDBNull(
+                        reader.GetOrdinal("PremiumReference"))
                         ? null
-                        : reader.GetString(9),
+                        : reader.GetString(
+                            reader.GetOrdinal("PremiumReference")),
 
                 ApiToken =
-                    reader.IsDBNull(10)
+                    reader.IsDBNull(
+                        reader.GetOrdinal("ApiToken"))
                         ? null
-                        : reader.GetString(10),
+                        : reader.GetString(
+                            reader.GetOrdinal("ApiToken")),
 
                 ApiTokenExpiresAt =
-                    reader.IsDBNull(11)
+                    reader.IsDBNull(
+                        reader.GetOrdinal("ApiTokenExpiresAt"))
                         ? null
-                        : reader.GetDateTime(11)
+                        : reader.GetDateTime(
+                            reader.GetOrdinal("ApiTokenExpiresAt")),
+
+                MobileNumber =
+                    reader.IsDBNull(
+                        reader.GetOrdinal("MobileNumber"))
+                        ? null
+                        : reader.GetString(
+                            reader.GetOrdinal("MobileNumber"))
             };
         }
 
 
         public UserAccount? RegisterUser(
-    string fullName,
-    string mobileNumber,
-    string email,
-    string password,
-    string role)
+     string fullName,
+     string mobileNumber,
+     string email,
+     string password,
+     string role)
         {
             fullName =
                 fullName.Trim();
 
 
             mobileNumber =
-                mobileNumber.Trim();
+                new string(
+                    (mobileNumber ?? string.Empty)
+                        .Where(char.IsDigit)
+                        .ToArray());
+
+
+            if (mobileNumber.Length == 12 &&
+                mobileNumber.StartsWith(
+                    "63",
+                    StringComparison.Ordinal))
+            {
+                mobileNumber =
+                    "0" +
+                    mobileNumber.Substring(2);
+            }
 
 
             email =
@@ -625,16 +676,14 @@ namespace Shoppet_VetClinic.Services
 
 
             // =========================================================
-            // CHECK EMAIL
+            // CHECK EXISTING EMAIL
             // =========================================================
 
             using var checkCmd =
                 new SqlCommand(@"
             SELECT COUNT(1)
-
             FROM UserAccounts
-
-            WHERE Email = @Email;",
+            WHERE LOWER(Email) = @Email;",
                     conn);
 
 
@@ -651,7 +700,7 @@ namespace Shoppet_VetClinic.Services
 
 
             // =========================================================
-            // CREATE USER OBJECT FOR PASSWORD HASHING
+            // USER OBJECT
             // =========================================================
 
             var user =
@@ -659,6 +708,9 @@ namespace Shoppet_VetClinic.Services
                 {
                     FullName =
                         fullName,
+
+                    MobileNumber =
+                        mobileNumber,
 
                     Email =
                         email,
@@ -676,7 +728,7 @@ namespace Shoppet_VetClinic.Services
 
 
             // =========================================================
-            // INSERT USER
+            // INSERT
             // =========================================================
 
             using var insertCmd =
@@ -772,26 +824,24 @@ namespace Shoppet_VetClinic.Services
 
 
             using var cmd =
-                new SqlCommand(@"
-            SELECT
-                Id,
-                FullName,
-                Email,
-                PasswordHash,
-                Role,
-                ClinicId,
-                CreatedAt,
-                ISNULL(IsPremium, 0),
-                PremiumActivatedAt,
-                PremiumReference,
-                ApiToken,
-                ApiTokenExpiresAt
-
-            FROM UserAccounts
-
-            WHERE Email = @Email;",
-                    conn);
-
+     new SqlCommand(@"
+        SELECT
+            Id,
+            FullName,
+            Email,
+            PasswordHash,
+            Role,
+            ClinicId,
+            CreatedAt,
+            ISNULL(IsPremium, 0) AS IsPremium,
+            PremiumActivatedAt,
+            PremiumReference,
+            ApiToken,
+            ApiTokenExpiresAt,
+            MobileNumber
+        FROM UserAccounts
+        WHERE LOWER(Email) = @Email;",
+         conn);
 
             cmd.Parameters.AddWithValue(
                 "@Email",
@@ -905,34 +955,55 @@ namespace Shoppet_VetClinic.Services
             return user;
         }
 
-        public UserAccount? GetUserById(int userId)
+        public UserAccount? GetUserById(
+     int userId)
         {
-            using var conn = new SqlConnection(_connectionString);
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
             conn.Open();
 
-            using var cmd = new SqlCommand(@"
-                SELECT
-                    Id, FullName, Email, PasswordHash, Role,
-                    ClinicId, CreatedAt,
-                    ISNULL(IsPremium, 0),
-                    PremiumActivatedAt,
-                    PremiumReference,
-                    ApiToken,
-                    ApiTokenExpiresAt
-                FROM UserAccounts
-                WHERE Id=@Id",
-                conn);
 
-            cmd.Parameters.AddWithValue("@Id", userId);
+            using var cmd =
+                new SqlCommand(@"
+            SELECT
+                Id,
+                FullName,
+                Email,
+                PasswordHash,
+                Role,
+                ClinicId,
+                CreatedAt,
+                ISNULL(IsPremium, 0) AS IsPremium,
+                PremiumActivatedAt,
+                PremiumReference,
+                ApiToken,
+                ApiTokenExpiresAt,
+                MobileNumber
+            FROM UserAccounts
+            WHERE Id = @Id;",
+                    conn);
 
-            using var reader = cmd.ExecuteReader();
 
-            if (reader.Read())
-                return MapUser(reader);
+            cmd.Parameters.AddWithValue(
+                "@Id",
+                userId);
 
-            return null;
+
+            using var reader =
+                cmd.ExecuteReader();
+
+
+            if (!reader.Read())
+            {
+                return null;
+            }
+
+
+            return MapUser(
+                reader);
         }
-
         public UserAccount? GetUserByEmail(
     string email)
         {
@@ -1385,26 +1456,43 @@ namespace Shoppet_VetClinic.Services
         {
             var pets = new List<PetProfile>();
 
-            using var conn = new SqlConnection(_connectionString);
+            using var conn =
+                new SqlConnection(_connectionString);
+
             conn.Open();
 
-            using var cmd = new SqlCommand(@"
-                SELECT
-                    Id, UserId, PetName, Breed, Species,
-Age, BirthDate, WeightKg, Diet, CreatedAt,
-CardId, CardIssuedAt, CardTheme
-                FROM PetProfiles
-                WHERE UserId=@UserId
-                ORDER BY PetName",
-                conn);
+            using var cmd =
+                new SqlCommand(@"
+                    SELECT
+                        Id,
+                        UserId,
+                        PetName,
+                        Breed,
+                        Species,
+                        Age,
+                        BirthDate,
+                        WeightKg,
+                        Diet,
+                        CreatedAt,
+                        CardId,
+                        CardIssuedAt,
+                        CardTheme
+                    FROM PetProfiles
+                    WHERE UserId = @UserId
+                    ORDER BY PetName;",
+                    conn);
 
-            cmd.Parameters.AddWithValue("@UserId", userId);
+            cmd.Parameters.AddWithValue(
+                "@UserId",
+                userId);
 
-            using var reader = cmd.ExecuteReader();
+            using var reader =
+                cmd.ExecuteReader();
 
             while (reader.Read())
             {
-                pets.Add(MapPet(reader));
+                pets.Add(
+                    MapPet(reader));
             }
 
             return pets;
@@ -1413,383 +1501,623 @@ CardId, CardIssuedAt, CardTheme
 
         public PetProfile? GetPetById(int petId)
         {
-            using var conn = new SqlConnection(_connectionString);
+            using var conn =
+                new SqlConnection(_connectionString);
+
             conn.Open();
 
-            using var cmd = new SqlCommand(@"
-                SELECT
-                    Id, UserId, PetName, Breed, Species,
-                    Age, WeightKg, Diet, CreatedAt,
-                    CardId, CardIssuedAt, CardTheme
-                FROM PetProfiles
-                WHERE Id=@Id",
-                conn);
+            using var cmd =
+                new SqlCommand(@"
+                    SELECT
+                        Id,
+                        UserId,
+                        PetName,
+                        Breed,
+                        Species,
+                        Age,
+                        BirthDate,
+                        WeightKg,
+                        Diet,
+                        CreatedAt,
+                        CardId,
+                        CardIssuedAt,
+                        CardTheme
+                    FROM PetProfiles
+                    WHERE Id = @Id;",
+                    conn);
 
-            cmd.Parameters.AddWithValue("@Id", petId);
+            cmd.Parameters.AddWithValue(
+                "@Id",
+                petId);
 
-            using var reader = cmd.ExecuteReader();
+            using var reader =
+                cmd.ExecuteReader();
 
             if (reader.Read())
+            {
                 return MapPet(reader);
+            }
 
             return null;
         }
 
 
-        public PetProfile? GetPetByCardId(string cardId)
+        public PetProfile? GetPetByCardId(
+            string cardId)
         {
-            if (string.IsNullOrWhiteSpace(cardId)) return null;
+            if (string.IsNullOrWhiteSpace(cardId))
+            {
+                return null;
+            }
 
-            using var conn = new SqlConnection(_connectionString);
+            using var conn =
+                new SqlConnection(_connectionString);
+
             conn.Open();
 
-            using var cmd = new SqlCommand(@"
-                SELECT
-                    Id, UserId, PetName, Breed, Species,
-                    Age, WeightKg, Diet, CreatedAt,
-                    CardId, CardIssuedAt, CardTheme
-                FROM PetProfiles
-                WHERE CardId=@CardId",
-                conn);
+            using var cmd =
+                new SqlCommand(@"
+                    SELECT
+                        Id,
+                        UserId,
+                        PetName,
+                        Breed,
+                        Species,
+                        Age,
+                        BirthDate,
+                        WeightKg,
+                        Diet,
+                        CreatedAt,
+                        CardId,
+                        CardIssuedAt,
+                        CardTheme
+                    FROM PetProfiles
+                    WHERE CardId = @CardId;",
+                    conn);
 
-            cmd.Parameters.AddWithValue("@CardId", cardId.Trim().ToUpperInvariant());
+            cmd.Parameters.AddWithValue(
+                "@CardId",
+                cardId
+                    .Trim()
+                    .ToUpperInvariant());
 
-            using var reader = cmd.ExecuteReader();
+            using var reader =
+                cmd.ExecuteReader();
 
             if (reader.Read())
+            {
                 return MapPet(reader);
+            }
 
             return null;
         }
 
 
-        private static PetProfile MapPet(SqlDataReader reader)
+        private static PetProfile MapPet(
+            SqlDataReader reader)
         {
             return new PetProfile
             {
-                Id = reader.GetInt32(0),
-                UserId = reader.GetInt32(1),
+                Id =
+                    reader.GetInt32(0),
 
-                PetName = reader.IsDBNull(2)
-                    ? string.Empty
-                    : reader.GetString(2),
+                UserId =
+                    reader.GetInt32(1),
 
-                Breed = reader.IsDBNull(3)
-                    ? string.Empty
-                    : reader.GetString(3),
+                PetName =
+                    reader.IsDBNull(2)
+                        ? string.Empty
+                        : reader.GetString(2),
 
-                Species = reader.IsDBNull(4)
-                    ? string.Empty
-                    : reader.GetString(4),
+                Breed =
+                    reader.IsDBNull(3)
+                        ? string.Empty
+                        : reader.GetString(3),
 
-                Age = reader.IsDBNull(5)
-                    ? string.Empty
-                    : reader.GetString(5),
+                Species =
+                    reader.IsDBNull(4)
+                        ? string.Empty
+                        : reader.GetString(4),
 
-                BirthDate = reader.IsDBNull(6)
-                    ? null
-                    : reader.GetDateTime(6),
+                Age =
+                    reader.IsDBNull(5)
+                        ? string.Empty
+                        : reader.GetString(5),
 
-                WeightKg = reader.IsDBNull(7)
-                    ? null
-                    : reader.GetDecimal(7),
+                BirthDate =
+                    reader.IsDBNull(6)
+                        ? null
+                        : reader.GetDateTime(6),
 
-                Diet = reader.IsDBNull(8)
-                    ? string.Empty
-                    : reader.GetString(8),
+                WeightKg =
+                    reader.IsDBNull(7)
+                        ? null
+                        : reader.GetDecimal(7),
 
-                CreatedAt = reader.GetDateTime(9),
+                Diet =
+                    reader.IsDBNull(8)
+                        ? string.Empty
+                        : reader.GetString(8),
 
-                CardId = reader.IsDBNull(10)
-                    ? string.Empty
-                    : reader.GetString(10),
+                CreatedAt =
+                    reader.IsDBNull(9)
+                        ? DateTime.Now
+                        : reader.GetDateTime(9),
 
-                CardIssuedAt = reader.IsDBNull(11)
-                    ? null
-                    : reader.GetDateTime(11),
+                CardId =
+                    reader.IsDBNull(10)
+                        ? string.Empty
+                        : reader.GetString(10),
 
-                CardTheme = reader.IsDBNull(12)
-                    ? null
-                    : reader.GetString(12)
+                CardIssuedAt =
+                    reader.IsDBNull(11)
+                        ? null
+                        : reader.GetDateTime(11),
+
+                CardTheme =
+                    reader.IsDBNull(12)
+                        ? null
+                        : reader.GetString(12)
             };
         }
 
-        public int AddPet(PetProfile pet)
+
+        public int AddPet(
+            PetProfile pet)
         {
-            using var conn = new SqlConnection(_connectionString);
+            using var conn =
+                new SqlConnection(_connectionString);
+
             conn.Open();
 
-            // ---- Enforce free-tier limit: 1 pet unless Premium ----
-            using (var check = new SqlCommand(@"
-                SELECT
-                    ISNULL(u.IsPremium, 0),
-                    (SELECT COUNT(*) FROM PetProfiles WHERE UserId=u.Id)
-                FROM UserAccounts u
-                WHERE u.Id = @UserId", conn))
+
+            // =====================================================
+            // FREE / PREMIUM PET LIMIT
+            // =====================================================
+
+            /*
+                Free:
+                    1 pet maximum
+
+                Premium:
+                    Unlimited pets while subscription is active
+
+                IMPORTANT:
+                We check the Premium activation date instead of
+                trusting IsPremium alone because Premium lasts
+                for 3 months.
+            */
+
+            using (var check =
+                new SqlCommand(@"
+                    SELECT
+                        ISNULL(
+                            IsPremium,
+                            0
+                        ),
+                        PremiumActivatedAt,
+                        (
+                            SELECT COUNT(*)
+                            FROM PetProfiles
+                            WHERE UserId = @UserId
+                        )
+                    FROM UserAccounts
+                    WHERE Id = @UserId;",
+                    conn))
             {
-                check.Parameters.AddWithValue("@UserId", pet.UserId);
+                check.Parameters.AddWithValue(
+                    "@UserId",
+                    pet.UserId);
 
-                using var r = check.ExecuteReader();
-                if (r.Read())
+                using var reader =
+                    check.ExecuteReader();
+
+                if (!reader.Read())
                 {
-                    bool premium = r.GetBoolean(0);
-                    int count = r.GetInt32(1);
-                    r.Close();
+                    throw new InvalidOperationException(
+                        "The pet owner account could not be found.");
+                }
 
-                    if (!premium && count >= 1)
-                        throw new InvalidOperationException(
-                            "Free accounts support 1 pet. Upgrade to the " +
-                            "Pet ID Virtual Card Premium (₱49) to add more.");
+                var premiumFlag =
+                    !reader.IsDBNull(0)
+                    &&
+                    reader.GetBoolean(0);
+
+                DateTime? premiumActivatedAt =
+                    reader.IsDBNull(1)
+                        ? null
+                        : reader.GetDateTime(1);
+
+                var petCount =
+                    reader.IsDBNull(2)
+                        ? 0
+                        : reader.GetInt32(2);
+
+                var premiumActive =
+                    premiumFlag
+                    &&
+                    premiumActivatedAt.HasValue
+                    &&
+                    premiumActivatedAt.Value
+                        .AddMonths(3) >= DateTime.Now;
+
+                if (!premiumActive &&
+                    petCount >= 1)
+                {
+                    throw new InvalidOperationException(
+                        "Free accounts support 1 pet. " +
+                        "Upgrade to ShoppetCare Premium " +
+                        "(₱150 / 3 months) to add more pets.");
                 }
             }
 
-            // ---- Generate CardId ----
-            var cardId = string.IsNullOrWhiteSpace(pet.CardId)
-                ? "PET-" + Guid.NewGuid()
-                    .ToString("N")
-                    .Substring(0, 6)
-                    .ToUpperInvariant()
-                : pet.CardId;
 
-            using var cmd = new SqlCommand(@"
-                INSERT INTO PetProfiles
-                   (UserId, PetName, Breed, Species, Age, BirthDate, WeightKg, Diet,
- CardId, CardIssuedAt, CardTheme)
-                OUTPUT INSERTED.Id
-                VALUES
-                   (@UserId, @PetName, @Breed, @Species, @Age, @BirthDate, @WeightKg, @Diet,
- @CardId, SYSDATETIME(), @CardTheme),
-                conn);
+            // =====================================================
+            // GENERATE PET CARD ID
+            // =====================================================
 
-            cmd.Parameters.AddWithValue("@UserId", pet.UserId);
-            cmd.Parameters.AddWithValue("@PetName", pet.PetName ?? "");
-            cmd.Parameters.AddWithValue("@Breed", pet.Breed ?? "");
-            cmd.Parameters.AddWithValue("@Species", pet.Species ?? "Dog");
-            cmd.Parameters.AddWithValue("@Age",
-                string.IsNullOrWhiteSpace(pet.Age) ? DBNull.Value : pet.Age);
-            cmd.Parameters.AddWithValue("@WeightKg",
-                cmd.Parameters.AddWithValue("@BirthDate",
-    pet.BirthDate.HasValue
-        ? pet.BirthDate.Value
-        : DBNull.Value);
-            pet.WeightKg.HasValue? pet.WeightKg.Value : DBNull.Value);
-            cmd.Parameters.AddWithValue("@Diet",
-                string.IsNullOrWhiteSpace(pet.Diet) ? DBNull.Value : pet.Diet);
-            cmd.Parameters.AddWithValue("@CardId", cardId);
-            cmd.Parameters.AddWithValue("@CardTheme",
-                string.IsNullOrWhiteSpace(pet.CardTheme)
-                    ? (object)DBNull.Value
+            var cardId =
+                string.IsNullOrWhiteSpace(
+                    pet.CardId)
+
+                    ? "PET-" +
+                      Guid.NewGuid()
+                          .ToString("N")
+                          .Substring(0, 6)
+                          .ToUpperInvariant()
+
+                    : pet.CardId
+                        .Trim()
+                        .ToUpperInvariant();
+
+
+            // =====================================================
+            // INSERT PET
+            // =====================================================
+
+            using var cmd =
+                new SqlCommand(@"
+                    INSERT INTO PetProfiles
+                    (
+                        UserId,
+                        PetName,
+                        Breed,
+                        Species,
+                        Age,
+                        BirthDate,
+                        WeightKg,
+                        Diet,
+                        CardId,
+                        CardIssuedAt,
+                        CardTheme
+                    )
+
+                    OUTPUT INSERTED.Id
+
+                    VALUES
+                    (
+                        @UserId,
+                        @PetName,
+                        @Breed,
+                        @Species,
+                        @Age,
+                        @BirthDate,
+                        @WeightKg,
+                        @Diet,
+                        @CardId,
+                        SYSDATETIME(),
+                        @CardTheme
+                    );",
+                    conn);
+
+
+            cmd.Parameters.AddWithValue(
+                "@UserId",
+                pet.UserId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@PetName",
+                pet.PetName
+                ??
+                string.Empty);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Breed",
+                string.IsNullOrWhiteSpace(
+                    pet.Breed)
+
+                    ? DBNull.Value
+                    : pet.Breed);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Species",
+                string.IsNullOrWhiteSpace(
+                    pet.Species)
+
+                    ? "Dog"
+                    : pet.Species);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Age",
+                string.IsNullOrWhiteSpace(
+                    pet.Age)
+
+                    ? DBNull.Value
+                    : pet.Age);
+
+
+            cmd.Parameters.AddWithValue(
+                "@BirthDate",
+                pet.BirthDate.HasValue
+
+                    ? pet.BirthDate.Value.Date
+                    : DBNull.Value);
+
+
+            cmd.Parameters.AddWithValue(
+                "@WeightKg",
+                pet.WeightKg.HasValue
+
+                    ? pet.WeightKg.Value
+                    : DBNull.Value);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Diet",
+                string.IsNullOrWhiteSpace(
+                    pet.Diet)
+
+                    ? DBNull.Value
+                    : pet.Diet);
+
+
+            cmd.Parameters.AddWithValue(
+                "@CardId",
+                cardId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@CardTheme",
+                string.IsNullOrWhiteSpace(
+                    pet.CardTheme)
+
+                    ? DBNull.Value
                     : pet.CardTheme);
 
-            return Convert.ToInt32(cmd.ExecuteScalar());
+
+            var result =
+                cmd.ExecuteScalar();
+
+
+            if (result is null ||
+                result == DBNull.Value)
+            {
+                throw new InvalidOperationException(
+                    "The pet profile could not be created.");
+            }
+
+
+            pet.CardId =
+                cardId;
+
+
+            return
+                Convert.ToInt32(
+                    result);
         }
 
 
-        public bool UpdatePet(PetProfile pet)
+        public bool UpdatePet(
+            PetProfile pet)
         {
-            using var conn = new SqlConnection(_connectionString);
+            using var conn =
+                new SqlConnection(_connectionString);
+
             conn.Open();
 
-            using var cmd = new SqlCommand(@"
-                UPDATE PetProfiles
-                SET
-                    PetName=@PetName,
-                    Breed=@Breed,
-                    Species=@Species,
-                    Age=@Age,
-BirthDate=@BirthDate,
-                    WeightKg=@WeightKg,
-                    Diet=@Diet,
-                    CardTheme=@CardTheme
-                WHERE Id=@Id
-                  AND UserId=@UserId",
-                conn);
 
-            cmd.Parameters.AddWithValue("@Id", pet.Id);
-            cmd.Parameters.AddWithValue("@UserId", pet.UserId);
-            cmd.Parameters.AddWithValue("@PetName", pet.PetName ?? "");
-            cmd.Parameters.AddWithValue("@Breed", pet.Breed ?? "");
-            cmd.Parameters.AddWithValue("@Species", pet.Species ?? "Dog");
-            cmd.Parameters.AddWithValue("@Age",
-                string.IsNullOrWhiteSpace(pet.Age) ? DBNull.Value : pet.Age);
-            cmd.Parameters.AddWithValue("@WeightKg",
-                pet.WeightKg.HasValue ? pet.WeightKg.Value : DBNull.Value);
-            cmd.Parameters.AddWithValue("@Diet",
-                string.IsNullOrWhiteSpace(pet.Diet) ? DBNull.Value : pet.Diet);
-            cmd.Parameters.AddWithValue("@CardTheme",
-                string.IsNullOrWhiteSpace(pet.CardTheme)
-                    ? (object)DBNull.Value
+            using var cmd =
+                new SqlCommand(@"
+                    UPDATE PetProfiles
+
+                    SET
+                        PetName = @PetName,
+                        Breed = @Breed,
+                        Species = @Species,
+                        Age = @Age,
+                        BirthDate = @BirthDate,
+                        WeightKg = @WeightKg,
+                        Diet = @Diet,
+                        CardTheme = @CardTheme
+
+                    WHERE
+                        Id = @Id
+                        AND
+                        UserId = @UserId;",
+                    conn);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Id",
+                pet.Id);
+
+
+            cmd.Parameters.AddWithValue(
+                "@UserId",
+                pet.UserId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@PetName",
+                pet.PetName
+                ??
+                string.Empty);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Breed",
+                string.IsNullOrWhiteSpace(
+                    pet.Breed)
+
+                    ? DBNull.Value
+                    : pet.Breed);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Species",
+                string.IsNullOrWhiteSpace(
+                    pet.Species)
+
+                    ? "Dog"
+                    : pet.Species);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Age",
+                string.IsNullOrWhiteSpace(
+                    pet.Age)
+
+                    ? DBNull.Value
+                    : pet.Age);
+
+
+            cmd.Parameters.AddWithValue(
+                "@BirthDate",
+                pet.BirthDate.HasValue
+
+                    ? pet.BirthDate.Value.Date
+                    : DBNull.Value);
+
+
+            cmd.Parameters.AddWithValue(
+                "@WeightKg",
+                pet.WeightKg.HasValue
+
+                    ? pet.WeightKg.Value
+                    : DBNull.Value);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Diet",
+                string.IsNullOrWhiteSpace(
+                    pet.Diet)
+
+                    ? DBNull.Value
+                    : pet.Diet);
+
+
+            cmd.Parameters.AddWithValue(
+                "@CardTheme",
+                string.IsNullOrWhiteSpace(
+                    pet.CardTheme)
+
+                    ? DBNull.Value
                     : pet.CardTheme);
 
-            return cmd.ExecuteNonQuery() > 0;
+
+            return
+                cmd.ExecuteNonQuery() > 0;
         }
 
 
-        public bool SetCardTheme(int petId, int userId, string? theme)
+        public bool SetCardTheme(
+            int petId,
+            int userId,
+            string? theme)
         {
-            using var conn = new SqlConnection(_connectionString);
+            using var conn =
+                new SqlConnection(_connectionString);
+
             conn.Open();
 
-            using var cmd = new SqlCommand(@"
-                UPDATE PetProfiles
-                SET CardTheme=@Theme
-                WHERE Id=@PetId
-                  AND UserId=@UserId",
-                conn);
 
-            cmd.Parameters.AddWithValue("@PetId", petId);
-            cmd.Parameters.AddWithValue("@UserId", userId);
-            cmd.Parameters.AddWithValue("@Theme",
-                string.IsNullOrWhiteSpace(theme)
-                    ? (object)DBNull.Value
+            using var cmd =
+                new SqlCommand(@"
+                    UPDATE PetProfiles
+
+                    SET CardTheme = @Theme
+
+                    WHERE
+                        Id = @PetId
+                        AND
+                        UserId = @UserId;",
+                    conn);
+
+
+            cmd.Parameters.AddWithValue(
+                "@PetId",
+                petId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@UserId",
+                userId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Theme",
+                string.IsNullOrWhiteSpace(
+                    theme)
+
+                    ? DBNull.Value
                     : theme);
 
-            return cmd.ExecuteNonQuery() > 0;
+
+            return
+                cmd.ExecuteNonQuery() > 0;
         }
 
 
-        public bool DeletePet(int petId, int userId)
+        public bool DeletePet(
+            int petId,
+            int userId)
         {
-            using var conn = new SqlConnection(_connectionString);
+            using var conn =
+                new SqlConnection(_connectionString);
+
             conn.Open();
 
-            using var cmd = new SqlCommand(@"
-                DELETE FROM PetProfiles
-                WHERE Id=@Id
-                  AND UserId=@UserId",
-                conn);
 
-            cmd.Parameters.AddWithValue("@Id", petId);
-            cmd.Parameters.AddWithValue("@UserId", userId);
+            using var cmd =
+                new SqlCommand(@"
+                    DELETE FROM PetProfiles
 
-            return cmd.ExecuteNonQuery() > 0;
+                    WHERE
+                        Id = @Id
+                        AND
+                        UserId = @UserId;",
+                    conn);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Id",
+                petId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@UserId",
+                userId);
+
+
+            return
+                cmd.ExecuteNonQuery() > 0;
         }
-
 
         // =========================================================
         // PET HEALTH RECORDS
         // =========================================================
 
-        public List<PetHealthRecord> GetHealthRecords(int petId)
+        public List<PetHealthRecord> GetHealthRecords(
+            int petId)
         {
-            var list = new List<PetHealthRecord>();
-
-            using var conn = new SqlConnection(_connectionString);
-            conn.Open();
-
-            using var cmd = new SqlCommand(@"
-                SELECT
-                    Id, PetId, ClinicId, RecordType, Title, Notes,
-                    RecordDate, NextDueDate, VetName, CreatedAt
-                FROM PetHealthRecords
-                WHERE PetId=@PetId
-                ORDER BY RecordDate DESC",
-                conn);
-
-            cmd.Parameters.AddWithValue("@PetId", petId);
-
-            using var reader = cmd.ExecuteReader();
-
-            while (reader.Read())
-            {
-                list.Add(new PetHealthRecord
-                {
-                    Id = reader.GetInt32(0),
-                    PetId = reader.GetInt32(1),
-
-                    ClinicId = reader.IsDBNull(2)
-                        ? null
-                        : reader.GetInt32(2),
-
-                    RecordType = reader.IsDBNull(3)
-                        ? "Checkup"
-                        : reader.GetString(3),
-
-                    Title = reader.IsDBNull(4)
-                        ? string.Empty
-                        : reader.GetString(4),
-
-                    Notes = reader.IsDBNull(5)
-                        ? string.Empty
-                        : reader.GetString(5),
-
-                    RecordDate = reader.GetDateTime(6),
-
-                    NextDueDate = reader.IsDBNull(7)
-                        ? null
-                        : reader.GetDateTime(7),
-
-                    VetName = reader.IsDBNull(8)
-                        ? string.Empty
-                        : reader.GetString(8),
-
-                    CreatedAt = reader.GetDateTime(9)
-                });
-            }
-
-            return list;
-        }
+            var list =
+                new List<PetHealthRecord>();
 
 
-        public int AddHealthRecord(PetHealthRecord rec)
-        {
-            using var conn = new SqlConnection(_connectionString);
-            conn.Open();
-
-            // Free tier: max 5 records per pet. Premium: unlimited.
-            using (var check = new SqlCommand(@"
-                SELECT
-                    ISNULL(u.IsPremium, 0),
-                    (SELECT COUNT(*) FROM PetHealthRecords WHERE PetId=@PetId)
-                FROM PetProfiles p
-                JOIN UserAccounts u ON u.Id = p.UserId
-                WHERE p.Id = @PetId", conn))
-            {
-                check.Parameters.AddWithValue("@PetId", rec.PetId);
-
-                using var r = check.ExecuteReader();
-                if (r.Read())
-                {
-                    bool premium = r.GetBoolean(0);
-                    int count = r.GetInt32(1);
-                    r.Close();
-
-                    if (!premium && count >= 5)
-                        throw new InvalidOperationException(
-                            "Free accounts store up to 5 health records per pet. " +
-                            "Upgrade to the Pet ID Virtual Card Premium (₱49) " +
-                            "for unlimited history.");
-                }
-            }
-
-            using var cmd = new SqlCommand(@"
-                INSERT INTO PetHealthRecords
-                    (PetId, ClinicId, RecordType, Title, Notes,
-                     RecordDate, NextDueDate, VetName)
-                OUTPUT INSERTED.Id
-                VALUES
-                    (@PetId, @ClinicId, @RecordType, @Title, @Notes,
-                     @RecordDate, @NextDueDate, @VetName)",
-                conn);
-
-            cmd.Parameters.AddWithValue("@PetId", rec.PetId);
-            cmd.Parameters.AddWithValue("@ClinicId",
-                rec.ClinicId.HasValue ? rec.ClinicId.Value : DBNull.Value);
-            cmd.Parameters.AddWithValue("@RecordType", rec.RecordType ?? "Checkup");
-            cmd.Parameters.AddWithValue("@Title", rec.Title ?? "");
-            cmd.Parameters.AddWithValue("@Notes", rec.Notes ?? "");
-            cmd.Parameters.AddWithValue("@RecordDate", rec.RecordDate);
-            cmd.Parameters.AddWithValue("@NextDueDate",
-                rec.NextDueDate.HasValue ? rec.NextDueDate.Value : DBNull.Value);
-            cmd.Parameters.AddWithValue("@VetName", rec.VetName ?? "");
-
-            return Convert.ToInt32(cmd.ExecuteScalar());
-        }
-
-        public bool UpdateHealthRecord(
-    PetHealthRecord rec,
-    int userId)
-        {
             using var conn =
                 new SqlConnection(
                     _connectionString);
@@ -1799,25 +2127,354 @@ BirthDate=@BirthDate,
 
             using var cmd =
                 new SqlCommand(@"
-            UPDATE r
+                    SELECT
+                        Id,
+                        PetId,
+                        ClinicId,
+                        RecordType,
+                        Title,
+                        Notes,
+                        RecordDate,
+                        NextDueDate,
+                        VetName,
+                        CreatedAt
 
-            SET
-                RecordType = @RecordType,
-                Title = @Title,
-                Notes = @Notes,
-                RecordDate = @RecordDate,
-                NextDueDate = @NextDueDate,
-                VetName = @VetName
+                    FROM PetHealthRecords
 
-            FROM PetHealthRecords r
+                    WHERE PetId = @PetId
 
-            INNER JOIN PetProfiles p
-                ON p.Id = r.PetId
+                    ORDER BY RecordDate DESC;",
+                    conn);
 
-            WHERE
-                r.Id = @Id
-                AND r.PetId = @PetId
-                AND p.UserId = @UserId;",
+
+            cmd.Parameters.AddWithValue(
+                "@PetId",
+                petId);
+
+
+            using var reader =
+                cmd.ExecuteReader();
+
+
+            while (reader.Read())
+            {
+                list.Add(
+                    new PetHealthRecord
+                    {
+                        Id =
+                            reader.GetInt32(0),
+
+                        PetId =
+                            reader.GetInt32(1),
+
+                        ClinicId =
+                            reader.IsDBNull(2)
+                                ? null
+                                : reader.GetInt32(2),
+
+                        RecordType =
+                            reader.IsDBNull(3)
+                                ? "Checkup"
+                                : reader.GetString(3),
+
+                        Title =
+                            reader.IsDBNull(4)
+                                ? string.Empty
+                                : reader.GetString(4),
+
+                        Notes =
+                            reader.IsDBNull(5)
+                                ? string.Empty
+                                : reader.GetString(5),
+
+                        RecordDate =
+                            reader.IsDBNull(6)
+                                ? DateTime.Now
+                                : reader.GetDateTime(6),
+
+                        NextDueDate =
+                            reader.IsDBNull(7)
+                                ? null
+                                : reader.GetDateTime(7),
+
+                        VetName =
+                            reader.IsDBNull(8)
+                                ? string.Empty
+                                : reader.GetString(8),
+
+                        CreatedAt =
+                            reader.IsDBNull(9)
+                                ? DateTime.Now
+                                : reader.GetDateTime(9)
+                    });
+            }
+
+
+            return list;
+        }
+
+
+        // =========================================================
+        // ADD HEALTH RECORD
+        // =========================================================
+
+        public int AddHealthRecord(
+            PetHealthRecord rec)
+        {
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
+            conn.Open();
+
+
+            // =====================================================
+            // FREE / PREMIUM HEALTH RECORD LIMIT
+            //
+            // BASIC:
+            //     Maximum 5 records per pet
+            //
+            // PREMIUM:
+            //     Unlimited while Premium is ACTIVE
+            //
+            // Premium lasts 3 months from PremiumActivatedAt.
+            // We intentionally do not trust IsPremium by itself.
+            // =====================================================
+
+            using (var check =
+                new SqlCommand(@"
+                    SELECT
+                        ISNULL(
+                            u.IsPremium,
+                            0
+                        ),
+
+                        u.PremiumActivatedAt,
+
+                        (
+                            SELECT COUNT(*)
+
+                            FROM PetHealthRecords
+
+                            WHERE PetId = @PetId
+                        )
+
+                    FROM PetProfiles p
+
+                    INNER JOIN UserAccounts u
+                        ON u.Id = p.UserId
+
+                    WHERE p.Id = @PetId;",
+                    conn))
+            {
+                check.Parameters.AddWithValue(
+                    "@PetId",
+                    rec.PetId);
+
+
+                using var reader =
+                    check.ExecuteReader();
+
+
+                if (!reader.Read())
+                {
+                    throw new InvalidOperationException(
+                        "The pet profile could not be found.");
+                }
+
+
+                var premiumFlag =
+                    !reader.IsDBNull(0)
+                    &&
+                    reader.GetBoolean(0);
+
+
+                DateTime? premiumActivatedAt =
+                    reader.IsDBNull(1)
+                        ? null
+                        : reader.GetDateTime(1);
+
+
+                var recordCount =
+                    reader.IsDBNull(2)
+                        ? 0
+                        : reader.GetInt32(2);
+
+
+                var premiumActive =
+                    premiumFlag
+                    &&
+                    premiumActivatedAt.HasValue
+                    &&
+                    premiumActivatedAt.Value
+                        .AddMonths(3) >= DateTime.Now;
+
+
+                if (!premiumActive &&
+                    recordCount >= 5)
+                {
+                    throw new InvalidOperationException(
+                        "Basic accounts can store up to 5 health " +
+                        "records per pet. Upgrade to ShoppetCare " +
+                        "Premium (₱150 / 3 months) for unlimited " +
+                        "health records.");
+                }
+            }
+
+
+            // =====================================================
+            // INSERT RECORD
+            // =====================================================
+
+            using var cmd =
+                new SqlCommand(@"
+                    INSERT INTO PetHealthRecords
+                    (
+                        PetId,
+                        ClinicId,
+                        RecordType,
+                        Title,
+                        Notes,
+                        RecordDate,
+                        NextDueDate,
+                        VetName
+                    )
+
+                    OUTPUT INSERTED.Id
+
+                    VALUES
+                    (
+                        @PetId,
+                        @ClinicId,
+                        @RecordType,
+                        @Title,
+                        @Notes,
+                        @RecordDate,
+                        @NextDueDate,
+                        @VetName
+                    );",
+                    conn);
+
+
+            cmd.Parameters.AddWithValue(
+                "@PetId",
+                rec.PetId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@ClinicId",
+                rec.ClinicId.HasValue
+                    ? rec.ClinicId.Value
+                    : DBNull.Value);
+
+
+            cmd.Parameters.AddWithValue(
+                "@RecordType",
+                string.IsNullOrWhiteSpace(
+                    rec.RecordType)
+                        ? "Checkup"
+                        : rec.RecordType);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Title",
+                rec.Title
+                ??
+                string.Empty);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Notes",
+                rec.Notes
+                ??
+                string.Empty);
+
+
+            cmd.Parameters.AddWithValue(
+                "@RecordDate",
+                rec.RecordDate);
+
+
+            cmd.Parameters.AddWithValue(
+                "@NextDueDate",
+                rec.NextDueDate.HasValue
+                    ? rec.NextDueDate.Value
+                    : DBNull.Value);
+
+
+            cmd.Parameters.AddWithValue(
+                "@VetName",
+                rec.VetName
+                ??
+                string.Empty);
+
+
+            var result =
+                cmd.ExecuteScalar();
+
+
+            if (result is null ||
+                result == DBNull.Value)
+            {
+                throw new InvalidOperationException(
+                    "The health record could not be created.");
+            }
+
+
+            return
+                Convert.ToInt32(
+                    result);
+        }
+
+
+        // =========================================================
+        // UPDATE HEALTH RECORD
+        // =========================================================
+
+        public bool UpdateHealthRecord(
+            PetHealthRecord rec,
+            int userId)
+        {
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
+            conn.Open();
+
+
+            /*
+                Ownership is checked through PetProfiles.
+
+                This prevents one pet owner from modifying
+                another owner's health record by changing
+                the record ID in the request.
+            */
+
+            using var cmd =
+                new SqlCommand(@"
+                    UPDATE r
+
+                    SET
+                        RecordType = @RecordType,
+                        Title = @Title,
+                        Notes = @Notes,
+                        RecordDate = @RecordDate,
+                        NextDueDate = @NextDueDate,
+                        VetName = @VetName
+
+                    FROM PetHealthRecords r
+
+                    INNER JOIN PetProfiles p
+                        ON p.Id = r.PetId
+
+                    WHERE
+                        r.Id = @Id
+
+                        AND
+                        r.PetId = @PetId
+
+                        AND
+                        p.UserId = @UserId;",
                     conn);
 
 
@@ -1838,17 +2495,24 @@ BirthDate=@BirthDate,
 
             cmd.Parameters.AddWithValue(
                 "@RecordType",
-                rec.RecordType ?? "Checkup");
+                string.IsNullOrWhiteSpace(
+                    rec.RecordType)
+                        ? "Checkup"
+                        : rec.RecordType);
 
 
             cmd.Parameters.AddWithValue(
                 "@Title",
-                rec.Title ?? string.Empty);
+                rec.Title
+                ??
+                string.Empty);
 
 
             cmd.Parameters.AddWithValue(
                 "@Notes",
-                rec.Notes ?? string.Empty);
+                rec.Notes
+                ??
+                string.Empty);
 
 
             cmd.Parameters.AddWithValue(
@@ -1865,13 +2529,19 @@ BirthDate=@BirthDate,
 
             cmd.Parameters.AddWithValue(
                 "@VetName",
-                rec.VetName ?? string.Empty);
+                rec.VetName
+                ??
+                string.Empty);
 
 
             return
                 cmd.ExecuteNonQuery() > 0;
         }
 
+
+        // =========================================================
+        // DELETE HEALTH RECORD — OWNER SAFE VERSION
+        // =========================================================
 
         public bool DeleteHealthRecordForOwner(
             int recordId,
@@ -1887,17 +2557,21 @@ BirthDate=@BirthDate,
 
             using var cmd =
                 new SqlCommand(@"
-            DELETE r
+                    DELETE r
 
-            FROM PetHealthRecords r
+                    FROM PetHealthRecords r
 
-            INNER JOIN PetProfiles p
-                ON p.Id = r.PetId
+                    INNER JOIN PetProfiles p
+                        ON p.Id = r.PetId
 
-            WHERE
-                r.Id = @RecordId
-                AND r.PetId = @PetId
-                AND p.UserId = @UserId;",
+                    WHERE
+                        r.Id = @RecordId
+
+                        AND
+                        r.PetId = @PetId
+
+                        AND
+                        p.UserId = @UserId;",
                     conn);
 
 
@@ -1920,62 +2594,231 @@ BirthDate=@BirthDate,
                 cmd.ExecuteNonQuery() > 0;
         }
 
-        public bool DeleteHealthRecord(int recordId, int petId)
+
+        // =========================================================
+        // DELETE HEALTH RECORD
+        //
+        // Kept because other parts of your existing application
+        // may already call this method.
+        // =========================================================
+
+        public bool DeleteHealthRecord(
+            int recordId,
+            int petId)
         {
-            using var conn = new SqlConnection(_connectionString);
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
             conn.Open();
 
-            using var cmd = new SqlCommand(
-                "DELETE FROM PetHealthRecords WHERE Id=@Id AND PetId=@PetId",
-                conn);
 
-            cmd.Parameters.AddWithValue("@Id", recordId);
-            cmd.Parameters.AddWithValue("@PetId", petId);
+            using var cmd =
+                new SqlCommand(@"
+                    DELETE FROM PetHealthRecords
 
-            return cmd.ExecuteNonQuery() > 0;
+                    WHERE
+                        Id = @Id
+                        AND
+                        PetId = @PetId;",
+                    conn);
+
+
+            cmd.Parameters.AddWithValue(
+                "@Id",
+                recordId);
+
+
+            cmd.Parameters.AddWithValue(
+                "@PetId",
+                petId);
+
+
+            return
+                cmd.ExecuteNonQuery() > 0;
         }
 
 
-        public byte[] ExportHealthRecordsCsv(int petId, int userId)
+        // =========================================================
+        // EXPORT HEALTH RECORDS — PREMIUM
+        // =========================================================
+
+        public byte[] ExportHealthRecordsCsv(
+            int petId,
+            int userId)
         {
-            using var conn = new SqlConnection(_connectionString);
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
             conn.Open();
 
-            // Premium-only export
-            using (var check = new SqlCommand(@"
-                SELECT ISNULL(u.IsPremium, 0)
-                FROM PetProfiles p
-                JOIN UserAccounts u ON u.Id = p.UserId
-                WHERE p.Id = @PetId AND p.UserId = @UserId", conn))
+
+            // =====================================================
+            // VERIFY:
+            // 1. Pet belongs to this user
+            // 2. Premium flag is active
+            // 3. PremiumActivatedAt exists
+            // 4. Subscription has NOT passed 3 months
+            // =====================================================
+
+            using (var check =
+                new SqlCommand(@"
+                    SELECT
+                        ISNULL(
+                            u.IsPremium,
+                            0
+                        ),
+
+                        u.PremiumActivatedAt
+
+                    FROM PetProfiles p
+
+                    INNER JOIN UserAccounts u
+                        ON u.Id = p.UserId
+
+                    WHERE
+                        p.Id = @PetId
+
+                        AND
+                        p.UserId = @UserId;",
+                    conn))
             {
-                check.Parameters.AddWithValue("@PetId", petId);
-                check.Parameters.AddWithValue("@UserId", userId);
+                check.Parameters.AddWithValue(
+                    "@PetId",
+                    petId);
 
-                var v = check.ExecuteScalar();
 
-                if (v == null || !Convert.ToBoolean(v))
+                check.Parameters.AddWithValue(
+                    "@UserId",
+                    userId);
+
+
+                using var reader =
+                    check.ExecuteReader();
+
+
+                if (!reader.Read())
+                {
                     throw new InvalidOperationException(
-                        "Exporting health records requires the " +
-                        "Pet ID Virtual Card Premium (₱49).");
+                        "The pet profile could not be found or " +
+                        "does not belong to this account.");
+                }
+
+
+                var premiumFlag =
+                    !reader.IsDBNull(0)
+                    &&
+                    reader.GetBoolean(0);
+
+
+                DateTime? premiumActivatedAt =
+                    reader.IsDBNull(1)
+                        ? null
+                        : reader.GetDateTime(1);
+
+
+                var premiumActive =
+                    premiumFlag
+                    &&
+                    premiumActivatedAt.HasValue
+                    &&
+                    premiumActivatedAt.Value
+                        .AddMonths(3) >= DateTime.Now;
+
+
+                if (!premiumActive)
+                {
+                    throw new InvalidOperationException(
+                        "Exporting health records requires an active " +
+                        "ShoppetCare Premium subscription.");
+                }
             }
 
-            var records = GetHealthRecords(petId);
 
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine("Date,Type,Title,Vet,NextDue,Notes");
+            // =====================================================
+            // GET RECORDS
+            // =====================================================
 
-            foreach (var r in records)
+            var records =
+                GetHealthRecords(
+                    petId);
+
+
+            // =====================================================
+            // CREATE CSV
+            // =====================================================
+
+            var sb =
+                new System.Text.StringBuilder();
+
+
+            sb.AppendLine(
+                "Date,Type,Title,Vet,NextDue,Notes");
+
+
+            foreach (var record in records)
             {
                 sb.AppendLine(
-                    $"{r.RecordDate:yyyy-MM-dd}," +
-                    $"{r.RecordType}," +
-                    $"\"{r.Title.Replace("\"", "'")}\"," +
-                    $"\"{r.VetName.Replace("\"", "'")}\"," +
-                    $"{(r.NextDueDate?.ToString("yyyy-MM-dd") ?? "")}," +
-                    $"\"{r.Notes.Replace("\"", "'")}\"");
+                    $"{EscapeCsv(record.RecordDate.ToString("yyyy-MM-dd"))}," +
+                    $"{EscapeCsv(record.RecordType)}," +
+                    $"{EscapeCsv(record.Title)}," +
+                    $"{EscapeCsv(record.VetName)}," +
+                    $"{EscapeCsv(record.NextDueDate?.ToString("yyyy-MM-dd") ?? string.Empty)}," +
+                    $"{EscapeCsv(record.Notes)}");
             }
 
-            return System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+
+            return
+                System.Text.Encoding.UTF8
+                    .GetBytes(
+                        sb.ToString());
+        }
+
+
+        // =========================================================
+        // CSV ESCAPING
+        // =========================================================
+
+        private static string EscapeCsv(
+            string? value)
+        {
+            value ??=
+                string.Empty;
+
+
+            /*
+                CSV fields containing commas, quotation marks,
+                carriage returns, or line feeds must be quoted.
+
+                Existing quotes inside the value are escaped by
+                doubling them.
+            */
+
+            var requiresQuotes =
+                value.Contains(',')
+                ||
+                value.Contains('"')
+                ||
+                value.Contains('\r')
+                ||
+                value.Contains('\n');
+
+
+            if (!requiresQuotes)
+            {
+                return value;
+            }
+
+
+            return
+                "\""
+                +
+                value.Replace(
+                    "\"",
+                    "\"\"")
+                +
+                "\"";
         }
 
         // =========================================================
