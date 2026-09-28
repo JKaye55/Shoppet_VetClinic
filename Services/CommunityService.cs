@@ -309,6 +309,40 @@ namespace Shoppet_VetClinic.Services
         }
         // =========================================================
         // COMMENTS
+        // The final migration creates this table. This lightweight
+        // guard also makes the Community resilient on an existing
+        // finals database that has not yet rerun the latest migration.
+        // =========================================================
+
+        private static void EnsureCommentsSchema(SqlConnection conn)
+        {
+            using var cmd = new SqlCommand(@"
+                IF OBJECT_ID('dbo.CommunityComments', 'U') IS NULL
+                BEGIN
+                    CREATE TABLE dbo.CommunityComments
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                        PostId INT NOT NULL,
+                        UserId INT NULL,
+                        AuthorName NVARCHAR(120) NOT NULL,
+                        Body NVARCHAR(300) NOT NULL,
+                        IsGuest BIT NOT NULL
+                            CONSTRAINT DF_CommunityComments_IsGuest_Runtime DEFAULT (0),
+                        CreatedAt DATETIME2 NOT NULL
+                            CONSTRAINT DF_CommunityComments_CreatedAt_Runtime DEFAULT (SYSDATETIME()),
+                        CONSTRAINT FK_CommunityComments_Post_Runtime
+                            FOREIGN KEY (PostId) REFERENCES dbo.CommunityPosts(Id),
+                        CONSTRAINT FK_CommunityComments_User_Runtime
+                            FOREIGN KEY (UserId) REFERENCES dbo.UserAccounts(Id)
+                    );
+                END;", conn);
+
+            cmd.ExecuteNonQuery();
+        }
+
+
+        // =========================================================
+        // COMMENTS
         // =========================================================
 
         public List<CommunityComment> GetComments(int postId)
@@ -317,6 +351,7 @@ namespace Shoppet_VetClinic.Services
 
             using var conn = new SqlConnection(_connectionString);
             conn.Open();
+            EnsureCommentsSchema(conn);
 
             using var cmd = new SqlCommand(@"
                 SELECT Id, PostId, UserId, AuthorName, Body, IsGuest, CreatedAt
@@ -360,6 +395,7 @@ namespace Shoppet_VetClinic.Services
 
             using var conn = new SqlConnection(_connectionString);
             conn.Open();
+            EnsureCommentsSchema(conn);
 
             using var cmd = new SqlCommand(@"
                 INSERT INTO CommunityComments
@@ -609,36 +645,58 @@ namespace Shoppet_VetClinic.Services
             int postId,
             int userId)
         {
-            using var conn =
-                new SqlConnection(
-                    _connectionString);
-
+            using var conn = new SqlConnection(_connectionString);
             conn.Open();
+            EnsureCommentsSchema(conn);
 
+            using var tx = conn.BeginTransaction();
 
-            using var cmd =
-                new SqlCommand(@"
+            try
+            {
+                using (var comments = new SqlCommand(@"
+                    DELETE FROM CommunityComments
+                    WHERE PostId = @PostId
+                      AND EXISTS
+                      (
+                          SELECT 1 FROM CommunityPosts
+                          WHERE Id = @PostId AND UserId = @UserId
+                      );", conn, tx))
+                {
+                    comments.Parameters.AddWithValue("@PostId", postId);
+                    comments.Parameters.AddWithValue("@UserId", userId);
+                    comments.ExecuteNonQuery();
+                }
+
+                using (var likes = new SqlCommand(@"
+                    DELETE FROM CommunityLikes
+                    WHERE PostId = @PostId
+                      AND EXISTS
+                      (
+                          SELECT 1 FROM CommunityPosts
+                          WHERE Id = @PostId AND UserId = @UserId
+                      );", conn, tx))
+                {
+                    likes.Parameters.AddWithValue("@PostId", postId);
+                    likes.Parameters.AddWithValue("@UserId", userId);
+                    likes.ExecuteNonQuery();
+                }
+
+                using var post = new SqlCommand(@"
                     DELETE FROM CommunityPosts
+                    WHERE Id = @PostId AND UserId = @UserId;", conn, tx);
 
-                    WHERE
-                        Id = @PostId
-                        AND
-                        UserId = @UserId;",
-                    conn);
+                post.Parameters.AddWithValue("@PostId", postId);
+                post.Parameters.AddWithValue("@UserId", userId);
 
-
-            cmd.Parameters.AddWithValue(
-                "@PostId",
-                postId);
-
-
-            cmd.Parameters.AddWithValue(
-                "@UserId",
-                userId);
-
-
-            return
-                cmd.ExecuteNonQuery() > 0;
+                var deleted = post.ExecuteNonQuery() > 0;
+                tx.Commit();
+                return deleted;
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
         }
 
 
@@ -650,11 +708,21 @@ namespace Shoppet_VetClinic.Services
         {
             using var conn = new SqlConnection(_connectionString);
             conn.Open();
+            EnsureCommentsSchema(conn);
 
             using var tx = conn.BeginTransaction();
 
             try
             {
+                using (var comments = new SqlCommand(
+                    "DELETE FROM CommunityComments WHERE PostId = @PostId;",
+                    conn,
+                    tx))
+                {
+                    comments.Parameters.AddWithValue("@PostId", postId);
+                    comments.ExecuteNonQuery();
+                }
+
                 using (var likes = new SqlCommand(
                     "DELETE FROM CommunityLikes WHERE PostId = @PostId;",
                     conn,
