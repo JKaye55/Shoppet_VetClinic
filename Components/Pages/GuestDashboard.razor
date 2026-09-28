@@ -1,0 +1,253 @@
+@page "/guest-dashboard"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject AuthService Auth
+@inject ProtectedSessionStorage Session
+@inject NavigationManager Nav
+
+<PageTitle>Guest Dashboard | ShoppetCare</PageTitle>
+
+<div class="gd-page">
+    <section class="gd-hero">
+        <div class="gd-shell gd-hero-inner">
+            <div>
+                <span class="gd-eyebrow light">GUEST MODE</span>
+                <h1>Try My ShoppetCare.</h1>
+                <p>
+                    Add one temporary pet and explore the public ShoppetCare experience.
+                    Create a free account when you want permanent pet data, Digital Pet ID,
+                    Marketplace checkout, notifications, and full Community participation.
+                </p>
+            </div>
+            <div class="gd-status">
+                <span>GUEST ACCESS</span>
+                <strong>1 temporary pet</strong>
+                <small>Saved only for this browser session</small>
+            </div>
+        </div>
+    </section>
+
+    <section class="gd-subnav">
+        <div class="gd-shell gd-tabs">
+            <a href="/guest-dashboard" class="active"><i class="bi bi-grid"></i> Overview</a>
+            <a href="/marketplace"><i class="bi bi-bag-heart"></i> Marketplace</a>
+            <a href="/community"><i class="bi bi-people"></i> Community</a>
+            <a href="/clinics"><i class="bi bi-hospital"></i> Clinics</a>
+        </div>
+    </section>
+
+    <main class="gd-shell gd-content">
+        @if (!ready)
+        {
+            <div class="gd-panel">Loading Guest Mode...</div>
+        }
+        else if (!Auth.IsGuest)
+        {
+            <section class="gd-panel gd-centered">
+                <span class="gd-eyebrow">GUEST DASHBOARD</span>
+                <h2>Enter Guest Mode to use this preview.</h2>
+                <a class="gd-primary" href="/home?guest=true">Enter Guest Mode</a>
+            </section>
+        }
+        else
+        {
+            <section class="gd-grid">
+                <article class="gd-panel gd-pet-panel">
+                    <div class="gd-panel-head">
+                        <div>
+                            <span class="gd-eyebrow">TEMPORARY PET</span>
+                            <h2>Your one-pet preview</h2>
+                            <p>This pet is not written to the ShoppetCare database and does not receive a permanent Pet ID.</p>
+                        </div>
+                        <span class="gd-limit">1 PET MAX</span>
+                    </div>
+
+                    @if (!hasPet && !showForm)
+                    {
+                        <div class="gd-empty">
+                            <div class="gd-pet-icon"><i class="bi bi-heart"></i></div>
+                            <strong>No guest pet yet.</strong>
+                            <span>Add one pet to preview how a ShoppetCare pet profile is organized.</span>
+                            <button class="gd-primary" @onclick="OpenForm">Add My Guest Pet</button>
+                        </div>
+                    }
+                    else if (showForm)
+                    {
+                        <div class="gd-form">
+                            <label>Pet name</label>
+                            <input maxlength="60" @bind="petName" placeholder="e.g. Mochi" />
+
+                            <div class="gd-form-grid">
+                                <div>
+                                    <label>Species</label>
+                                    <select @bind="species">
+                                        <option value="">Select species</option>
+                                        <option>Dog</option>
+                                        <option>Cat</option>
+                                        <option>Bird</option>
+                                        <option>Rabbit</option>
+                                        <option>Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Breed</label>
+                                    <input maxlength="80" @bind="breed" placeholder="e.g. Shih Tzu" />
+                                </div>
+                            </div>
+
+                            <div class="gd-form-actions">
+                                <button class="gd-primary" @onclick="SavePetAsync">Save Guest Pet</button>
+                                <button class="gd-secondary" @onclick="CancelForm">Cancel</button>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(message))
+                            {
+                                <div class="gd-message">@message</div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="gd-pet-card">
+                            <div class="gd-avatar">@PetInitial</div>
+                            <div>
+                                <span>GUEST PET PROFILE</span>
+                                <h3>@petName</h3>
+                                <p>@species@(string.IsNullOrWhiteSpace(breed) ? "" : $" · {breed}")</p>
+                            </div>
+                            <button class="gd-secondary" @onclick="OpenForm">Edit</button>
+                        </div>
+
+                        <div class="gd-preview-lock">
+                            <i class="bi bi-qr-code"></i>
+                            <div>
+                                <strong>Digital Pet ID unlocks after registration</strong>
+                                <span>Your registered pet can receive a persistent ShoppetCare identity and QR card.</span>
+                            </div>
+                            <a href="/register">Create Account</a>
+                        </div>
+                    }
+                </article>
+
+                <aside class="gd-panel">
+                    <span class="gd-eyebrow">GUEST ACCESS</span>
+                    <h2>What you can use now</h2>
+
+                    <div class="gd-access-row available">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <div><strong>Clinic Directory</strong><span>Browse and search local clinics.</span></div>
+                        <a href="/clinics">Open</a>
+                    </div>
+                    <div class="gd-access-row available">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <div><strong>Marketplace</strong><span>Browse and add items to a session cart.</span></div>
+                        <a href="/marketplace">Open</a>
+                    </div>
+                    <div class="gd-access-row available">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <div><strong>Community</strong><span>Read posts and leave Guest comments.</span></div>
+                        <a href="/community">Open</a>
+                    </div>
+
+                    <div class="gd-divider"></div>
+                    <span class="gd-eyebrow">UNLOCK WITH FREE ACCOUNT</span>
+
+                    <div class="gd-access-row locked"><i class="bi bi-lock-fill"></i><div><strong>Permanent Pet Profile</strong><span>Keep your pet connected to your account.</span></div></div>
+                    <div class="gd-access-row locked"><i class="bi bi-lock-fill"></i><div><strong>Digital Pet ID + QR</strong><span>Issue a persistent pet identity.</span></div></div>
+                    <div class="gd-access-row locked"><i class="bi bi-lock-fill"></i><div><strong>Marketplace Checkout</strong><span>Submit demo purchase requests and earn review vouchers.</span></div></div>
+                    <div class="gd-access-row locked"><i class="bi bi-lock-fill"></i><div><strong>Community Posting</strong><span>Create, edit and delete your own posts.</span></div></div>
+                    <div class="gd-access-row locked"><i class="bi bi-lock-fill"></i><div><strong>Notifications &amp; Mobile Sync</strong><span>Keep account activity and pet-care data connected.</span></div></div>
+
+                    <a class="gd-create" href="/register">Create Free Account</a>
+                    <a class="gd-signin" href="/login">Already registered? Sign In</a>
+                </aside>
+            </section>
+        }
+    </main>
+</div>
+
+<style>
+    .gd-page{min-height:100vh;background:#FAF9F6;color:#1E2D27}.gd-shell{width:min(1180px,calc(100% - 40px));margin:auto}.gd-hero{padding:50px 0;background:linear-gradient(145deg,#173D3D,#102E2D);color:#fff}.gd-hero-inner{display:flex;align-items:end;justify-content:space-between;gap:28px}.gd-eyebrow{color:#2F9098;font-size:.67rem;font-weight:900;letter-spacing:.12em}.gd-eyebrow.light{color:#8ED6D8}.gd-hero h1{margin:8px 0 10px;font-size:clamp(2.6rem,5vw,4.2rem);letter-spacing:-.055em}.gd-hero p{max-width:740px;margin:0;color:rgba(255,255,255,.7);line-height:1.65}.gd-status{min-width:245px;padding:18px;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:rgba(255,255,255,.06)}.gd-status span,.gd-status strong,.gd-status small{display:block}.gd-status span{color:#F3D27A;font-size:.62rem;font-weight:900;letter-spacing:.1em}.gd-status strong{margin-top:7px}.gd-status small{margin-top:4px;color:rgba(255,255,255,.62)}
+    .gd-subnav{border-bottom:1px solid #DDE7E4;background:#FFF}.gd-tabs{min-height:62px;display:flex;align-items:center;gap:7px;overflow:auto}.gd-tabs a{display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border-radius:9px;color:#5F706A;text-decoration:none;font-size:.72rem;font-weight:850;white-space:nowrap}.gd-tabs a.active{background:#E8F4F2;color:#267C83}
+    .gd-content{padding:28px 0 65px}.gd-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(310px,.65fr);gap:18px}.gd-panel{padding:26px;border:1px solid #DDE7E4;border-radius:19px;background:#FFF;box-shadow:0 10px 30px rgba(30,45,39,.045)}.gd-panel h2{margin:6px 0 8px;letter-spacing:-.035em}.gd-panel p{margin:0;color:#6E7C76;line-height:1.55}.gd-panel-head{display:flex;justify-content:space-between;gap:18px}.gd-limit{height:max-content;padding:6px 8px;border-radius:999px;background:#FFF4CF;color:#705B15;font-size:.58rem;font-weight:900}.gd-empty{margin-top:22px;padding:38px;text-align:center;border:1px dashed #CAD9D5;border-radius:15px;background:#FAFCFB}.gd-pet-icon{width:54px;height:54px;margin:auto;display:grid;place-items:center;border-radius:15px;background:#EAF5F5;color:#2F9098;font-size:1.35rem}.gd-empty strong,.gd-empty span{display:block}.gd-empty strong{margin-top:11px}.gd-empty span{margin:5px auto 15px;max-width:430px;color:#7B8984;font-size:.73rem}
+    .gd-primary,.gd-secondary{min-height:42px;padding:0 14px;border-radius:9px;font-weight:850;cursor:pointer}.gd-primary{border:1px solid #2F9098;background:#2F9098;color:#FFF}.gd-secondary{border:1px solid #CBD9D5;background:#FFF;color:#173D3D}.gd-form{margin-top:22px}.gd-form label{display:block;margin:11px 0 5px;color:#53635E;font-size:.68rem;font-weight:850}.gd-form input,.gd-form select{width:100%;min-height:43px;padding:0 11px;border:1px solid #CBD9D5;border-radius:9px;background:#FFF;color:#173D3D}.gd-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.gd-form-actions{display:flex;gap:7px;margin-top:16px}.gd-message{margin-top:10px;padding:10px;border-radius:9px;background:#FFF4E8;color:#8B5B21;font-size:.7rem}
+    .gd-pet-card{margin-top:22px;display:grid;grid-template-columns:58px 1fr auto;align-items:center;gap:13px;padding:16px;border:1px solid #E1EAE7;border-radius:14px;background:#FAFCFB}.gd-avatar{width:58px;height:58px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(145deg,#E2F2EF,#F3F8F6);color:#267C83;font-size:1.25rem;font-weight:900}.gd-pet-card span{color:#2F9098;font-size:.57rem;font-weight:900;letter-spacing:.08em}.gd-pet-card h3{margin:3px 0;font-size:1.05rem}.gd-pet-card p{font-size:.7rem}.gd-preview-lock{margin-top:12px;padding:14px;display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:11px;border-radius:12px;background:#EEF6F4}.gd-preview-lock>i{color:#2F9098;font-size:1.2rem}.gd-preview-lock strong,.gd-preview-lock span{display:block}.gd-preview-lock span{margin-top:2px;color:#74827D;font-size:.65rem}.gd-preview-lock a{color:#267C83;text-decoration:none;font-size:.68rem;font-weight:900}
+    .gd-access-row{display:grid;grid-template-columns:24px 1fr auto;gap:8px;align-items:start;padding:11px 0;border-top:1px solid #EDF1EF}.gd-access-row:first-of-type{margin-top:12px}.gd-access-row i{margin-top:2px}.gd-access-row.available i{color:#2F9098}.gd-access-row.locked i{color:#A4AEAA}.gd-access-row strong,.gd-access-row span{display:block}.gd-access-row strong{font-size:.72rem}.gd-access-row span{margin-top:2px;color:#83908B;font-size:.63rem;line-height:1.4}.gd-access-row>a{align-self:center;color:#267C83;text-decoration:none;font-size:.66rem;font-weight:900}.gd-divider{height:1px;margin:12px 0 18px;background:#DDE7E4}.gd-create,.gd-signin{display:flex;align-items:center;justify-content:center;min-height:43px;margin-top:14px;border-radius:9px;text-decoration:none;font-size:.72rem;font-weight:900}.gd-create{background:#2F9098;color:#FFF}.gd-signin{margin-top:7px;border:1px solid #CBD9D5;color:#173D3D}.gd-centered{max-width:650px;margin:auto;text-align:center}.gd-centered .gd-primary{display:inline-flex;align-items:center;text-decoration:none;margin-top:12px}
+    @@media(max-width:850px){.gd-grid{grid-template-columns:1fr}.gd-hero-inner{align-items:start;flex-direction:column}.gd-status{width:100%}}@@media(max-width:560px){.gd-form-grid{grid-template-columns:1fr}.gd-pet-card,.gd-preview-lock{grid-template-columns:50px 1fr}.gd-pet-card button,.gd-preview-lock a{grid-column:2}}
+</style>
+
+@code {
+    private const string GuestPetNameKey = "guestPetName";
+    private const string GuestPetSpeciesKey = "guestPetSpecies";
+    private const string GuestPetBreedKey = "guestPetBreed";
+
+    private bool ready;
+    private bool hasPet;
+    private bool showForm;
+    private string petName = string.Empty;
+    private string species = string.Empty;
+    private string breed = string.Empty;
+    private string message = string.Empty;
+
+    private string PetInitial =>
+        string.IsNullOrWhiteSpace(petName) ? "P" : petName.Trim()[0].ToString().ToUpperInvariant();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        await Auth.InitializeAsync();
+
+        if (Auth.IsGuest)
+        {
+            try
+            {
+                var name = await Session.GetAsync<string>(GuestPetNameKey);
+                var sp = await Session.GetAsync<string>(GuestPetSpeciesKey);
+                var br = await Session.GetAsync<string>(GuestPetBreedKey);
+
+                petName = name.Success ? name.Value ?? string.Empty : string.Empty;
+                species = sp.Success ? sp.Value ?? string.Empty : string.Empty;
+                breed = br.Success ? br.Value ?? string.Empty : string.Empty;
+                hasPet = !string.IsNullOrWhiteSpace(petName);
+            }
+            catch { }
+        }
+
+        ready = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OpenForm()
+    {
+        message = string.Empty;
+        showForm = true;
+    }
+
+    private void CancelForm()
+    {
+        message = string.Empty;
+        showForm = false;
+    }
+
+    private async Task SavePetAsync()
+    {
+        message = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(petName) || string.IsNullOrWhiteSpace(species))
+        {
+            message = "Pet name and species are required.";
+            return;
+        }
+
+        petName = petName.Trim();
+        breed = breed.Trim();
+
+        await Session.SetAsync(GuestPetNameKey, petName);
+        await Session.SetAsync(GuestPetSpeciesKey, species);
+        await Session.SetAsync(GuestPetBreedKey, breed);
+
+        hasPet = true;
+        showForm = false;
+    }
+}
