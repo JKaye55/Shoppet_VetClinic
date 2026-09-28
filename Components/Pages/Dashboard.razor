@@ -4,1814 +4,302 @@
 @using Shoppet_VetClinic.Models
 @using Shoppet_VetClinic.Services
 
-@inject DatabaseService DbService
-@inject FileStorageService FileStorage
+@inject DatabaseService Db
+@inject CommerceService Commerce
 @inject AuthService Auth
 @inject NavigationManager Nav
 
 <PageTitle>My ShoppetCare | Overview</PageTitle>
 
-
-<div class="ov-page">
-
-    @if (!isReady)
+<div class="msc-page">
+    @if (!ready)
     {
-        <div class="ov-loading">
-            Loading My ShoppetCare...
-        </div>
+        <div class="msc-loading">Loading My ShoppetCare...</div>
+    }
+    else if (!Auth.IsLoggedIn || Auth.CurrentUser is null)
+    {
+        <main class="msc-shell">
+            <section class="msc-panel access-panel">
+                <span class="eyebrow">MY SHOPPETCARE</span>
+                <h1>Sign in to open your pet-care hub.</h1>
+                <p>Your pets, Digital Pet IDs, subscription status, marketplace access, and connected care summaries live here.</p>
+                <a class="primary-link" href="/login">Sign In</a>
+            </section>
+        </main>
     }
     else
     {
-        <main class="ov-shell">
-
-
-            <!-- =====================================================
-                 HERO
-                 ===================================================== -->
-
-            <section class="ov-hero">
-
-                <div class="ov-hero-main">
-
-                    <span class="ov-eyebrow">
-                        MY SHOPPETCARE
-                    </span>
-
-
-                    <div class="ov-owner">
-
-                        <div class="ov-owner-photo">
-
-                            @if (!string.IsNullOrWhiteSpace(
-                                ownerPhotoUrl))
-                            {
-                                <img src="@ownerPhotoUrl"
-                                     alt="@Auth.CurrentUser?.FullName" />
-                            }
-                            else
-                            {
-                                <span>
-                                    @GetInitials()
-                                </span>
-                            }
-
-                        </div>
-
-
-                        <h1>
-                            Welcome back,
-                            <em>@FirstName.</em>
-                        </h1>
-
-                    </div>
-
-
-                    <p class="ov-hero-copy">
-                        One connected place for your pets,
-                        Digital Pet IDs, trusted veterinary care,
-                        community, and the ShoppetCare marketplace.
+        <section class="msc-hero">
+            <div class="msc-shell hero-inner">
+                <div>
+                    <span class="eyebrow light">MY SHOPPETCARE</span>
+                    <h1>Welcome back, @FirstName.</h1>
+                    <p>
+                        Your web hub for Digital Pet IDs, pet-care summaries, local clinic discovery,
+                        Community, Marketplace, and ShoppetCare subscriptions.
                     </p>
-
-
-                    <div class="ov-hero-actions">
-
-                        <a href="/my-pets"
-                           class="primary">
-
-                            Manage My Pets
-
-                            <span>→</span>
-
-                        </a>
-
-
-                        <a href="/marketplace"
-                           class="secondary">
-
-                            Explore Marketplace
-
-                        </a>
-
-                    </div>
-
                 </div>
 
-
-                <!-- MEMBERSHIP -->
-
-                <aside class="ov-membership">
-
-                    <span class="ov-membership-label">
-                        MEMBERSHIP
-                    </span>
-
-
-                    @if (Auth.IsPremium)
+                <div class="membership-card">
+                    <span>MEMBERSHIP</span>
+                    @if (premiumActive)
                     {
-                        <div class="ov-membership-title">
-
-                            <span class="star">
-
-                                <svg aria-hidden="true">
-                                    <use href="/icons/bootstrap-icons.svg#star-fill"></use>
-                                </svg>
-
-                            </span>
-
-
-                            <div>
-
-                                <strong>
-                                    Lifetime Premium
-                                </strong>
-
-                                <small>
-                                    Active membership
-                                </small>
-
-                            </div>
-
-                        </div>
-
-
-                        <p>
-                            Your account has Premium pet-management
-                            and Pet ID features enabled.
-                        </p>
-
-
-                        <a href="/account">
-                            Manage membership →
-                        </a>
+                        <strong><i class="bi bi-star-fill"></i> Premium Active</strong>
+                        <small>Until @premiumExpiresAt?.ToString("MMM d, yyyy")</small>
                     }
                     else
                     {
-                        <strong class="ov-free-plan">
-                            Free Plan
-                        </strong>
-
-                        <p>
-                            Core pet-management tools
-                            are ready to use.
-                        </p>
-
-
-                        <a href="/premium">
-                            Explore Premium →
-                        </a>
+                        <strong>Free Pet Owner</strong>
+                        <small>Core ShoppetCare access</small>
                     }
+                    <a href="/premium">Manage Premium</a>
+                </div>
+            </div>
+        </section>
 
-                </aside>
+        <main class="msc-shell msc-content">
+            <section class="metric-grid">
+                <a href="/my-pets" class="metric-card">
+                    <i class="bi bi-heart-fill"></i>
+                    <span>Pet Profiles</span>
+                    <strong>@pets.Count</strong>
+                    <small>Connected pets</small>
+                </a>
 
-            </section>
+                <a href="/my-pets" class="metric-card">
+                    <i class="bi bi-qr-code"></i>
+                    <span>Digital Pet IDs</span>
+                    <strong>@petIdCount</strong>
+                    <small>Issued identities</small>
+                </a>
 
-
-            <!-- =====================================================
-                 ACCOUNT TODAY
-                 ===================================================== -->
-
-            <section class="ov-today">
-
-                <div class="ov-today-title">
-
-                    <span class="ov-eyebrow">
-                        ACCOUNT TODAY
-                    </span>
-
-                    <h2>
-                        The essentials,
-                        <em>right away.</em>
-                    </h2>
-
+                <div class="metric-card">
+                    <i class="bi bi-heart-pulse-fill"></i>
+                    <span>Synced Care Records</span>
+                    <strong>@healthRecordCount</strong>
+                    <small>Read from connected pet-care data</small>
                 </div>
 
-
-                <div class="ov-metrics">
-
-
-                    <a href="/my-pets"
-                       class="ov-metric primary">
-
-                        <span class="metric-icon">
-
-                            <svg aria-hidden="true">
-                                <use href="/icons/bootstrap-icons.svg#heart-fill"></use>
-                            </svg>
-
-                        </span>
-
-
-                        <span class="metric-copy">
-
-                            <strong>
-                                @pets.Count
-                            </strong>
-
-                            <span>
-                                Pet Profiles
-                            </span>
-
-                            <small>
-                                Manage pet family
-                            </small>
-
-                        </span>
-
-
-                        <span class="metric-arrow">
-                            →
-                        </span>
-
-                    </a>
-
-
-                    <a href="/my-pets"
-                       class="ov-metric">
-
-                        <span class="metric-icon">
-
-                            <svg aria-hidden="true">
-                                <use href="/icons/bootstrap-icons.svg#qr-code"></use>
-                            </svg>
-
-                        </span>
-
-
-                        <span class="metric-copy">
-
-                            <strong>
-                                @activePetIdCount
-                            </strong>
-
-                            <span>
-                                Digital Pet IDs
-                            </span>
-
-                            <small>
-                                Active identities
-                            </small>
-
-                        </span>
-
-
-                        <span class="metric-arrow">
-                            →
-                        </span>
-
-                    </a>
-
-
-                    <a href="/my-pets"
-                       class="ov-metric">
-
-                        <span class="metric-icon">
-
-                            <svg aria-hidden="true">
-                                <use href="/icons/bootstrap-icons.svg#clipboard2-pulse"></use>
-                            </svg>
-
-                        </span>
-
-
-                        <span class="metric-copy">
-
-                            <strong>
-                                @healthRecordCount
-                            </strong>
-
-                            <span>
-                                Health Records
-                            </span>
-
-                            <small>
-                                Across your pets
-                            </small>
-
-                        </span>
-
-
-                        <span class="metric-arrow">
-                            →
-                        </span>
-
-                    </a>
-
-
-                    <a href="/clinics"
-                       class="ov-metric">
-
-                        <span class="metric-icon">
-
-                            <svg aria-hidden="true">
-                                <use href="/icons/bootstrap-icons.svg#calendar-event"></use>
-                            </svg>
-
-                        </span>
-
-
-                        <span class="metric-copy">
-
-                            <strong>
-                                @appointments.Count
-                            </strong>
-
-                            <span>
-                                Upcoming Visits
-                            </span>
-
-                            <small>
-                                Veterinary care
-                            </small>
-
-                        </span>
-
-
-                        <span class="metric-arrow">
-                            →
-                        </span>
-
-                    </a>
-
-                </div>
-
+                <a href="/notifications" class="metric-card">
+                    <i class="bi bi-bell-fill"></i>
+                    <span>Notifications</span>
+                    <strong>@unreadNotifications</strong>
+                    <small>Unread updates</small>
+                </a>
             </section>
 
-
-            <!-- =====================================================
-                 MAIN BENTO
-                 ===================================================== -->
-
-            <section class="ov-bento">
-
-
-                <!-- PET HUB -->
-
-                <article class="ov-pet-hub">
-
-                    <div class="ov-pet-heading">
-
+            <div class="msc-main-grid">
+                <section class="msc-panel">
+                    <div class="panel-head">
                         <div>
-
-                            <span class="ov-eyebrow">
-                                PET HUB
-                            </span>
-
-                            <h2>
-                                Your pet family.
-                            </h2>
-
+                            <span class="eyebrow">YOUR PETS</span>
+                            <h2>Pet identity &amp; care overview</h2>
                             <p>
-                                My Pets is the single management
-                                workspace for profiles, photos,
-                                Digital Pet IDs, and health records.
+                                Mobile remains the main pet-care management application. Web presents your connected pet identity
+                                and selected vaccination or health summaries.
                             </p>
-
                         </div>
-
-
-                        <span class="ov-count">
-
-                            @pets.Count
-
-                            @(pets.Count == 1
-                                ? "Pet"
-                                : "Pets")
-
-                        </span>
-
+                        <a class="secondary-link" href="/my-pets">Open My Pets</a>
                     </div>
-
 
                     @if (pets.Count == 0)
                     {
-                        <div class="ov-empty-family">
-
-                            <span class="empty-icon">
-
-                                <svg aria-hidden="true">
-                                    <use href="/icons/bootstrap-icons.svg#heart"></use>
-                                </svg>
-
-                            </span>
-
-
-                            <div>
-
-                                <strong>
-                                    Start your pet family.
-                                </strong>
-
-                                <p>
-                                    Create your first pet profile
-                                    and Digital Pet ID.
-                                </p>
-
-                            </div>
-
+                        <div class="empty-state">
+                            <i class="bi bi-heart"></i>
+                            <strong>No pet profiles yet.</strong>
+                            <span>Add your first pet to start using a Digital Pet ID.</span>
+                            <a class="primary-link" href="/my-pets">Add a Pet</a>
                         </div>
                     }
                     else
                     {
-                        <div class="ov-family">
+                        <div class="pet-list">
+                            @foreach (var pet in pets.Take(4))
+                            {
+                                var recordCount = healthByPet.TryGetValue(pet.Id, out var count) ? count : 0;
 
-                            <div class="ov-avatar-stack">
-
-                                @foreach (var pet in pets.Take(4))
-                                {
-                                    var photo =
-                                        GetPetPhoto(
-                                            pet.Id);
-
-
-                                    <div class="ov-pet-avatar"
-                                         title="@pet.PetName">
-
-                                        @if (!string.IsNullOrWhiteSpace(photo))
-                                        {
-                                            <img src="@photo"
-                                                 alt="@pet.PetName" />
-                                        }
-                                        else
-                                        {
-                                            <span>
-                                                @GetPetInitial(pet)
-                                            </span>
-                                        }
-
+                                <article class="pet-row">
+                                    <div class="pet-avatar">@GetPetInitial(pet.PetName)</div>
+                                    <div class="pet-copy">
+                                        <strong>@pet.PetName</strong>
+                                        <span>@pet.Species · @pet.Breed</span>
+                                        <small>@recordCount connected care record@(recordCount == 1 ? "" : "s")</small>
                                     </div>
-                                }
+                                    <div class="pet-actions">
+                                        <a href="@($"/pet/{pet.Id}")">Overview</a>
+                                        <a href="@($"/pet/{pet.Id}/card")">Pet ID</a>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                    }
+                </section>
 
+                <aside class="msc-panel account-panel">
+                    <span class="eyebrow">ACCOUNT STATUS</span>
+                    <h2>Your ShoppetCare access</h2>
+
+                    <div class="status-row">
+                        <div>
+                            <strong>Premium</strong>
+                            <span>@(premiumActive ? $"Active until {premiumExpiresAt:MMM d, yyyy}" : "Free plan")</span>
+                        </div>
+                        <a href="/premium">@(premiumActive ? "Manage" : "Upgrade")</a>
+                    </div>
+
+                    <div class="status-row">
+                        <div>
+                            <strong>Verified Seller</strong>
+                            <span>@(sellerActive ? $"Active until {sellerExpiresAt:MMM d, yyyy}" : "Not active")</span>
+                        </div>
+                        <a href="@(sellerActive ? "/marketplace" : "/checkout/SellerSubscription")">
+                            @(sellerActive ? "My Listings" : "Activate")
+                        </a>
+                    </div>
+
+                    @if (Auth.IsClinicStaff && Auth.CurrentUser.ClinicId.HasValue)
+                    {
+                        <div class="status-row">
+                            <div>
+                                <strong>Clinic Access</strong>
+                                <span>Clinic account linked</span>
                             </div>
-
-
-                            <div class="ov-family-copy">
-
-                                <strong>
-                                    @GetPetFamilyHeadline()
-                                </strong>
-
-                                <p>
-                                    Ready whenever you need
-                                    to update a profile,
-                                    open an ID card,
-                                    or review records.
-                                </p>
-
-                            </div>
-
+                            <a href="/clinic-portal">Dashboard</a>
                         </div>
                     }
 
-
-                    <div class="ov-capabilities">
-
-                        <div>
-
-                            <span class="cap-icon">
-
-                                <svg aria-hidden="true">
-                                    <use href="/icons/bootstrap-icons.svg#person-vcard"></use>
-                                </svg>
-
-                            </span>
-
-                            <span>
-
-                                <strong>
-                                    Profiles
-                                </strong>
-
-                                <small>
-                                    Identity &amp; details
-                                </small>
-
-                            </span>
-
-                        </div>
-
-
-                        <div>
-
-                            <span class="cap-icon">
-
-                                <svg aria-hidden="true">
-                                    <use href="/icons/bootstrap-icons.svg#qr-code"></use>
-                                </svg>
-
-                            </span>
-
-                            <span>
-
-                                <strong>
-                                    Digital Pet ID
-                                </strong>
-
-                                <small>
-                                    Scannable identity
-                                </small>
-
-                            </span>
-
-                        </div>
-
-
-                        <div>
-
-                            <span class="cap-icon">
-
-                                <svg aria-hidden="true">
-                                    <use href="/icons/bootstrap-icons.svg#clipboard2-pulse"></use>
-                                </svg>
-
-                            </span>
-
-                            <span>
-
-                                <strong>
-                                    Health Records
-                                </strong>
-
-                                <small>
-                                    Care information
-                                </small>
-
-                            </span>
-
-                        </div>
-
-                    </div>
-
-
-                    <a href="/my-pets"
-                       class="ov-open-pets">
-
-                        Open My Pets
-
-                        <span>→</span>
-
+                    <a class="account-link" href="/account">
+                        <i class="bi bi-person-circle"></i>
+                        Account &amp; Profile
                     </a>
+                </aside>
+            </div>
 
-                </article>
-
-
-                <!-- MARKETPLACE -->
-
-                <a href="/marketplace"
-                   class="ov-marketplace">
-
-                    <div class="marketplace-top">
-
-                        <span class="market-icon">
-
-                            <svg aria-hidden="true">
-                                <use href="/icons/bootstrap-icons.svg#shop"></use>
-                            </svg>
-
-                        </span>
-
-                        <span class="market-pill">
-                            PET-OWNER MARKETPLACE
-                        </span>
-
-                    </div>
-
-
-                    <div>
-
-                        <span class="ov-eyebrow">
-                            PRE-LOVED MARKETPLACE
-                        </span>
-
-                        <h2>
-                            Give pet items
-                            <em>a second home.</em>
-                        </h2>
-
-                        <p>
-                            Browse or sell useful pet items
-                            directly with fellow pet owners.
-                        </p>
-
-                    </div>
-
-
-                    <span class="ov-card-link">
-                        Explore Marketplace →
-                    </span>
-
+            <section class="quick-grid">
+                <a href="/clinics" class="quick-card">
+                    <i class="bi bi-hospital"></i>
+                    <strong>Verified Clinics</strong>
+                    <span>Find local veterinary and pet-care providers.</span>
                 </a>
 
-
-                <!-- CARE -->
-
-                <a href="/clinics"
-                   class="ov-small-card care">
-
-                    <span class="small-icon">
-
-                        <svg aria-hidden="true">
-                            <use href="/icons/bootstrap-icons.svg#hospital"></use>
-                        </svg>
-
-                    </span>
-
-
-                    <div>
-
-                        <span class="ov-eyebrow">
-                            VERIFIED CARE
-                        </span>
-
-                        <h3>
-                            Find veterinary care.
-                        </h3>
-
-                        <p>
-                            Discover trusted local clinics.
-                        </p>
-
-                    </div>
-
-
-                    <span class="small-arrow">
-                        →
-                    </span>
-
+                <a href="/marketplace" class="quick-card">
+                    <i class="bi bi-bag-heart"></i>
+                    <strong>Marketplace</strong>
+                    <span>Browse pre-loved pet items or manage seller listings.</span>
                 </a>
 
-
-                <!-- COMMUNITY -->
-
-                <a href="/community"
-                   class="ov-small-card community">
-
-                    <span class="small-icon">
-
-                        <svg aria-hidden="true">
-                            <use href="/icons/bootstrap-icons.svg#people-fill"></use>
-                        </svg>
-
-                    </span>
-
-
-                    <div>
-
-                        <span class="ov-eyebrow">
-                            COMMUNITY
-                        </span>
-
-                        <h3>
-                            Share pet moments.
-                        </h3>
-
-                        <p>
-                            Connect through stories and photos.
-                        </p>
-
-                    </div>
-
-
-                    <span class="small-arrow">
-                        →
-                    </span>
-
+                <a href="/community" class="quick-card">
+                    <i class="bi bi-people-fill"></i>
+                    <strong>Community</strong>
+                    <span>Share pet stories and manage your own posts.</span>
                 </a>
 
+                <a href="/announcements" class="quick-card">
+                    <i class="bi bi-megaphone-fill"></i>
+                    <strong>Announcements</strong>
+                    <span>Read current ShoppetCare updates.</span>
+                </a>
             </section>
 
+            <section class="sync-note">
+                <i class="bi bi-phone-fill"></i>
+                <div>
+                    <strong>Mobile is your main pet-care manager.</strong>
+                    <span>
+                        Vaccinations, health or medical records, Food Tracker, weight and care details are primarily managed
+                        in the ShoppetCare Mobile application. The Web application retrieves selected information for summaries,
+                        Digital Pet ID views, and eligible Premium features.
+                    </span>
+                </div>
+            </section>
         </main>
     }
-
 </div>
 
-
 <style>
-
-    :root {
-        --sc-teal: #2F9098;
-        --sc-teal-dark: #267C83;
-        --sc-dark: #173D3D;
-        --sc-deep: #102E2D;
-        --sc-cream: #FBF8F2;
-        --sc-yellow: #F3D27A;
-        --sc-yellow-soft: #FFF5D6;
-        --sc-border: #DDE7E4;
-        --sc-muted: #70817B;
-        --sc-white: #FFFFFF;
-    }
-
-
-    .ov-page,
-    .ov-page *,
-    .ov-page *::before,
-    .ov-page *::after {
-        box-sizing: border-box;
-    }
-
-
-    .ov-page {
-        min-height: 100vh;
-        padding: 32px 0 76px;
-        color: var(--sc-dark);
-        background: radial-gradient( circle at 94% 3%, rgba(47,144,152,.10), transparent 22% ), var(--sc-cream);
-    }
-
-
-        .ov-page svg {
-            width: 1em;
-            height: 1em;
-            fill: currentColor;
-        }
-
-
-    .ov-shell,
-    .ov-loading {
-        width: min( 1480px, calc(100% - 48px) );
-        margin: 0 auto;
-    }
-
-
-    .ov-loading {
-        padding: 90px 0;
-        color: var(--sc-muted);
-        text-align: center;
-    }
-
-
-    .ov-eyebrow {
-        display: block;
-        color: var(--sc-teal);
-        font-size: 11px;
-        font-weight: 900;
-        letter-spacing: .12em;
-    }
-
-
-    /* =========================================================
-           HERO
-           ========================================================= */
-
-    .ov-hero {
-        position: relative;
-        overflow: hidden;
-        min-height: 320px;
-        padding: 45px 50px;
-        display: grid;
-        grid-template-columns: minmax(0,1.45fr) minmax(300px,.55fr);
-        align-items: center;
-        gap: 55px;
-        border: 1px solid var(--sc-border);
-        border-radius: 30px;
-        background: radial-gradient( circle at 92% 14%, rgba(47,144,152,.14), transparent 28% ), linear-gradient( 125deg, #FFFDF9, #FBF8F2 53%, #EEF7F5 );
-        box-shadow: 0 28px 65px rgba(23,61,61,.08);
-    }
-
-
-        .ov-hero::after {
-            content: "";
-            position: absolute;
-            top: -330px;
-            right: -280px;
-            width: 520px;
-            height: 520px;
-            border: 1px solid rgba(47,144,152,.13);
-            border-radius: 50%;
-        }
-
-
-    .ov-hero-main,
-    .ov-membership {
-        position: relative;
-        z-index: 2;
-    }
-
-
-    .ov-owner {
-        margin-top: 10px;
-        display: flex;
-        align-items: center;
-        gap: 22px;
-    }
-
-
-    .ov-owner-photo {
-        width: 90px;
-        height: 90px;
-        flex: 0 0 90px;
-        overflow: hidden;
-        display: grid;
-        place-items: center;
-        border: 4px solid #FFFFFF;
-        border-radius: 24px;
-        background: linear-gradient( 135deg, var(--sc-teal), var(--sc-dark) );
-        color: #FFFFFF;
-        font-size: 20px;
-        font-weight: 900;
-        box-shadow: 0 13px 29px rgba(23,61,61,.15);
-    }
-
-
-        .ov-owner-photo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-
-    .ov-owner h1 {
-        margin: 0;
-        color: var(--sc-dark);
-        font-size: clamp( 44px, 5vw, 72px );
-        line-height: .91;
-        font-weight: 900;
-        letter-spacing: -.055em;
-    }
-
-
-        .ov-owner h1 em {
-            display: block;
-            color: var(--sc-teal);
-            font-family: Georgia, "Times New Roman", serif;
-            font-style: italic;
-            font-weight: 500;
-            letter-spacing: -.035em;
-        }
-
-
-    .ov-hero-copy {
-        max-width: 770px;
-        margin: 23px 0 0;
-        color: #62756E;
-        font-size: 15px;
-        line-height: 1.7;
-    }
-
-
-    .ov-hero-actions {
-        margin-top: 24px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-
-        .ov-hero-actions a {
-            min-height: 48px;
-            padding: 0 18px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 11px;
-            border-radius: 11px;
-            font-size: 13px;
-            font-weight: 850;
-            text-decoration: none;
-        }
-
-
-        .ov-hero-actions .primary {
-            background: var(--sc-teal);
-            color: #FFFFFF;
-            box-shadow: 0 9px 22px rgba(47,144,152,.17);
-        }
-
-
-        .ov-hero-actions .secondary {
-            border: 1px solid #C8DAD6;
-            background: #FFFFFF;
-            color: var(--sc-dark);
-        }
-
-
-    /* MEMBERSHIP */
-
-    .ov-membership {
-        padding: 24px;
-        border: 1px solid #D7E4E0;
-        border-radius: 20px;
-        background: rgba(255,255,255,.88);
-        box-shadow: 0 13px 31px rgba(23,61,61,.07);
-    }
-
-
-    .ov-membership-label {
-        color: #9B7418;
-        font-size: 10px;
-        font-weight: 900;
-        letter-spacing: .12em;
-    }
-
-
-    .ov-membership-title {
-        margin-top: 13px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-
-        .ov-membership-title .star {
-            width: 43px;
-            height: 43px;
-            display: grid;
-            place-items: center;
-            border-radius: 12px;
-            background: var(--sc-yellow-soft);
-            color: #9B7418;
-        }
-
-
-        .ov-membership-title strong,
-        .ov-membership-title small {
-            display: block;
-        }
-
-
-        .ov-membership-title strong {
-            color: var(--sc-dark);
-            font-size: 17px;
-        }
-
-
-        .ov-membership-title small {
-            margin-top: 2px;
-            color: #9B7418;
-            font-size: 11px;
-            font-weight: 800;
-        }
-
-
-    .ov-membership p {
-        margin: 14px 0 0;
-        color: #75867F;
-        font-size: 12px;
-        line-height: 1.6;
-    }
-
-
-    .ov-membership > a {
-        display: inline-block;
-        margin-top: 16px;
-        color: var(--sc-teal-dark);
-        font-size: 12px;
-        font-weight: 850;
-        text-decoration: none;
-    }
-
-
-    .ov-free-plan {
-        display: block;
-        margin-top: 11px;
-        color: var(--sc-dark);
-        font-size: 18px;
-    }
-
-
-    /* =========================================================
-           ACCOUNT TODAY
-           ========================================================= */
-
-    .ov-today {
-        margin-top: 16px;
-        padding: 22px 24px;
-        display: grid;
-        grid-template-columns: 250px minmax(0,1fr);
-        align-items: center;
-        gap: 26px;
-        border: 1px solid var(--sc-border);
-        border-radius: 19px;
-        background: #FFFFFF;
-        box-shadow: 0 10px 29px rgba(23,61,61,.045);
-    }
-
-
-    .ov-today-title h2 {
-        margin: 5px 0 0;
-        color: var(--sc-dark);
-        font-size: 24px;
-        line-height: 1.05;
-        font-weight: 900;
-        letter-spacing: -.035em;
-    }
-
-
-        .ov-today-title h2 em {
-            color: var(--sc-teal);
-            font-family: Georgia, "Times New Roman", serif;
-            font-style: italic;
-            font-weight: 500;
-        }
-
-
-    .ov-metrics {
-        display: grid;
-        grid-template-columns: repeat( 4, minmax(0,1fr) );
-        gap: 9px;
-    }
-
-
-    .ov-metric {
-        min-height: 94px;
-        padding: 14px;
-        display: grid;
-        grid-template-columns: auto minmax(0,1fr) auto;
-        align-items: center;
-        gap: 11px;
-        border: 1px solid #E1E9E6;
-        border-radius: 13px;
-        background: #FBFCFB;
-        color: var(--sc-dark);
-        text-decoration: none;
-        transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
-    }
-
-
-        .ov-metric.primary {
-            border-color: #C4DEDA;
-            background: linear-gradient( 135deg, #EAF6F5, #FFFFFF );
-        }
-
-
-        .ov-metric:hover {
-            transform: translateY(-2px);
-            border-color: #BCD8D3;
-            box-shadow: 0 9px 21px rgba(23,61,61,.06);
-        }
-
-
-    .metric-icon {
-        width: 40px;
-        height: 40px;
-        display: grid;
-        place-items: center;
-        border-radius: 11px;
-        background: #E4F3F1;
-        color: var(--sc-teal);
-    }
-
-
-    .metric-copy {
-        min-width: 0;
-    }
-
-
-        .metric-copy strong,
-        .metric-copy span,
-        .metric-copy small {
-            display: block;
-        }
-
-
-        .metric-copy strong {
-            color: var(--sc-dark);
-            font-size: 20px;
-            font-weight: 950;
-        }
-
-
-        .metric-copy > span {
-            margin-top: 1px;
-            color: #4F655E;
-            font-size: 12px;
-            font-weight: 850;
-        }
-
-
-        .metric-copy small {
-            margin-top: 2px;
-            color: #919E99;
-            font-size: 10px;
-        }
-
-
-    .metric-arrow {
-        color: #9AA9A4;
-    }
-
-
-    /* =========================================================
-           BENTO LAYOUT
-           ========================================================= */
-
-    .ov-bento {
-        margin-top: 26px;
-        display: grid;
-        grid-template-columns: repeat( 12, minmax(0,1fr) );
-        grid-template-rows: repeat( 2, minmax(190px,auto) );
-        gap: 12px;
-    }
-
-
-    /* PET HUB */
-
-    .ov-pet-hub {
-        grid-column: span 7;
-        grid-row: span 2;
-        min-height: 500px;
-        padding: 30px;
-        display: flex;
-        flex-direction: column;
-        border: 1px solid var(--sc-border);
-        border-radius: 22px;
-        background: radial-gradient( circle at 90% 9%, rgba(47,144,152,.13), transparent 29% ), #FFFFFF;
-        box-shadow: 0 12px 32px rgba(23,61,61,.05);
-    }
-
-
-    .ov-pet-heading {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 20px;
-    }
-
-
-        .ov-pet-heading h2 {
-            margin: 6px 0 0;
-            color: var(--sc-dark);
-            font-size: 32px;
-            font-weight: 900;
-            letter-spacing: -.04em;
-        }
-
-
-        .ov-pet-heading p {
-            max-width: 600px;
-            margin: 7px 0 0;
-            color: #788984;
-            font-size: 13px;
-            line-height: 1.55;
-        }
-
-
-    .ov-count {
-        min-height: 33px;
-        padding: 0 11px;
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        background: #EAF5F5;
-        color: var(--sc-teal-dark);
-        font-size: 11px;
-        font-weight: 850;
-        white-space: nowrap;
-    }
-
-
-    .ov-family {
-        margin-top: 47px;
-        display: flex;
-        align-items: center;
-        gap: 28px;
-    }
-
-
-    .ov-avatar-stack {
-        display: flex;
-        padding-left: 23px;
-    }
-
-
-    .ov-pet-avatar {
-        width: 90px;
-        height: 90px;
-        margin-left: -23px;
-        overflow: hidden;
-        display: grid;
-        place-items: center;
-        border: 4px solid #FFFFFF;
-        border-radius: 24px;
-        background: linear-gradient( 135deg, var(--sc-teal), var(--sc-dark) );
-        color: #FFFFFF;
-        font-size: 18px;
-        font-weight: 900;
-        box-shadow: 0 11px 25px rgba(23,61,61,.14);
-    }
-
-
-        .ov-pet-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-
-    .ov-family-copy strong {
-        display: block;
-        color: var(--sc-dark);
-        font-size: 17px;
-    }
-
-
-    .ov-family-copy p {
-        max-width: 400px;
-        margin: 5px 0 0;
-        color: #7D8C87;
-        font-size: 12px;
-        line-height: 1.5;
-    }
-
-
-    .ov-capabilities {
-        margin-top: 37px;
-        display: grid;
-        grid-template-columns: repeat( 3, minmax(0,1fr) );
-        gap: 8px;
-    }
-
-
-        .ov-capabilities > div {
-            min-height: 72px;
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-radius: 11px;
-            background: #F5F9F8;
-        }
-
-
-    .cap-icon {
-        width: 36px;
-        height: 36px;
-        flex: 0 0 36px;
-        display: grid;
-        place-items: center;
-        border-radius: 9px;
-        background: #E2F2EF;
-        color: var(--sc-teal);
-    }
-
-
-    .ov-capabilities strong,
-    .ov-capabilities small {
-        display: block;
-    }
-
-
-    .ov-capabilities strong {
-        color: var(--sc-dark);
-        font-size: 12px;
-    }
-
-
-    .ov-capabilities small {
-        margin-top: 2px;
-        color: #899792;
-        font-size: 10px;
-    }
-
-
-    .ov-open-pets {
-        min-height: 48px;
-        margin-top: auto;
-        padding: 0 16px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-radius: 10px;
-        background: var(--sc-teal);
-        color: #FFFFFF;
-        font-size: 13px;
-        font-weight: 850;
-        text-decoration: none;
-    }
-
-
-    .ov-empty-family {
-        margin-top: 42px;
-        padding: 30px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        border: 1px dashed #CADCD7;
-        border-radius: 14px;
-        background: #FAFCFB;
-    }
-
-
-    .empty-icon {
-        width: 46px;
-        height: 46px;
-        display: grid;
-        place-items: center;
-        border-radius: 12px;
-        background: #EAF5F5;
-        color: var(--sc-teal);
-    }
-
-
-    /* MARKETPLACE */
-
-    .ov-marketplace {
-        grid-column: span 5;
-        min-height: 245px;
-        padding: 27px;
-        display: flex;
-        flex-direction: column;
-        border: 1px solid #E7D38C;
-        border-radius: 22px;
-        color: var(--sc-dark);
-        text-decoration: none;
-        background: radial-gradient( circle at 90% 10%, rgba(243,210,122,.38), transparent 25% ), linear-gradient( 135deg, #FFF7D8, #FFFDF7 );
-        transition: transform .18s ease, box-shadow .18s ease;
-    }
-
-
-        .ov-marketplace:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 32px rgba(23,61,61,.08);
-        }
-
-
-    .marketplace-top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-    }
-
-
-    .market-icon {
-        width: 46px;
-        height: 46px;
-        display: grid;
-        place-items: center;
-        border-radius: 13px;
-        background: #FFFFFF;
-        color: var(--sc-teal);
-        box-shadow: 0 6px 16px rgba(23,61,61,.06);
-    }
-
-
-    .market-pill {
-        padding: 7px 9px;
-        border-radius: 999px;
-        background: rgba(255,255,255,.65);
-        color: #816518;
-        font-size: 10px;
-        font-weight: 850;
-    }
-
-
-    .ov-marketplace > div:nth-child(2) {
-        margin-top: auto;
-    }
-
-
-    .ov-marketplace h2 {
-        max-width: 420px;
-        margin: 6px 0 0;
-        color: var(--sc-dark);
-        font-size: 28px;
-        line-height: 1.03;
-        font-weight: 900;
-        letter-spacing: -.04em;
-    }
-
-
-        .ov-marketplace h2 em {
-            color: #A47C18;
-            font-family: Georgia, "Times New Roman", serif;
-            font-style: italic;
-            font-weight: 500;
-        }
-
-
-    .ov-marketplace p {
-        max-width: 440px;
-        margin: 8px 0 0;
-        color: #7A704B;
-        font-size: 12px;
-        line-height: 1.5;
-    }
-
-
-    .ov-card-link {
-        margin-top: 17px;
-        color: var(--sc-teal-dark);
-        font-size: 12px;
-        font-weight: 850;
-    }
-
-
-    /* SMALL CARDS */
-    .ov-small-card {
-        min-height: 205px;
-        padding: 22px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        border-radius: 20px;
-        color: var(--sc-dark);
-        text-decoration: none;
-        transition: transform .18s ease, box-shadow .18s ease;
-    }
-        /*
-           CSS grid cannot literally use 2.5-column spans.
-           Put them explicitly in columns below.
-        */
-
-        .ov-small-card.care {
-            grid-column: 8 / span 2;
-            border: 1px solid #C7DFDB;
-            background: linear-gradient( 135deg, #EAF6F5, #FFFFFF );
-        }
-
-
-        .ov-small-card.community {
-            grid-column: 10 / span 3;
-            border: 1px solid #DDE7E4;
-            background: linear-gradient( 135deg, #F7F4EC, #FFFFFF );
-        }
-
-
-        .ov-small-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 13px 28px rgba(23,61,61,.07);
-        }
-
-
-    .small-icon {
-        width: 43px;
-        height: 43px;
-        display: grid;
-        place-items: center;
-        border-radius: 12px;
-        background: #FFFFFF;
-        color: var(--sc-teal);
-        box-shadow: 0 6px 15px rgba(23,61,61,.05);
-    }
-
-
-    .ov-small-card > div {
-        margin-top: 17px;
-    }
-
-
-    .ov-small-card h3 {
-        margin: 5px 0 0;
-        color: var(--sc-dark);
-        font-size: 19px;
-        line-height: 1.15;
-        font-weight: 900;
-    }
-
-
-    .ov-small-card p {
-        margin: 6px 0 0;
-        color: #788984;
-        font-size: 11px;
-        line-height: 1.5;
-    }
-
-
-    .small-arrow {
-        margin-top: auto;
-        color: var(--sc-teal);
-        font-size: 18px;
-    }
-
-
-    /* =========================================================
-           RESPONSIVE
-           ========================================================= */
-
-    @@media (max-width: 1180px) {
-
-        .ov-today {
-            grid-template-columns: 1fr;
-        }
-
-
-        .ov-metrics {
-            grid-template-columns: repeat( 2, minmax(0,1fr) );
-        }
-
-
-        .ov-bento {
-            grid-template-columns: repeat( 2, minmax(0,1fr) );
-            grid-template-rows: auto;
-        }
-
-
-        .ov-pet-hub,
-        .ov-marketplace,
-        .ov-small-card.care,
-        .ov-small-card.community {
-            grid-column: auto;
-            grid-row: auto;
-        }
-
-
-        .ov-pet-hub {
-            grid-column: 1 / -1;
-            min-height: 430px;
-        }
-    }
-
-
-    @@media (max-width: 880px) {
-
-        .ov-hero {
-            grid-template-columns: 1fr;
-        }
-
-
-        .ov-membership {
-            max-width: 470px;
-        }
-    }
-
-
-    @@media (max-width: 680px) {
-
-        .ov-shell,
-        .ov-loading {
-            width: calc(100% - 24px);
-        }
-
-
-        .ov-hero {
-            padding: 28px 22px;
-        }
-
-
-        .ov-owner {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-
-
-        .ov-owner-photo {
-            width: 68px;
-            height: 68px;
-            flex-basis: 68px;
-        }
-
-
-        .ov-owner h1 {
-            font-size: 42px;
-        }
-
-
-        .ov-metrics,
-        .ov-bento,
-        .ov-capabilities {
-            grid-template-columns: 1fr;
-        }
-
-
-        .ov-pet-hub {
-            grid-column: auto;
-        }
-
-
-        .ov-family {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-    }
+    .msc-page{min-height:100vh;background:#FAF9F6;color:#1E2D27}.msc-shell{width:min(1180px,calc(100% - 40px));margin:auto}.msc-loading{padding:90px;text-align:center;color:#6C7974}
+    .msc-hero{padding:50px 0;background:linear-gradient(145deg,#173D3D,#102E2D);color:#fff}.hero-inner{display:flex;align-items:end;justify-content:space-between;gap:30px}.eyebrow{color:#2F9098;font-size:.67rem;font-weight:900;letter-spacing:.12em}.eyebrow.light{color:#8ED6D8}.msc-hero h1{margin:8px 0 10px;font-size:clamp(2.6rem,5vw,4.3rem);font-weight:900;letter-spacing:-.055em}.msc-hero p{max-width:760px;margin:0;color:rgba(255,255,255,.68);line-height:1.68}.membership-card{min-width:255px;padding:18px;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:rgba(255,255,255,.06)}.membership-card>span,.membership-card strong,.membership-card small,.membership-card a{display:block}.membership-card>span{color:#F3D27A;font-size:.62rem;font-weight:900;letter-spacing:.1em}.membership-card strong{margin-top:7px}.membership-card small{margin-top:4px;color:rgba(255,255,255,.62)}.membership-card a{margin-top:10px;color:#A7E1E2;font-size:.68rem;font-weight:850;text-decoration:none}
+    .msc-content{padding:28px 0 60px}.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric-card{min-height:128px;padding:18px;border:1px solid #DDE7E4;border-radius:17px;background:#fff;color:#1E2D27;text-decoration:none;box-shadow:0 10px 28px rgba(30,45,39,.04)}.metric-card i{color:#2F9098}.metric-card span,.metric-card strong,.metric-card small{display:block}.metric-card span{margin-top:14px;color:#77847F;font-size:.65rem;font-weight:800;text-transform:uppercase}.metric-card strong{margin-top:3px;font-size:1.7rem}.metric-card small{margin-top:2px;color:#8B9692;font-size:.64rem}
+    .msc-main-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.55fr);gap:18px;margin-top:18px}.msc-panel{padding:26px;border:1px solid #DDE7E4;border-radius:19px;background:#fff;box-shadow:0 10px 30px rgba(30,45,39,.045)}.panel-head{display:flex;justify-content:space-between;align-items:start;gap:20px}.msc-panel h2{margin:5px 0 7px;font-weight:900;letter-spacing:-.04em}.msc-panel p{margin:0;color:#6E7C76;line-height:1.58}.primary-link,.secondary-link{min-height:43px;padding:0 15px;border-radius:10px;text-decoration:none;font-size:.73rem;font-weight:850;display:inline-flex;align-items:center;justify-content:center}.primary-link{background:#2F9098;color:#fff}.secondary-link{border:1px solid #C9D9D5;background:#fff;color:#173D3D}
+    .pet-list{display:grid;gap:9px;margin-top:20px}.pet-row{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #E5ECE9;border-radius:13px}.pet-avatar{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#EEF6F4;color:#267C83;font-weight:900}.pet-copy{min-width:0;flex:1}.pet-copy strong,.pet-copy span,.pet-copy small{display:block}.pet-copy span{margin-top:2px;color:#75827D;font-size:.69rem}.pet-copy small{margin-top:2px;color:#98A19D;font-size:.61rem}.pet-actions{display:flex;gap:6px}.pet-actions a{padding:7px 9px;border-radius:8px;background:#F3F7F5;color:#245E60;text-decoration:none;font-size:.63rem;font-weight:850}.empty-state{margin-top:20px;padding:32px;text-align:center;border:1px dashed #C9D8D3;border-radius:14px}.empty-state i,.empty-state strong,.empty-state span{display:block}.empty-state i{font-size:2rem;color:#2F9098}.empty-state strong{margin-top:8px}.empty-state span{margin:4px 0 12px;color:#7B8883;font-size:.72rem}
+    .status-row{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid #EDF1EF}.status-row:first-of-type{margin-top:14px}.status-row strong,.status-row span{display:block}.status-row strong{font-size:.76rem}.status-row span{margin-top:3px;color:#84908B;font-size:.65rem}.status-row a{align-self:center;color:#267C83;text-decoration:none;font-size:.68rem;font-weight:900}.account-link{margin-top:10px;padding:12px;border-radius:11px;background:#F3F7F5;color:#173D3D;text-decoration:none;display:flex;gap:8px;align-items:center;font-size:.72rem;font-weight:850}
+    .quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}.quick-card{padding:18px;border:1px solid #DDE7E4;border-radius:16px;background:#fff;color:#1E2D27;text-decoration:none}.quick-card i{color:#2F9098}.quick-card strong,.quick-card span{display:block}.quick-card strong{margin-top:12px}.quick-card span{margin-top:4px;color:#7A8782;font-size:.68rem;line-height:1.45}.sync-note{margin-top:18px;padding:18px;border:1px solid #D6E5E1;border-radius:16px;background:#EEF6F4;display:flex;gap:12px}.sync-note i{font-size:1.4rem;color:#267C83}.sync-note strong,.sync-note span{display:block}.sync-note span{margin-top:4px;color:#5F6F69;font-size:.72rem;line-height:1.55}.access-panel{max-width:720px;margin:70px auto}.access-panel h1{font-size:2.4rem}
+    @@media(max-width:950px){.metric-grid,.quick-grid{grid-template-columns:1fr 1fr}.msc-main-grid{grid-template-columns:1fr}.hero-inner{align-items:start;flex-direction:column}.membership-card{width:100%}}@@media(max-width:600px){.metric-grid,.quick-grid{grid-template-columns:1fr}.panel-head{flex-direction:column}.pet-row{align-items:flex-start}.pet-actions{flex-direction:column}}
 </style>
 
-
 @code {
-
-    private bool isReady;
-
-
-    private string ownerPhotoUrl =
-        string.Empty;
-
-
-    private List<PetProfile> pets =
-        new();
-
-
-    private List<ClinicAppointment> appointments =
-        new();
-
-
+    private List<PetProfile> pets = new();
+    private readonly Dictionary<int, int> healthByPet = new();
+    private int petIdCount;
     private int healthRecordCount;
+    private int unreadNotifications;
+    private bool ready;
+    private bool premiumActive;
+    private bool sellerActive;
+    private DateTime? premiumExpiresAt;
+    private DateTime? sellerExpiresAt;
 
+    private string FirstName =>
+        Auth.CurrentUser?.FullName?
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault() ?? "Pet Parent";
 
-    private int activePetIdCount;
-
-
-    private string FirstName
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        get
-        {
-            var name =
-                Auth.CurrentUser?
-                    .FullName?
-                    .Trim();
-
-
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                return "Pet Owner";
-            }
-
-
-            return
-                name.Split(
-                    ' ',
-                    StringSplitOptions.RemoveEmptyEntries)
-                    .FirstOrDefault()
-                ??
-                "Pet Owner";
-        }
-    }
-
-
-    protected override async Task OnAfterRenderAsync(
-        bool firstRender)
-    {
-        if (!firstRender)
-            return;
-
+        if (!firstRender) return;
 
         await Auth.InitializeAsync();
 
-
-        if (!Auth.IsLoggedIn)
+        if (Auth.CurrentUser is not null)
         {
-            Nav.NavigateTo(
-                "/login");
-
-            return;
+            LoadData();
         }
 
-
-        if (!Auth.IsPetOwner)
-        {
-            Nav.NavigateTo(
-                Auth.IsAdmin
-                    ? "/admin-portal"
-                    : Auth.IsClinicStaff
-                        ? "/clinic-portal"
-                        : "/home");
-
-            return;
-        }
-
-
-        LoadDashboard();
-
-
-        isReady =
-            true;
-
-
-        await InvokeAsync(
-            StateHasChanged);
+        ready = true;
+        await InvokeAsync(StateHasChanged);
     }
 
-
-    private void LoadDashboard()
+    private void LoadData()
     {
-        var userId =
-            Auth.CurrentUser!.Id;
+        var user = Auth.CurrentUser;
+        if (user is null) return;
 
+        pets = Db.GetPetsByUser(user.Id);
+        petIdCount = pets.Count(p => !string.IsNullOrWhiteSpace(p.CardId));
 
-        ownerPhotoUrl =
-            FileStorage.GetImageUrl(
-                "users",
-                userId)
-            ??
-            string.Empty;
+        healthByPet.Clear();
+        healthRecordCount = 0;
 
-
-        pets =
-            DbService.GetPetsByUser(
-                userId)
-            ??
-            new List<PetProfile>();
-
-
-        healthRecordCount =
-            pets.Sum(
-                pet =>
-                    DbService
-                        .GetHealthRecords(
-                            pet.Id)
-                        .Count);
-
-
-        activePetIdCount =
-            pets.Count(
-                pet =>
-                    !string.IsNullOrWhiteSpace(
-                        pet.CardId));
-
-
-        appointments =
-            DbService
-                .GetAppointments(
-                    userId: userId)
-                .Where(
-                    appointment =>
-                        appointment.AppointmentDate >=
-                            DateTime.Today
-                        &&
-                        !string.Equals(
-                            appointment.Status,
-                            "Cancelled",
-                            StringComparison.OrdinalIgnoreCase))
-                .OrderBy(
-                    appointment =>
-                        appointment.AppointmentDate)
-                .Take(3)
-                .ToList();
-    }
-
-
-    private string GetPetPhoto(
-        int petId)
-    {
-        return
-            FileStorage.GetImageUrl(
-                "pets",
-                petId)
-            ??
-            string.Empty;
-    }
-
-
-    private static string GetPetInitial(
-        PetProfile pet)
-    {
-        return
-            string.IsNullOrWhiteSpace(
-                pet.PetName)
-                ? "P"
-                : pet.PetName[..1]
-                    .ToUpperInvariant();
-    }
-
-
-    private string GetPetFamilyHeadline()
-    {
-        if (pets.Count == 0)
+        foreach (var pet in pets)
         {
-            return
-                "Your pet family starts here.";
+            var count = Db.GetHealthRecords(pet.Id).Count;
+            healthByPet[pet.Id] = count;
+            healthRecordCount += count;
         }
 
+        unreadNotifications = Db.GetUnreadNotificationCount(user.Id);
 
-        if (pets.Count == 1)
-        {
-            return
-                pets[0].PetName;
-        }
+        var premium =
+            Commerce.GetActiveSubscription(
+                CommerceService.PremiumType,
+                userId: user.Id);
 
+        premiumActive = premium is not null || Auth.IsPremium;
+        premiumExpiresAt =
+            premium?.ExpiresAt
+            ?? user.PremiumActivatedAt?.AddMonths(3);
 
-        if (pets.Count == 2)
-        {
-            return
-                $"{pets[0].PetName} & {pets[1].PetName}";
-        }
+        var seller =
+            Commerce.GetActiveSubscription(
+                CommerceService.SellerType,
+                userId: user.Id);
 
-
-        return
-            $"{pets[0].PetName}, {pets[1].PetName} + {pets.Count - 2} more";
+        sellerActive = seller is not null;
+        sellerExpiresAt = seller?.ExpiresAt;
     }
 
-
-    private string GetInitials()
-    {
-        var name =
-            Auth.CurrentUser?
-                .FullName?
-                .Trim();
-
-
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return "PO";
-        }
-
-
-        var parts =
-            name.Split(
-                ' ',
-                StringSplitOptions.RemoveEmptyEntries);
-
-
-        if (parts.Length == 1)
-        {
-            return
-                parts[0][..Math.Min(
-                    2,
-                    parts[0].Length)]
-                .ToUpperInvariant();
-        }
-
-
-        return
-            $"{parts[0][0]}{parts[^1][0]}"
-                .ToUpperInvariant();
-    }
-
+    private static string GetPetInitial(string? name) =>
+        string.IsNullOrWhiteSpace(name)
+            ? "P"
+            : name.Trim()[0].ToString().ToUpperInvariant();
 }
