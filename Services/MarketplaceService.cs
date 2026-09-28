@@ -62,7 +62,22 @@ namespace Shoppet_VetClinic.Services
                         ISNULL(
                             u.Email,
                             ''
-                        ) AS SellerEmail
+                        ) AS SellerEmail,
+
+                        CAST(
+                            CASE WHEN EXISTS
+                            (
+                                SELECT 1
+                                FROM Subscriptions s
+                                WHERE s.UserId = u.Id
+                                  AND s.SubscriptionType = 'SellerSubscription'
+                                  AND s.Status = 'Active'
+                                  AND s.StartsAt <= SYSDATETIME()
+                                  AND s.ExpiresAt >= SYSDATETIME()
+                            )
+                            THEN 1 ELSE 0 END
+                            AS bit
+                        ) AS IsVerifiedSeller
 
                     FROM MarketplaceListings m
 
@@ -127,7 +142,22 @@ namespace Shoppet_VetClinic.Services
                         ISNULL(
                             u.Email,
                             ''
-                        ) AS SellerEmail
+                        ) AS SellerEmail,
+
+                        CAST(
+                            CASE WHEN EXISTS
+                            (
+                                SELECT 1
+                                FROM Subscriptions s
+                                WHERE s.UserId = u.Id
+                                  AND s.SubscriptionType = 'SellerSubscription'
+                                  AND s.Status = 'Active'
+                                  AND s.StartsAt <= SYSDATETIME()
+                                  AND s.ExpiresAt >= SYSDATETIME()
+                            )
+                            THEN 1 ELSE 0 END
+                            AS bit
+                        ) AS IsVerifiedSeller
 
                     FROM MarketplaceListings m
 
@@ -510,6 +540,25 @@ namespace Shoppet_VetClinic.Services
 
 
         // =========================================================
+        // ADMIN MODERATION
+        // =========================================================
+
+        public bool AdminDeleteListing(int listingId)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+
+            using var cmd = new SqlCommand(
+                "DELETE FROM MarketplaceListings WHERE Id = @Id;",
+                conn);
+
+            cmd.Parameters.AddWithValue("@Id", listingId);
+
+            return cmd.ExecuteNonQuery() > 0;
+        }
+
+
+        // =========================================================
         // DATABASE → MODEL
         // =========================================================
 
@@ -574,7 +623,11 @@ namespace Shoppet_VetClinic.Services
                 SellerEmail =
                     reader.IsDBNull(12)
                         ? string.Empty
-                        : reader.GetString(12)
+                        : reader.GetString(12),
+
+                IsVerifiedSeller =
+                    !reader.IsDBNull(13)
+                    && reader.GetBoolean(13)
             };
         }
     }
