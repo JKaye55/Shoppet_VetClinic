@@ -3,9 +3,11 @@
 
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.JSInterop
 
 @inject AuthService Auth
 @inject ProtectedSessionStorage Session
+@inject IJSRuntime JS
 
 <PageTitle>Guest Dashboard | ShoppetCare</PageTitle>
 
@@ -105,11 +107,11 @@
                         <div class="gd-editor">
                             <section class="gd-photo-column">
                                 <div class="gd-photo-preview">
-                                    @if (!string.IsNullOrWhiteSpace(photoDataUrl))
-                                    {
-                                        <img src="@photoDataUrl" alt="Guest pet preview" />
-                                    }
-                                    else
+                                    <img @ref="editorPhotoElement"
+                                         class="@(!hasPhoto ? "gd-browser-photo hidden" : "gd-browser-photo")"
+                                         alt="Guest pet preview" />
+
+                                    @if (!hasPhoto)
                                     {
                                         <div>
                                             <i class="bi bi-camera-fill"></i>
@@ -121,12 +123,13 @@
 
                                 <label class="gd-photo-button">
                                     <i class="bi bi-upload"></i>
-                                    @(string.IsNullOrWhiteSpace(photoDataUrl) ? "Choose Photo" : "Change Photo")
-                                    <InputFile OnChange="HandlePhotoSelected"
+                                    @(hasPhoto ? "Change Photo" : "Choose Photo")
+                                    <InputFile @ref="photoInput"
+                                               OnChange="HandlePhotoSelected"
                                                accept="image/jpeg,image/png,image/webp" />
                                 </label>
 
-                                @if (!string.IsNullOrWhiteSpace(photoDataUrl))
+                                @if (hasPhoto)
                                 {
                                     <button type="button" class="gd-remove-photo" @onclick="RemovePhoto">
                                         Remove photo
@@ -215,11 +218,11 @@
                     {
                         <div class="gd-pet-card">
                             <div class="gd-pet-photo">
-                                @if (!string.IsNullOrWhiteSpace(photoDataUrl))
-                                {
-                                    <img src="@photoDataUrl" alt="@petName" />
-                                }
-                                else
+                                <img @ref="savedPhotoElement"
+                                     class="@(!hasPhoto ? "gd-browser-photo hidden" : "gd-browser-photo")"
+                                     alt="@petName" />
+
+                                @if (!hasPhoto)
                                 {
                                     <span>@PetInitial</span>
                                 }
@@ -341,9 +344,9 @@
     .gd-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(330px,.65fr);gap:18px;align-items:start}.gd-panel,.gd-journey{border:1px solid #DDE7E4;border-radius:19px;background:#fff;box-shadow:0 10px 30px rgba(30,45,39,.045)}.gd-panel{padding:26px}.gd-panel h2,.gd-journey h2{margin:6px 0 8px;letter-spacing:-.035em}.gd-panel p{margin:0;color:#6E7C76;line-height:1.55}.gd-panel-head{display:flex;justify-content:space-between;gap:18px}.gd-limit{height:max-content;padding:6px 8px;display:inline-flex;gap:5px;align-items:center;border-radius:999px;background:#FFF4CF;color:#705B15;font-size:.57rem;font-weight:900}
     .gd-empty{margin-top:22px;padding:26px;border:1px dashed #CAD9D5;border-radius:15px;background:#FAFCFB}.gd-empty-visual{display:flex;align-items:center;justify-content:center;gap:18px}.gd-empty-photo{width:88px;height:88px;display:grid;place-items:center;flex:0 0 auto;border-radius:22px;background:linear-gradient(145deg,#E2F2EF,#F4F9F7);color:#2F9098;font-size:1.65rem}.gd-empty-copy strong,.gd-empty-copy span{display:block}.gd-empty-copy span{max-width:410px;margin:5px 0 13px;color:#7B8984;font-size:.72rem;line-height:1.5}
     .gd-primary,.gd-secondary{min-height:42px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:9px;font-size:.72rem;font-weight:850;cursor:pointer}.gd-primary{border:1px solid #2F9098;background:#2F9098;color:#fff}.gd-secondary{border:1px solid #CBD9D5;background:#fff;color:#173D3D}.gd-primary.link{text-decoration:none;margin-top:14px}
-    .gd-editor{margin-top:22px;display:grid;grid-template-columns:210px minmax(0,1fr);gap:22px}.gd-photo-preview{aspect-ratio:1;border:1px solid #DCE6E3;border-radius:18px;background:linear-gradient(145deg,#EFF7F5,#FAFCFB);display:grid;place-items:center;overflow:hidden}.gd-photo-preview img{width:100%;height:100%;object-fit:cover}.gd-photo-preview>div{text-align:center;padding:16px}.gd-photo-preview i{display:block;margin-bottom:8px;color:#2F9098;font-size:1.65rem}.gd-photo-preview strong,.gd-photo-preview span{display:block}.gd-photo-preview span{margin-top:4px;color:#83908B;font-size:.62rem}.gd-photo-button{width:100%;min-height:41px;margin-top:9px;display:flex;align-items:center;justify-content:center;gap:7px;border-radius:9px;background:#173D3D;color:#fff;font-size:.68rem;font-weight:850;cursor:pointer}.gd-photo-button input{display:none}.gd-remove-photo{width:100%;margin-top:6px;border:0;background:transparent;color:#9B4A4A;font-size:.64rem;font-weight:800;cursor:pointer}.gd-photo-note{display:block;margin-top:8px;color:#8A9692;font-size:.6rem;line-height:1.45}
+    .gd-editor{margin-top:22px;display:grid;grid-template-columns:210px minmax(0,1fr);gap:22px}.gd-photo-preview{aspect-ratio:1;border:1px solid #DCE6E3;border-radius:18px;background:linear-gradient(145deg,#EFF7F5,#FAFCFB);display:grid;place-items:center;overflow:hidden}.gd-photo-preview img{width:100%;height:100%;object-fit:cover}.gd-browser-photo.hidden{display:none}.gd-photo-preview>div{text-align:center;padding:16px}.gd-photo-preview i{display:block;margin-bottom:8px;color:#2F9098;font-size:1.65rem}.gd-photo-preview strong,.gd-photo-preview span{display:block}.gd-photo-preview span{margin-top:4px;color:#83908B;font-size:.62rem}.gd-photo-button{width:100%;min-height:41px;margin-top:9px;display:flex;align-items:center;justify-content:center;gap:7px;border-radius:9px;background:#173D3D;color:#fff;font-size:.68rem;font-weight:850;cursor:pointer}.gd-photo-button input{display:none}.gd-remove-photo{width:100%;margin-top:6px;border:0;background:transparent;color:#9B4A4A;font-size:.64rem;font-weight:800;cursor:pointer}.gd-photo-note{display:block;margin-top:8px;color:#8A9692;font-size:.6rem;line-height:1.45}
     .gd-step{margin:0 0 9px;display:flex;align-items:center;gap:9px}.gd-step:not(:first-child){margin-top:18px}.gd-step>span{width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:#E5F3F1;color:#267C83;font-size:.64rem;font-weight:900}.gd-step strong,.gd-step small{display:block}.gd-step strong{font-size:.72rem}.gd-step small{margin-top:1px;color:#8A9692;font-size:.59rem}.gd-choice-grid,.gd-breed-grid,.gd-species-grid{display:grid;gap:7px}.gd-choice-grid.names{grid-template-columns:repeat(5,1fr)}.gd-breed-grid{grid-template-columns:repeat(3,1fr)}.gd-species-grid{grid-template-columns:repeat(4,1fr)}.gd-choice,.gd-species{min-height:39px;padding:8px;border:1px solid #D7E2DF;border-radius:9px;background:#fff;color:#52635D;font-size:.65rem;font-weight:800;cursor:pointer}.gd-choice:hover,.gd-species:hover{border-color:#93C4C3}.gd-choice.active,.gd-species.active{border-color:#2F9098;background:#EAF6F4;color:#216E74;box-shadow:0 0 0 2px rgba(47,144,152,.08)}.gd-species{display:grid;place-items:center;gap:3px}.gd-species i{font-size:.9rem}.gd-form-actions{display:flex;gap:7px;margin-top:19px}.gd-message{margin-top:10px;padding:10px;border-radius:9px;background:#FFF4E8;color:#8B5B21;font-size:.68rem}
-    .gd-pet-card{margin-top:22px;display:grid;grid-template-columns:88px 1fr auto;align-items:center;gap:15px;padding:17px;border:1px solid #E1EAE7;border-radius:15px;background:#FAFCFB}.gd-pet-photo{width:88px;height:88px;border-radius:17px;background:linear-gradient(145deg,#E2F2EF,#F3F8F6);display:grid;place-items:center;overflow:hidden;color:#267C83;font-size:1.4rem;font-weight:900}.gd-pet-photo img{width:100%;height:100%;object-fit:cover}.gd-pet-copy>span{color:#2F9098;font-size:.57rem;font-weight:900;letter-spacing:.08em}.gd-pet-copy h3{margin:4px 0;font-size:1.2rem}.gd-pet-copy p{font-size:.7rem}.gd-pet-copy small{display:block;margin-top:7px;color:#8A9692;font-size:.61rem}.gd-preview-lock{margin-top:12px;padding:14px;display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:11px;border:1px solid #E1E6E4;border-radius:12px;background:#F4F6F5}.gd-lock-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#E5E9E7;color:#7D8985}.gd-preview-lock strong,.gd-preview-lock span{display:block}.gd-preview-lock span{margin-top:2px;color:#7D8985;font-size:.64rem}.gd-preview-lock a{color:#267C83;text-decoration:none;font-size:.66rem;font-weight:900}
+    .gd-pet-card{margin-top:22px;display:grid;grid-template-columns:88px 1fr auto;align-items:center;gap:15px;padding:17px;border:1px solid #E1EAE7;border-radius:15px;background:#FAFCFB}.gd-pet-photo{width:88px;height:88px;border-radius:17px;background:linear-gradient(145deg,#E2F2EF,#F3F8F6);display:grid;place-items:center;overflow:hidden;color:#267C83;font-size:1.4rem;font-weight:900}.gd-pet-photo img{width:100%;height:100%;object-fit:cover}.gd-pet-photo .gd-browser-photo.hidden{display:none}.gd-pet-copy>span{color:#2F9098;font-size:.57rem;font-weight:900;letter-spacing:.08em}.gd-pet-copy h3{margin:4px 0;font-size:1.2rem}.gd-pet-copy p{font-size:.7rem}.gd-pet-copy small{display:block;margin-top:7px;color:#8A9692;font-size:.61rem}.gd-preview-lock{margin-top:12px;padding:14px;display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:11px;border:1px solid #E1E6E4;border-radius:12px;background:#F4F6F5}.gd-lock-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#E5E9E7;color:#7D8985}.gd-preview-lock strong,.gd-preview-lock span{display:block}.gd-preview-lock span{margin-top:2px;color:#7D8985;font-size:.64rem}.gd-preview-lock a{color:#267C83;text-decoration:none;font-size:.66rem;font-weight:900}
     .gd-access-intro{font-size:.7rem}.gd-section-label{margin-top:18px;padding-bottom:7px;border-bottom:1px solid #E7ECEA;font-size:.57rem;font-weight:900;letter-spacing:.1em}.available-label{color:#2F9098}.locked-label{color:#8E9995}.gd-access-row{display:grid;grid-template-columns:24px 1fr auto;gap:8px;align-items:start;padding:11px 4px;border-bottom:1px solid #EDF1EF}.gd-access-row.available{text-decoration:none;color:#1E2D27;transition:.18s ease}.gd-access-row.available:hover{padding-left:8px;background:#FAFCFB}.gd-access-row.available>i{color:#2F9098}.gd-access-row.locked{color:#89948F;background:linear-gradient(90deg,rgba(245,247,246,.8),transparent)}.gd-access-row.locked>i{color:#A5AEAA}.gd-access-row strong,.gd-access-row span{display:block}.gd-access-row strong{font-size:.7rem}.gd-access-row span{margin-top:2px;color:#83908B;font-size:.61rem;line-height:1.4}.gd-open{align-self:center!important;color:#267C83!important;font-weight:900}.gd-locked-text{align-self:center!important;padding:4px 6px;border-radius:999px;background:#ECEFEE;color:#8A9591!important;font-size:.55rem!important;font-weight:900}.gd-create,.gd-signin{display:flex;align-items:center;justify-content:center;gap:7px;min-height:43px;margin-top:14px;border-radius:9px;text-decoration:none;font-size:.7rem;font-weight:900}.gd-create{background:#2F9098;color:#fff}.gd-signin{margin-top:7px;border:1px solid #CBD9D5;color:#173D3D}
     .gd-journey{margin-top:18px;padding:24px;display:flex;align-items:center;justify-content:space-between;gap:25px}.gd-journey h2{font-size:1.25rem}.gd-journey-steps{display:flex;align-items:center;gap:9px}.gd-journey-steps>i{color:#A7B1AD}.gd-journey article{display:flex;align-items:center;gap:8px;padding:10px;border-radius:11px;background:#F5F7F6}.gd-journey article.current{background:#EAF6F4}.gd-journey article>span{width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:#fff;color:#267C83;font-size:.62rem;font-weight:900}.gd-journey strong,.gd-journey small{display:block}.gd-journey strong{font-size:.66rem}.gd-journey small{margin-top:2px;color:#899590;font-size:.56rem}.gd-centered{max-width:650px;margin:auto;text-align:center}.gd-centered p{margin:auto}.gd-large-icon{width:54px;height:54px;margin:0 auto 12px;display:grid;place-items:center;border-radius:15px;background:#EAF6F4;color:#2F9098;font-size:1.25rem}.gd-loading{text-align:center}
     @@media(max-width:950px){.gd-grid{grid-template-columns:1fr}.gd-hero-inner,.gd-journey{align-items:start;flex-direction:column}.gd-status{width:100%}.gd-journey-steps{flex-wrap:wrap}}@@media(max-width:650px){.gd-editor{grid-template-columns:1fr}.gd-photo-column{max-width:260px}.gd-choice-grid.names{grid-template-columns:repeat(3,1fr)}.gd-breed-grid{grid-template-columns:repeat(2,1fr)}.gd-species-grid{grid-template-columns:repeat(2,1fr)}.gd-pet-card{grid-template-columns:70px 1fr}.gd-pet-photo{width:70px;height:70px}.gd-pet-card>button{grid-column:2}.gd-preview-lock{grid-template-columns:38px 1fr}.gd-preview-lock>a{grid-column:2}.gd-mode-note{grid-template-columns:auto 1fr}.gd-mode-note>a{grid-column:2}.gd-empty-visual{align-items:flex-start;flex-direction:column}.gd-journey-steps>i{display:none}}
@@ -378,40 +381,20 @@
     private string petName = string.Empty;
     private string species = string.Empty;
     private string breed = string.Empty;
-    private string photoDataUrl = string.Empty;
+    private bool hasPhoto;
+    private bool restoreEditorPhoto;
+    private bool restoreSavedPhoto;
     private string message = string.Empty;
+
+    private InputFile? photoInput;
+    private ElementReference editorPhotoElement;
+    private ElementReference savedPhotoElement;
 
     private string PetInitial =>
         string.IsNullOrWhiteSpace(petName) ? "P" : petName.Trim()[0].ToString().ToUpperInvariant();
 
     private IEnumerable<string> CurrentBreeds =>
         BreedOptions.TryGetValue(species, out var values) ? values : Array.Empty<string>();
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender) return;
-
-        await Auth.InitializeAsync();
-
-        if (Auth.IsGuest)
-        {
-            try
-            {
-                var name = await Session.GetAsync<string>(GuestPetNameKey);
-                var sp = await Session.GetAsync<string>(GuestPetSpeciesKey);
-                var br = await Session.GetAsync<string>(GuestPetBreedKey);
-
-                petName = name.Success ? name.Value ?? string.Empty : string.Empty;
-                species = sp.Success ? sp.Value ?? string.Empty : string.Empty;
-                breed = br.Success ? br.Value ?? string.Empty : string.Empty;
-                hasPet = !string.IsNullOrWhiteSpace(petName);
-            }
-            catch { }
-        }
-
-        ready = true;
-        await InvokeAsync(StateHasChanged);
-    }
 
     private void OpenForm()
     {
@@ -427,6 +410,7 @@
             breed = BreedOptions[species][0];
 
         showForm = true;
+        restoreEditorPhoto = hasPhoto;
     }
 
     private void CancelForm()
@@ -455,6 +439,7 @@
         if (file.Size > 5 * 1024 * 1024)
         {
             message = "Choose a photo smaller than 5 MB.";
+            hasPhoto = false;
             return;
         }
 
@@ -462,23 +447,98 @@
         if (!allowed.Contains(file.ContentType, StringComparer.OrdinalIgnoreCase))
         {
             message = "Use a JPG, PNG or WEBP pet photo.";
+            hasPhoto = false;
+            return;
+        }
+
+        // Do not read the image into .NET memory. In Interactive Server,
+        // turning a multi-megabyte image into a base64 component string can
+        // overload the circuit. The browser creates a temporary object URL
+        // instead, so the preview stays local to this tab.
+        hasPhoto = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            if (photoInput is not null)
+            {
+                await JS.InvokeVoidAsync(
+                    "shoppetGuestPetPhoto.preview",
+                    photoInput.Element,
+                    editorPhotoElement);
+            }
+        }
+        catch (JSException ex)
+        {
+            Console.WriteLine($"[Guest Photo Preview] {ex.Message}");
+            hasPhoto = false;
+            message = "The photo could not be previewed. Please choose another image.";
+        }
+    }
+
+    private async Task RemovePhoto()
+    {
+        hasPhoto = false;
+        restoreEditorPhoto = false;
+        restoreSavedPhoto = false;
+
+        try
+        {
+            if (photoInput is not null)
+                await JS.InvokeVoidAsync("shoppetGuestPetPhoto.clear", photoInput.Element);
+        }
+        catch (JSException ex)
+        {
+            Console.WriteLine($"[Guest Photo Clear] {ex.Message}");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Auth.InitializeAsync();
+
+            if (Auth.IsGuest)
+            {
+                try
+                {
+                    var name = await Session.GetAsync<string>(GuestPetNameKey);
+                    var sp = await Session.GetAsync<string>(GuestPetSpeciesKey);
+                    var br = await Session.GetAsync<string>(GuestPetBreedKey);
+
+                    petName = name.Success ? name.Value ?? string.Empty : string.Empty;
+                    species = sp.Success ? sp.Value ?? string.Empty : string.Empty;
+                    breed = br.Success ? br.Value ?? string.Empty : string.Empty;
+                    hasPet = !string.IsNullOrWhiteSpace(petName);
+                }
+                catch { }
+            }
+
+            ready = true;
+            await InvokeAsync(StateHasChanged);
             return;
         }
 
         try
         {
-            await using var stream = file.OpenReadStream(5 * 1024 * 1024);
-            using var memory = new MemoryStream();
-            await stream.CopyToAsync(memory);
-            photoDataUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(memory.ToArray())}";
+            if (restoreEditorPhoto && hasPhoto)
+            {
+                restoreEditorPhoto = false;
+                await JS.InvokeVoidAsync("shoppetGuestPetPhoto.apply", editorPhotoElement);
+            }
+
+            if (restoreSavedPhoto && hasPhoto)
+            {
+                restoreSavedPhoto = false;
+                await JS.InvokeVoidAsync("shoppetGuestPetPhoto.apply", savedPhotoElement);
+            }
         }
-        catch
+        catch (JSException ex)
         {
-            message = "The photo could not be previewed. Please choose another image.";
+            Console.WriteLine($"[Guest Photo Restore] {ex.Message}");
         }
     }
-
-    private void RemovePhoto() => photoDataUrl = string.Empty;
 
     private async Task SavePetAsync()
     {
@@ -498,5 +558,6 @@
 
         hasPet = true;
         showForm = false;
+        restoreSavedPhoto = hasPhoto;
     }
 }
