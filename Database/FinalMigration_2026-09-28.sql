@@ -226,6 +226,64 @@ BEGIN TRY
 
 
     /* ============================================================
+       6B. BACKFILL ACTIVE LEGACY PREMIUM INTO SUBSCRIPTIONS
+       Preserves historical transaction rows exactly as they are.
+       This only mirrors currently-active legacy Premium entitlement
+       into the new subscription table so Web/Admin status stays
+       synchronized.
+       ============================================================ */
+
+    INSERT INTO dbo.Subscriptions
+    (
+        UserId,
+        ClinicId,
+        SubscriptionType,
+        Status,
+        Reference,
+        StartsAt,
+        ExpiresAt,
+        CreatedAt
+    )
+    SELECT
+        u.Id,
+        NULL,
+        'PremiumSubscription',
+        'Active',
+        CASE
+            WHEN NULLIF(LTRIM(RTRIM(u.PremiumReference)), '') IS NOT NULL
+                THEN u.PremiumReference
+            ELSE CONCAT('LEGACY-PREM-', u.Id, '-', FORMAT(u.PremiumActivatedAt, 'yyyyMMddHHmmss'))
+        END,
+        u.PremiumActivatedAt,
+        DATEADD(MONTH, 3, u.PremiumActivatedAt),
+        u.PremiumActivatedAt
+    FROM dbo.UserAccounts u
+    WHERE ISNULL(u.IsPremium, 0) = 1
+      AND u.PremiumActivatedAt IS NOT NULL
+      AND DATEADD(MONTH, 3, u.PremiumActivatedAt) >= SYSDATETIME()
+      AND NOT EXISTS
+      (
+          SELECT 1
+          FROM dbo.Subscriptions s
+          WHERE s.UserId = u.Id
+            AND s.SubscriptionType = 'PremiumSubscription'
+            AND s.Status = 'Active'
+            AND s.ExpiresAt >= SYSDATETIME()
+      )
+      AND NOT EXISTS
+      (
+          SELECT 1
+          FROM dbo.Subscriptions s2
+          WHERE s2.Reference =
+              CASE
+                  WHEN NULLIF(LTRIM(RTRIM(u.PremiumReference)), '') IS NOT NULL
+                      THEN u.PremiumReference
+                  ELSE CONCAT('LEGACY-PREM-', u.Id, '-', FORMAT(u.PremiumActivatedAt, 'yyyyMMddHHmmss'))
+              END
+      );
+
+
+    /* ============================================================
        7. CLINIC LISTING REQUESTS
        ============================================================ */
 
