@@ -598,6 +598,8 @@
 
                     @foreach (var listing in FilteredListings)
                     {
+                        var reviews = GetReviews(listing.Id);
+
                         <article class="sc-marketplace-card">
 
 
@@ -838,9 +840,6 @@
                                         </div>
                                     }
 
-                                    @{
-                                        var reviews = GetReviews(listing.Id);
-                                    }
                                     <div class="sc-marketplace-rating">
                                         <strong>@GetRatingText(reviews)</strong>
                                         <span>@(reviews.Count == 0 ? "No verified reviews yet" : $"{reviews.Count} verified review{(reviews.Count == 1 ? "" : "s")}")</span>
@@ -859,7 +858,7 @@
                                             {
                                                 <article>
                                                     <div>
-                                                        <strong>@new string('★', review.Rating)@new string('☆', 5 - review.Rating)</strong>
+                                                        <strong>@(new string('★', review.Rating))@(new string('☆', 5 - review.Rating))</strong>
                                                         <span>@review.BuyerName · Verified Purchase</span>
                                                     </div>
                                                     @if (!string.IsNullOrWhiteSpace(review.Comment))
