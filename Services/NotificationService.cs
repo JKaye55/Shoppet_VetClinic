@@ -38,7 +38,7 @@ namespace Shoppet_VetClinic.Services
             _db.CreateNotification(
                 userId,
                 "You're now Premium",
-                "Thanks for supporting ShoppetCare. Unlimited pets, unlimited records, and premium card themes are now unlocked.",
+                "Your 3-month ShoppetCare Premium access is active. Premium Pet ID themes, eligible private card details, selected care summaries, and supported export features are now available.",
                 "/my-pets",
                 "bi-star-fill");
         }
