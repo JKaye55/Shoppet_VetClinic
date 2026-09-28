@@ -1,0 +1,256 @@
+@page "/marketplace/orders"
+@rendermode InteractiveServer
+@inject MarketplaceOrderService Orders
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Marketplace Orders | ShoppetCare</PageTitle>
+
+<div class="orders-page">
+    <section class="orders-hero">
+        <div class="orders-shell">
+            <span>MARKETPLACE ACTIVITY</span>
+            <h1>Orders, reviews & rewards.</h1>
+            <p>Track demo purchase requests, complete seller handoffs, submit verified-purchase reviews, and use earned vouchers.</p>
+        </div>
+    </section>
+
+    <main class="orders-shell orders-main">
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div class="message @(isError ? "error" : "")">@message</div>
+        }
+
+        <div class="tabs">
+            <button class="@(!sellerView ? "active" : "")" @onclick="ShowPurchases">My Purchases</button>
+            @if (Auth.IsLoggedIn && Auth.IsPetOwner)
+            {
+                <button class="@(sellerView ? "active" : "")" @onclick="ShowSales">Seller Requests</button>
+            }
+        </div>
+
+        @if (VisibleOrders.Count == 0)
+        {
+            <section class="empty">
+                <i class="bi bi-receipt"></i>
+                <h2>No marketplace activity yet</h2>
+                <p>Your demo marketplace orders will appear here.</p>
+                <a href="/marketplace">Browse Marketplace</a>
+            </section>
+        }
+        else
+        {
+            @foreach (var order in VisibleOrders)
+            {
+                <section class="order-card">
+                    <header>
+                        <div>
+                            <small>@(sellerView ? "PURCHASE REQUEST" : "DEMO ORDER")</small>
+                            <h2>@order.Reference</h2>
+                            <span>@order.CreatedAt.ToString("MMM d, yyyy · h:mm tt")</span>
+                        </div>
+                        <div class="status">@order.Status</div>
+                    </header>
+
+                    <div class="party">
+                        <span>@(sellerView ? "Buyer" : "Seller")</span>
+                        <strong>@(sellerView ? order.BuyerName : order.SellerName)</strong>
+                    </div>
+
+                    @foreach (var item in order.Items)
+                    {
+                        <div class="order-item">
+                            <div>
+                                <strong>@item.ListingTitle</strong>
+                                <span>₱@item.Price.ToString("N2") · Quantity 1</span>
+                            </div>
+
+                            @if (!sellerView &&
+                                 string.Equals(order.Status, "Completed", StringComparison.OrdinalIgnoreCase) &&
+                                 !item.HasReview)
+                            {
+                                <button class="review-button" @onclick="() => OpenReview(item)">Rate & Review</button>
+                            }
+                            else if (!sellerView && item.HasReview)
+                            {
+                                <span class="reviewed"><i class="bi bi-patch-check-fill"></i> Reviewed</span>
+                            }
+                        </div>
+                    }
+
+                    <div class="summary">
+                        <span>@order.PaymentMethod</span>
+                        @if (order.VoucherDiscount > 0)
+                        {
+                            <span>Voucher -₱@order.VoucherDiscount.ToString("N2")</span>
+                        }
+                        <strong>Total ₱@order.Total.ToString("N2")</strong>
+                    </div>
+
+                    @if (string.Equals(order.Status, "Purchase Requested", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <footer>
+                            @if (sellerView)
+                            {
+                                <button class="complete" @onclick="() => Complete(order)">Mark Completed</button>
+                            }
+                            <button class="cancel" @onclick="() => Cancel(order)">Cancel Request</button>
+                        </footer>
+                    }
+                </section>
+            }
+        }
+
+        @if (!sellerView && vouchers.Count > 0)
+        {
+            <section class="voucher-section">
+                <span class="kicker">MY ACTIVE VOUCHERS</span>
+                <div class="voucher-grid">
+                    @foreach (var voucher in vouchers)
+                    {
+                        <article>
+                            <div><small>REVIEW REWARD</small><strong>₱@voucher.Amount.ToString("N0") OFF</strong></div>
+                            <code>@voucher.Code</code>
+                            <span>Valid until @voucher.ExpiresAt.ToString("MMM d, yyyy")</span>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
+    </main>
+</div>
+
+@if (reviewItem is not null)
+{
+    <div class="modal-backdrop">
+        <section class="review-modal">
+            <button class="close" @onclick="CloseReview"><i class="bi bi-x-lg"></i></button>
+            <span class="kicker">VERIFIED PURCHASE REVIEW</span>
+            <h2>@reviewItem.ListingTitle</h2>
+            <p>Share an honest review. Any rating from 1–5 stars earns the same ₱20 demo voucher after submission.</p>
+
+            <div class="stars">
+                @for (var star = 1; star <= 5; star++)
+                {
+                    var value = star;
+                    <button class="@(reviewRating >= value ? "selected" : "")" @onclick="() => reviewRating = value">★</button>
+                }
+            </div>
+
+            <textarea maxlength="500" @bind="reviewComment" placeholder="Optional: tell other pet owners about the item and seller experience."></textarea>
+            <small>@reviewComment.Length / 500</small>
+
+            <button class="submit-review" @onclick="SubmitReview">Submit Review & Earn ₱20 Voucher</button>
+        </section>
+    </div>
+}
+
+<style>
+    .orders-page{min-height:100vh;background:#FAF9F6;color:#173D3D}.orders-shell{width:min(1000px,calc(100% - 32px));margin:auto}.orders-hero{padding:52px 0;background:#173D3D;color:#fff}.orders-hero span,.kicker{font-size:.66rem;font-weight:900;letter-spacing:.12em;color:#F3D27A}.orders-hero h1{margin:8px 0 6px;font-size:clamp(2rem,4vw,3.3rem);letter-spacing:-.04em}.orders-hero p{margin:0;max-width:760px;color:#D6E4E0}
+    .orders-main{padding:30px 0 70px}.tabs{display:flex;gap:7px;margin-bottom:16px}.tabs button{padding:10px 14px;border:1px solid #D3DFDB;border-radius:9px;background:#fff;color:#53645E;font-weight:850;cursor:pointer}.tabs button.active{background:#173D3D;border-color:#173D3D;color:#fff}
+    .order-card,.empty,.voucher-section{margin-bottom:15px;border:1px solid #DDE7E4;border-radius:18px;background:#fff;box-shadow:0 10px 28px rgba(23,61,61,.05);overflow:hidden}.order-card header{display:flex;justify-content:space-between;gap:16px;padding:18px 20px;border-bottom:1px solid #EDF1EF}.order-card small{color:#2F9098;font-weight:900;letter-spacing:.1em}.order-card h2{margin:4px 0 2px;font-size:.95rem}.order-card header span{color:#8A9793;font-size:.68rem}.status{height:max-content;padding:6px 9px;border-radius:999px;background:#EEF6F4;color:#267C83;font-size:.64rem;font-weight:850}
+    .party{padding:12px 20px;background:#FAFCFB}.party span,.party strong{font-size:.72rem}.party span{color:#899692;margin-right:7px}.order-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 20px;border-top:1px solid #F0F2F1}.order-item strong,.order-item span{display:block}.order-item span{margin-top:3px;color:#84928E;font-size:.68rem}.review-button,.complete,.cancel,.submit-review{border:0;border-radius:8px;padding:9px 12px;font-weight:850;cursor:pointer}.review-button,.complete,.submit-review{background:#2F9098;color:#fff}.reviewed{color:#267C83!important;font-weight:800}.summary{display:flex;justify-content:flex-end;gap:16px;flex-wrap:wrap;padding:13px 20px;background:#FAFCFB;font-size:.72rem}.order-card footer{display:flex;justify-content:flex-end;gap:7px;padding:13px 20px}.cancel{background:#FFF2F2;color:#A04343}
+    .empty{padding:65px 20px;text-align:center}.empty i{font-size:1.8rem;color:#2F9098}.empty h2{margin:10px 0 5px}.empty p{color:#82918C}.empty a{display:inline-block;margin-top:12px;padding:11px 14px;border-radius:9px;background:#2F9098;color:#fff;text-decoration:none;font-weight:850}.voucher-section{padding:20px}.voucher-section>.kicker{color:#2F9098}.voucher-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:13px}.voucher-grid article{padding:15px;border:1px dashed #BFD5CF;border-radius:12px;background:#F2F8F6}.voucher-grid small,.voucher-grid strong,.voucher-grid code,.voucher-grid span{display:block}.voucher-grid strong{font-size:1.2rem}.voucher-grid code{margin:8px 0;color:#267C83;font-weight:900}.voucher-grid span{font-size:.68rem;color:#71827D}
+    .message{margin-bottom:14px;padding:12px;border-radius:10px;background:#EAF7F1;color:#286B4E}.message.error{background:#FFF0F0;color:#9B3E3E}.modal-backdrop{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;padding:16px;background:rgba(13,35,33,.58)}.review-modal{position:relative;width:min(520px,100%);padding:25px;border-radius:18px;background:#fff;box-shadow:0 24px 70px rgba(0,0,0,.22)}.review-modal>.kicker{color:#2F9098}.review-modal h2{margin:7px 0}.review-modal p{color:#71827D;font-size:.78rem;line-height:1.5}.close{position:absolute;right:15px;top:15px;border:0;background:transparent;cursor:pointer}.stars{display:flex;gap:4px;margin:15px 0}.stars button{border:0;background:transparent;color:#C8CFCD;font-size:1.8rem;cursor:pointer}.stars button.selected{color:#E0B53B}.review-modal textarea{width:100%;min-height:110px;padding:11px;border:1px solid #CBD9D5;border-radius:9px;resize:vertical}.review-modal>small{display:block;text-align:right;color:#8A9793}.submit-review{width:100%;margin-top:13px}.kicker{color:#2F9098}
+    @@media(max-width:650px){.voucher-grid{grid-template-columns:1fr}.order-card header,.order-item{align-items:flex-start;flex-direction:column}.summary{justify-content:flex-start}}
+</style>
+
+@code {
+    private List<MarketplaceOrder> purchases = new();
+    private List<MarketplaceOrder> sales = new();
+    private List<MarketplaceVoucher> vouchers = new();
+    private bool sellerView;
+    private MarketplaceOrderItem? reviewItem;
+    private int reviewRating = 5;
+    private string reviewComment = string.Empty;
+    private string message = string.Empty;
+    private bool isError;
+
+    private List<MarketplaceOrder> VisibleOrders => sellerView ? sales : purchases;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await Auth.InitializeAsync();
+
+        if (!Auth.IsLoggedIn || Auth.CurrentUser is null)
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+
+        LoadData();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void LoadData()
+    {
+        if (Auth.CurrentUser is null) return;
+        purchases = Orders.GetBuyerOrders(Auth.CurrentUser.Id);
+        sales = Orders.GetSellerOrders(Auth.CurrentUser.Id);
+        vouchers = Orders.GetActiveVouchers(Auth.CurrentUser.Id);
+    }
+
+    private void ShowPurchases() { sellerView = false; message = string.Empty; }
+    private void ShowSales() { sellerView = true; message = string.Empty; }
+
+    private void Complete(MarketplaceOrder order)
+    {
+        if (Auth.CurrentUser is null) return;
+        try
+        {
+            if (Orders.CompleteOrder(order.Id, Auth.CurrentUser.Id))
+            {
+                message = "Order marked completed. The buyer can now submit a verified review.";
+                isError = false;
+                LoadData();
+            }
+        }
+        catch (Exception ex) { isError = true; message = ex.Message; }
+    }
+
+    private void Cancel(MarketplaceOrder order)
+    {
+        if (Auth.CurrentUser is null) return;
+        try
+        {
+            if (Orders.CancelOrder(order.Id, Auth.CurrentUser.Id))
+            {
+                message = "Purchase request cancelled.";
+                isError = false;
+                LoadData();
+            }
+        }
+        catch (Exception ex) { isError = true; message = ex.Message; }
+    }
+
+    private void OpenReview(MarketplaceOrderItem item)
+    {
+        reviewItem = item;
+        reviewRating = 5;
+        reviewComment = string.Empty;
+    }
+
+    private void CloseReview() => reviewItem = null;
+
+    private void SubmitReview()
+    {
+        if (Auth.CurrentUser is null || reviewItem is null) return;
+
+        try
+        {
+            var result = Orders.AddReview(reviewItem.Id, Auth.CurrentUser.Id, reviewRating, reviewComment);
+            isError = !result.Success;
+            message = result.Success
+                ? $"{result.Message} Code: {result.VoucherCode}"
+                : result.Message;
+
+            if (result.Success)
+            {
+                reviewItem = null;
+                LoadData();
+            }
+        }
+        catch (Exception ex) { isError = true; message = ex.Message; }
+    }
+}
