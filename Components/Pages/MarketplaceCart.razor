@@ -1,0 +1,119 @@
+@page "/marketplace/cart"
+@rendermode InteractiveServer
+@inject MarketplaceCartService Cart
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Marketplace Cart | ShoppetCare</PageTitle>
+
+<div class="cart-page">
+    <section class="cart-hero">
+        <div class="cart-shell">
+            <span>PRE-LOVED MARKETPLACE</span>
+            <h1>Your marketplace cart.</h1>
+            <p>Pre-loved items are unique, so every listing has a quantity of one. Checkout is grouped by seller.</p>
+        </div>
+    </section>
+
+    <main class="cart-shell cart-main">
+        @if (Cart.Count == 0)
+        {
+            <section class="empty-card">
+                <i class="bi bi-bag"></i>
+                <h2>Your cart is empty</h2>
+                <p>Browse pre-loved pet essentials and save an available item here.</p>
+                <a href="/marketplace">Browse Marketplace</a>
+            </section>
+        }
+        else
+        {
+            @if (Auth.IsGuest)
+            {
+                <div class="guest-note">
+                    <strong>Guest cart preview</strong>
+                    <span>Your cart works during this session. Create an account or sign in before submitting a purchase request.</span>
+                </div>
+            }
+
+            @foreach (var group in Cart.Items.GroupBy(x => new { x.SellerUserId, x.SellerName }))
+            {
+                <section class="seller-card">
+                    <header>
+                        <div>
+                            <small>SELLER</small>
+                            <h2>@group.Key.SellerName</h2>
+                        </div>
+                        <strong>₱@group.Sum(x => x.Price).ToString("N2")</strong>
+                    </header>
+
+                    @foreach (var item in group)
+                    {
+                        <article class="cart-item">
+                            <div class="item-photo">
+                                @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl" alt="@item.Title" />
+                                }
+                                else
+                                {
+                                    <i class="bi bi-image"></i>
+                                }
+                            </div>
+                            <div class="item-copy">
+                                <h3>@item.Title</h3>
+                                <span>Quantity 1 · Pre-loved item</span>
+                            </div>
+                            <strong>₱@item.Price.ToString("N2")</strong>
+                            <button type="button" @onclick="() => Remove(item.ListingId)">Remove</button>
+                        </article>
+                    }
+
+                    <footer>
+                        <span>@group.Count() item@(group.Count() == 1 ? "" : "s")</span>
+                        @if (Auth.IsLoggedIn)
+                        {
+                            <a href="@($"/marketplace/checkout/{group.Key.SellerUserId}")">Checkout this seller</a>
+                        }
+                        else
+                        {
+                            <button type="button" @onclick="GoToLogin">Sign in to Checkout</button>
+                        }
+                    </footer>
+                </section>
+            }
+
+            <div class="cart-total">
+                <span>Cart total</span>
+                <strong>₱@Cart.Total.ToString("N2")</strong>
+            </div>
+        }
+    </main>
+</div>
+
+<style>
+    .cart-page{min-height:100vh;background:#FAF9F6;color:#173D3D}.cart-shell{width:min(1050px,calc(100% - 32px));margin:auto}
+    .cart-hero{padding:56px 0;background:#173D3D;color:#fff}.cart-hero span{font-size:.68rem;font-weight:900;letter-spacing:.12em;color:#F3D27A}
+    .cart-hero h1{margin:8px 0 6px;font-size:clamp(2rem,4vw,3.5rem);letter-spacing:-.04em}.cart-hero p{margin:0;max-width:700px;color:#D6E4E0}
+    .cart-main{padding:32px 0 70px}.guest-note,.seller-card,.empty-card,.cart-total{border:1px solid #DDE7E4;border-radius:18px;background:#fff;box-shadow:0 10px 28px rgba(23,61,61,.05)}
+    .guest-note{padding:15px 18px;margin-bottom:16px;background:#F2F8F6}.guest-note strong,.guest-note span{display:block}.guest-note span{margin-top:4px;color:#6A7B76;font-size:.8rem}
+    .seller-card{margin-bottom:16px;overflow:hidden}.seller-card header,.seller-card footer{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px}
+    .seller-card header{border-bottom:1px solid #EDF1EF}.seller-card small{color:#2F9098;font-weight:900;letter-spacing:.1em}.seller-card h2{margin:3px 0 0;font-size:1rem}
+    .cart-item{display:grid;grid-template-columns:64px minmax(0,1fr) auto auto;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid #F0F2F1}
+    .item-photo{width:64px;height:64px;border-radius:12px;background:#EEF4F1;display:grid;place-items:center;overflow:hidden}.item-photo img{width:100%;height:100%;object-fit:cover}
+    .item-copy h3{margin:0;font-size:.9rem}.item-copy span{display:block;margin-top:4px;color:#85928E;font-size:.7rem}.cart-item button{border:0;background:transparent;color:#A04343;font-weight:800;cursor:pointer}
+    .seller-card footer{background:#FAFCFB}.seller-card footer span{color:#788783;font-size:.76rem}.seller-card footer a,.seller-card footer button,.empty-card a{border:0;border-radius:9px;background:#2F9098;color:#fff;text-decoration:none;padding:11px 15px;font-weight:850;cursor:pointer}
+    .cart-total{display:flex;justify-content:space-between;padding:20px;font-size:1.05rem}.empty-card{padding:70px 24px;text-align:center}.empty-card i{font-size:2rem;color:#2F9098}.empty-card h2{margin:12px 0 6px}.empty-card p{margin:0 0 22px;color:#7D8D88}
+    @@media(max-width:650px){.cart-item{grid-template-columns:56px 1fr}.cart-item>strong,.cart-item>button{grid-column:2}.seller-card footer{align-items:flex-start;flex-direction:column}}
+</style>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await Auth.InitializeAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void Remove(int listingId) => Cart.Remove(listingId);
+    private void GoToLogin() => Nav.NavigateTo("/login");
+}
