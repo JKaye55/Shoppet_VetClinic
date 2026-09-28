@@ -88,9 +88,9 @@
                         </strong>
 
                         <span>
-                            You can read community posts freely.
-                            Create an account to share your own
-                            pet stories.
+                            You can read posts and comment as Guest.
+                            Guest identity is fixed for clarity. Create an account
+                            to publish stories, like posts, and build your profile.
                         </span>
 
                     </div>
@@ -609,11 +609,13 @@
                                         <div class="sc-community-comment-form">
                                             @if (Auth.IsGuest)
                                             {
-                                                <input type="text"
-                                                       maxlength="40"
-                                                       value="@GetGuestName(post.Id)"
-                                                       @oninput="e => SetGuestName(post.Id, e.Value?.ToString() ?? string.Empty)"
-                                                       placeholder="Guest display name" />
+                                                <div class="sc-community-comment-identity">
+                                                    <span class="sc-community-guest-avatar">G</span>
+                                                    <span>
+                                                        <strong>Commenting as Guest</strong>
+                                                        <small>Your guest name cannot be changed.</small>
+                                                    </span>
+                                                </div>
                                             }
 
                                             <div>
@@ -621,7 +623,7 @@
                                                        maxlength="300"
                                                        value="@GetCommentDraft(post.Id)"
                                                        @oninput="e => SetCommentDraft(post.Id, e.Value?.ToString() ?? string.Empty)"
-                                                       placeholder="Write a comment..." />
+                                                       placeholder="Write a helpful comment..." />
                                                 <button type="button" @onclick="() => SubmitComment(post.Id)">Comment</button>
                                             </div>
                                         </div>
@@ -1371,11 +1373,46 @@
         margin-top: 9px;
     }
 
-    .sc-community-comment-form > input {
-        margin-bottom: 6px;
+    .sc-community-comment-identity {
+        margin-bottom: 7px;
+        padding: 8px 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid #E0E8E5;
+        border-radius: 9px;
+        background: #F7F9F8;
     }
 
-    .sc-community-comment-form > div {
+    .sc-community-guest-avatar {
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #E6EFEC;
+        color: #667772;
+        font-size: .64rem;
+        font-weight: 900;
+    }
+
+    .sc-community-comment-identity strong,
+    .sc-community-comment-identity small {
+        display: block;
+    }
+
+    .sc-community-comment-identity strong {
+        color: #4F615B;
+        font-size: .64rem;
+    }
+
+    .sc-community-comment-identity small {
+        margin-top: 1px;
+        color: #909B97;
+        font-size: .56rem;
+    }
+
+    .sc-community-comment-form > div:last-child {
         display: grid;
         grid-template-columns: 1fr auto;
         gap: 6px;
@@ -1742,7 +1779,6 @@
 
     private readonly Dictionary<int, List<CommunityComment>> commentsByPost = new();
     private readonly Dictionary<int, string> commentDrafts = new();
-    private readonly Dictionary<int, string> guestNames = new();
 
     private List<CommunityPost> posts = new();
 
@@ -1959,12 +1995,6 @@
     private void SetCommentDraft(int postId, string value) =>
         commentDrafts[postId] = value;
 
-    private string GetGuestName(int postId) =>
-        guestNames.TryGetValue(postId, out var value) ? value : "Guest";
-
-    private void SetGuestName(int postId, string value) =>
-        guestNames[postId] = value;
-
     private void SubmitComment(int postId)
     {
         var body = GetCommentDraft(postId).Trim();
@@ -1978,7 +2008,7 @@
         var isGuest = Auth.IsGuest || !Auth.IsLoggedIn;
         var userId = Auth.CurrentUser?.Id;
         var authorName = isGuest
-            ? GetGuestName(postId)
+            ? "Guest"
             : Auth.CurrentUser?.FullName ?? "Pet Owner";
 
         try
