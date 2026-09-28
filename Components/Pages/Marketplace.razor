@@ -3,6 +3,7 @@
 @implements IDisposable
 
 @inject MarketplaceService ListingService
+@inject CommerceService Commerce
 @inject FileStorageService FileStorage
 @inject AuthService Auth
 @inject NavigationManager Nav
@@ -41,17 +42,22 @@
 
             <div class="sc-marketplace-hero-actions">
 
-                @if (Auth.IsLoggedIn && Auth.IsPetOwner)
+                @if (Auth.IsLoggedIn && Auth.IsPetOwner && sellerActive)
                 {
                     <button type="button"
                             class="sc-marketplace-sell"
                             @onclick="StartCreating">
-
-                        <i class="bi bi-plus-lg"
-                           aria-hidden="true"></i>
-
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
                         Sell an Item
-
+                    </button>
+                }
+                else if (Auth.IsLoggedIn && Auth.IsPetOwner)
+                {
+                    <button type="button"
+                            class="sc-marketplace-sell"
+                            @onclick="GoToSellerCheckout">
+                        <i class="bi bi-patch-check-fill" aria-hidden="true"></i>
+                        Become a Verified Seller
                     </button>
                 }
                 else
@@ -59,12 +65,8 @@
                     <button type="button"
                             class="sc-marketplace-sell"
                             @onclick="GoToRegister">
-
-                        <i class="bi bi-lock-fill"
-                           aria-hidden="true"></i>
-
+                        <i class="bi bi-lock-fill" aria-hidden="true"></i>
                         Sell an Item
-
                     </button>
                 }
 
@@ -401,6 +403,30 @@
 
         <div class="sc-marketplace-shell">
 
+            @if (Auth.IsLoggedIn && Auth.IsPetOwner)
+            {
+                <div style="margin-bottom:18px;padding:14px 16px;border:1px solid #DDE7E4;border-radius:14px;background:#FFFFFF;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+                    <div>
+                        <strong style="display:block;color:#173D3D;">
+                            @(sellerActive ? "Verified Seller is active" : "Browsing as a Pet Owner")
+                        </strong>
+                        <span style="display:block;margin-top:3px;color:#77857F;font-size:.72rem;">
+                            @(sellerActive
+                                ? $"Selling access active until {sellerExpiresAt?.ToString("MMM d, yyyy")}."
+                                : "A ₱50/month Verified Seller subscription is required to create or manage listings.")
+                        </span>
+                    </div>
+
+                    @if (!sellerActive)
+                    {
+                        <a href="/checkout/SellerSubscription"
+                           style="padding:10px 14px;border-radius:10px;background:#2F9098;color:#fff;text-decoration:none;font-size:.74rem;font-weight:850;">
+                            Activate for ₱50/month
+                        </a>
+                    }
+                </div>
+            }
+
 
             <!-- =================================================
                  USER TABS
@@ -676,6 +702,12 @@
 
                                         <strong>
                                             @listing.SellerName
+                                        @if (listing.IsVerifiedSeller)
+                                        {
+                                            <span style="display:inline-flex;margin-left:6px;padding:3px 7px;border-radius:999px;background:#EAF5F5;color:#267C83;font-size:.58rem;font-weight:900;vertical-align:middle;">
+                                                Verified Seller
+                                            </span>
+                                        }
                                         </strong>
 
                                     </div>
@@ -1889,6 +1921,8 @@
     private string conditionFilter = string.Empty;
 
     private bool showMyListings;
+    private bool sellerActive;
+    private DateTime? sellerExpiresAt;
 
 
     // =========================================================
@@ -2065,6 +2099,7 @@
 
         await Auth.InitializeAsync();
 
+        RefreshSellerStatus();
 
         await InvokeAsync(
             StateHasChanged);
@@ -2117,6 +2152,13 @@
             return;
         }
 
+        RefreshSellerStatus();
+
+        if (!sellerActive)
+        {
+            GoToSellerCheckout();
+            return;
+        }
 
         ResetForm();
 
@@ -2138,6 +2180,14 @@
     {
         if (!IsOwnListing(listing))
             return;
+
+        RefreshSellerStatus();
+
+        if (!sellerActive)
+        {
+            ShowError("Your Verified Seller subscription is inactive. Renew it to manage listings.");
+            return;
+        }
 
 
         editingId =
@@ -2238,6 +2288,15 @@
             ShowError(
                 "Please sign in with a pet owner account before creating a listing.");
 
+            return;
+        }
+
+        RefreshSellerStatus();
+
+        if (!sellerActive)
+        {
+            ShowError(
+                "An active Verified Seller subscription is required to create or update listings.");
 
             return;
         }
@@ -2520,6 +2579,14 @@
             return;
         }
 
+        RefreshSellerStatus();
+
+        if (!sellerActive)
+        {
+            ShowError("Renew Verified Seller to manage listing status.");
+            return;
+        }
+
 
         try
         {
@@ -2665,6 +2732,37 @@
     // =========================================================
     // CONTACT SELLER
     // =========================================================
+
+    private void RefreshSellerStatus()
+    {
+        if (Auth.CurrentUser is null || !Auth.IsPetOwner)
+        {
+            sellerActive = false;
+            sellerExpiresAt = null;
+            return;
+        }
+
+        var subscription =
+            Commerce.GetActiveSubscription(
+                CommerceService.SellerType,
+                userId: Auth.CurrentUser.Id);
+
+        sellerActive = subscription is not null;
+        sellerExpiresAt = subscription?.ExpiresAt;
+    }
+
+
+    private void GoToSellerCheckout()
+    {
+        if (!Auth.IsLoggedIn)
+        {
+            GoToLogin();
+            return;
+        }
+
+        Nav.NavigateTo("/checkout/SellerSubscription");
+    }
+
 
     private void ToggleContact(
         int listingId)
