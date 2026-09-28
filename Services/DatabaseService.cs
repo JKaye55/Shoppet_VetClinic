@@ -69,7 +69,18 @@ namespace Shoppet_VetClinic.Services
                         VerifiedAt,
                         VerificationFee,
                         VerificationReference,
-                        ISNULL(VerificationStatus, 'Unverified')
+                        ISNULL(VerificationStatus, 'Unverified'),
+                        CAST(
+                            CASE WHEN EXISTS
+                            (
+                                SELECT 1
+                                FROM UserAccounts ownerAccount
+                                WHERE ownerAccount.ClinicId = ClinicTenants.Id
+                                  AND ownerAccount.Role IN ('Clinic Owner', 'Clinic Representative')
+                            )
+                            THEN 1 ELSE 0 END
+                            AS bit
+                        )
                     FROM ClinicTenants
                     ORDER BY ClinicName", conn);
 
@@ -153,7 +164,10 @@ namespace Shoppet_VetClinic.Services
 
                         VerificationStatus = reader.IsDBNull(19)
                             ? "Unverified"
-                            : reader.GetString(19)
+                            : reader.GetString(19),
+
+                        IsClaimed = !reader.IsDBNull(20)
+                            && reader.GetBoolean(20)
                     });
                 }
             }
