@@ -40,5 +40,7 @@
 
         public string SellerEmail { get; set; }
             = string.Empty;
+
+        public bool IsVerifiedSeller { get; set; }
     }
 }
