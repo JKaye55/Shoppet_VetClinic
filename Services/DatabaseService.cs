@@ -495,7 +495,7 @@ namespace Shoppet_VetClinic.Services
                 SELECT
                     Id, FullName, Email, PasswordHash, Role,
                     ClinicId, CreatedAt,
-                    ISNULL(IsPremium, 0),
+                    ISNULL(IsPremium, 0) AS IsPremium,
                     PremiumActivatedAt,
                     PremiumReference,
                     ApiToken,
