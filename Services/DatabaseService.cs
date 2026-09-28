@@ -597,12 +597,17 @@ namespace Shoppet_VetClinic.Services
 
         public UserAccount? RegisterUser(
     string fullName,
+    string mobileNumber,
     string email,
     string password,
     string role)
         {
             fullName =
                 fullName.Trim();
+
+
+            mobileNumber =
+                mobileNumber.Trim();
 
 
             email =
@@ -619,10 +624,16 @@ namespace Shoppet_VetClinic.Services
             conn.Open();
 
 
+            // =========================================================
+            // CHECK EMAIL
+            // =========================================================
+
             using var checkCmd =
                 new SqlCommand(@"
             SELECT COUNT(1)
+
             FROM UserAccounts
+
             WHERE Email = @Email;",
                     conn);
 
@@ -638,6 +649,10 @@ namespace Shoppet_VetClinic.Services
                 return null;
             }
 
+
+            // =========================================================
+            // CREATE USER OBJECT FOR PASSWORD HASHING
+            // =========================================================
 
             var user =
                 new UserAccount
@@ -660,11 +675,16 @@ namespace Shoppet_VetClinic.Services
                         password);
 
 
+            // =========================================================
+            // INSERT USER
+            // =========================================================
+
             using var insertCmd =
                 new SqlCommand(@"
             INSERT INTO UserAccounts
             (
                 FullName,
+                MobileNumber,
                 Email,
                 PasswordHash,
                 Role
@@ -677,6 +697,7 @@ namespace Shoppet_VetClinic.Services
             VALUES
             (
                 @FullName,
+                @MobileNumber,
                 @Email,
                 @PasswordHash,
                 @Role
@@ -687,6 +708,11 @@ namespace Shoppet_VetClinic.Services
             insertCmd.Parameters.AddWithValue(
                 "@FullName",
                 fullName);
+
+
+            insertCmd.Parameters.AddWithValue(
+                "@MobileNumber",
+                mobileNumber);
 
 
             insertCmd.Parameters.AddWithValue(
@@ -726,6 +752,7 @@ namespace Shoppet_VetClinic.Services
 
             return user;
         }
+
         public UserAccount? AuthenticateUser(
     string email,
     string password)
@@ -1120,9 +1147,10 @@ namespace Shoppet_VetClinic.Services
 
 
         public bool UpdateUserProfile(
-            int userId,
-            string fullName,
-            string email)
+      int userId,
+      string fullName,
+      string email,
+      string mobileNumber)
         {
             fullName =
                 fullName.Trim();
@@ -1132,9 +1160,21 @@ namespace Shoppet_VetClinic.Services
                     .Trim()
                     .ToLowerInvariant();
 
+            mobileNumber =
+                new string(
+                    (mobileNumber ?? string.Empty)
+                        .Where(char.IsDigit)
+                        .ToArray());
+
+            if (mobileNumber.Length == 12 &&
+                mobileNumber.StartsWith("63"))
+            {
+                mobileNumber =
+                    "0" + mobileNumber.Substring(2);
+            }
+
             using var conn =
-                new SqlConnection(
-                    _connectionString);
+                new SqlConnection(_connectionString);
 
             conn.Open();
 
@@ -1143,7 +1183,8 @@ namespace Shoppet_VetClinic.Services
             UPDATE UserAccounts
             SET
                 FullName = @FullName,
-                Email = @Email
+                Email = @Email,
+                MobileNumber = @MobileNumber
             WHERE Id = @Id;",
                     conn);
 
@@ -1156,88 +1197,185 @@ namespace Shoppet_VetClinic.Services
                 email);
 
             cmd.Parameters.AddWithValue(
+                "@MobileNumber",
+                string.IsNullOrWhiteSpace(mobileNumber)
+                    ? (object)DBNull.Value
+                    : mobileNumber);
+
+            cmd.Parameters.AddWithValue(
                 "@Id",
                 userId);
 
             return
                 cmd.ExecuteNonQuery() > 0;
         }
-
         // =========================================================
         // PREMIUM (Pet ID Virtual Card Premium — ₱49 one-time)
         // =========================================================
 
-        public bool IsUserPremium(int userId)
+        public bool IsUserPremium(
+     int userId)
         {
-            using var conn = new SqlConnection(_connectionString);
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
             conn.Open();
 
-            using var cmd = new SqlCommand(
-                "SELECT ISNULL(IsPremium, 0) FROM UserAccounts WHERE Id=@Id",
-                conn);
+            using var cmd =
+                new SqlCommand(@"
+            SELECT
+                ISNULL(IsPremium, 0),
+                PremiumActivatedAt
+            FROM UserAccounts
+            WHERE Id = @Id;",
+                    conn);
 
-            cmd.Parameters.AddWithValue("@Id", userId);
+            cmd.Parameters.AddWithValue(
+                "@Id",
+                userId);
 
-            var v = cmd.ExecuteScalar();
+            using var reader =
+                cmd.ExecuteReader();
 
-            return v != null && Convert.ToBoolean(v);
+            if (!reader.Read())
+            {
+                return false;
+            }
+
+            var premiumFlag =
+                !reader.IsDBNull(0)
+                &&
+                reader.GetBoolean(0);
+
+            var activatedAt =
+                reader.IsDBNull(1)
+                    ? (DateTime?)null
+                    : reader.GetDateTime(1);
+
+            if (!premiumFlag ||
+                !activatedAt.HasValue)
+            {
+                return false;
+            }
+
+            return
+                activatedAt.Value
+                    .AddMonths(3)
+                >=
+                DateTime.Now;
         }
 
 
         public bool ActivatePremiumUpgrade(
-            int userId,
-            string reference,
-            decimal amount = 49m)
+    int userId,
+    string reference,
+    decimal amount = 150m)
         {
-            using var conn = new SqlConnection(_connectionString);
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
             conn.Open();
-            using var tx = conn.BeginTransaction();
+
+            using var tx =
+                conn.BeginTransaction();
 
             try
             {
-                using (var cmd = new SqlCommand(@"
-                    UPDATE UserAccounts
-                    SET IsPremium = 1,
-                        PremiumActivatedAt = SYSDATETIME(),
-                        PremiumReference = @Ref
-                    WHERE Id = @UserId
-                      AND Role = 'Pet Owner'
-                      AND ISNULL(IsPremium, 0) = 0",
-                    conn, tx))
+                using (var cmd =
+                    new SqlCommand(@"
+                UPDATE UserAccounts
+
+                SET
+                    IsPremium = 1,
+                    PremiumActivatedAt = SYSDATETIME(),
+                    PremiumReference = @Ref
+
+                WHERE
+                    Id = @UserId
+                    AND Role = 'Pet Owner'
+                    AND
+                    (
+                        ISNULL(IsPremium, 0) = 0
+
+                        OR
+
+                        PremiumActivatedAt IS NULL
+
+                        OR
+
+                        DATEADD(
+                            MONTH,
+                            3,
+                            PremiumActivatedAt
+                        ) < SYSDATETIME()
+                    );",
+                        conn,
+                        tx))
                 {
-                    cmd.Parameters.AddWithValue("@UserId", userId);
-                    cmd.Parameters.AddWithValue("@Ref", reference);
+                    cmd.Parameters.AddWithValue(
+                        "@UserId",
+                        userId);
+
+                    cmd.Parameters.AddWithValue(
+                        "@Ref",
+                        reference);
 
                     if (cmd.ExecuteNonQuery() == 0)
                     {
                         tx.Rollback();
+
                         return false;
                     }
                 }
 
-                using (var log = new SqlCommand(@"
-                    INSERT INTO Transactions
-                        (UserId, Type, Amount, Reference)
-                    VALUES
-                        (@UserId, 'PremiumUpgrade', @Amount, @Ref)",
-                    conn, tx))
+                using (var log =
+                    new SqlCommand(@"
+                INSERT INTO Transactions
+                (
+                    UserId,
+                    Type,
+                    Amount,
+                    Reference
+                )
+
+                VALUES
+                (
+                    @UserId,
+                    'PremiumSubscription',
+                    @Amount,
+                    @Ref
+                );",
+                        conn,
+                        tx))
                 {
-                    log.Parameters.AddWithValue("@UserId", userId);
-                    log.Parameters.AddWithValue("@Amount", amount);
-                    log.Parameters.AddWithValue("@Ref", reference);
+                    log.Parameters.AddWithValue(
+                        "@UserId",
+                        userId);
+
+                    log.Parameters.AddWithValue(
+                        "@Amount",
+                        amount);
+
+                    log.Parameters.AddWithValue(
+                        "@Ref",
+                        reference);
+
                     log.ExecuteNonQuery();
                 }
 
                 tx.Commit();
+
                 return true;
             }
             catch
             {
                 tx.Rollback();
+
                 throw;
             }
         }
-
 
         // =========================================================
         // PET PROFILES
@@ -1253,8 +1391,8 @@ namespace Shoppet_VetClinic.Services
             using var cmd = new SqlCommand(@"
                 SELECT
                     Id, UserId, PetName, Breed, Species,
-                    Age, WeightKg, Diet, CreatedAt,
-                    CardId, CardIssuedAt, CardTheme
+Age, BirthDate, WeightKg, Diet, CreatedAt,
+CardId, CardIssuedAt, CardTheme
                 FROM PetProfiles
                 WHERE UserId=@UserId
                 ORDER BY PetName",
@@ -1348,30 +1486,33 @@ namespace Shoppet_VetClinic.Services
                     ? string.Empty
                     : reader.GetString(5),
 
-                WeightKg = reader.IsDBNull(6)
+                BirthDate = reader.IsDBNull(6)
                     ? null
-                    : reader.GetDecimal(6),
+                    : reader.GetDateTime(6),
 
-                Diet = reader.IsDBNull(7)
+                WeightKg = reader.IsDBNull(7)
+                    ? null
+                    : reader.GetDecimal(7),
+
+                Diet = reader.IsDBNull(8)
                     ? string.Empty
-                    : reader.GetString(7),
+                    : reader.GetString(8),
 
-                CreatedAt = reader.GetDateTime(8),
+                CreatedAt = reader.GetDateTime(9),
 
-                CardId = reader.IsDBNull(9)
+                CardId = reader.IsDBNull(10)
                     ? string.Empty
-                    : reader.GetString(9),
+                    : reader.GetString(10),
 
-                CardIssuedAt = reader.IsDBNull(10)
+                CardIssuedAt = reader.IsDBNull(11)
                     ? null
-                    : reader.GetDateTime(10),
+                    : reader.GetDateTime(11),
 
-                CardTheme = reader.IsDBNull(11)
+                CardTheme = reader.IsDBNull(12)
                     ? null
-                    : reader.GetString(11)
+                    : reader.GetString(12)
             };
         }
-
 
         public int AddPet(PetProfile pet)
         {
@@ -1412,12 +1553,12 @@ namespace Shoppet_VetClinic.Services
 
             using var cmd = new SqlCommand(@"
                 INSERT INTO PetProfiles
-                    (UserId, PetName, Breed, Species, Age, WeightKg, Diet,
-                     CardId, CardIssuedAt, CardTheme)
+                   (UserId, PetName, Breed, Species, Age, BirthDate, WeightKg, Diet,
+ CardId, CardIssuedAt, CardTheme)
                 OUTPUT INSERTED.Id
                 VALUES
-                    (@UserId, @PetName, @Breed, @Species, @Age, @WeightKg, @Diet,
-                     @CardId, SYSDATETIME(), @CardTheme)",
+                   (@UserId, @PetName, @Breed, @Species, @Age, @BirthDate, @WeightKg, @Diet,
+ @CardId, SYSDATETIME(), @CardTheme),
                 conn);
 
             cmd.Parameters.AddWithValue("@UserId", pet.UserId);
@@ -1427,7 +1568,11 @@ namespace Shoppet_VetClinic.Services
             cmd.Parameters.AddWithValue("@Age",
                 string.IsNullOrWhiteSpace(pet.Age) ? DBNull.Value : pet.Age);
             cmd.Parameters.AddWithValue("@WeightKg",
-                pet.WeightKg.HasValue ? pet.WeightKg.Value : DBNull.Value);
+                cmd.Parameters.AddWithValue("@BirthDate",
+    pet.BirthDate.HasValue
+        ? pet.BirthDate.Value
+        : DBNull.Value);
+            pet.WeightKg.HasValue? pet.WeightKg.Value : DBNull.Value);
             cmd.Parameters.AddWithValue("@Diet",
                 string.IsNullOrWhiteSpace(pet.Diet) ? DBNull.Value : pet.Diet);
             cmd.Parameters.AddWithValue("@CardId", cardId);
@@ -1452,6 +1597,7 @@ namespace Shoppet_VetClinic.Services
                     Breed=@Breed,
                     Species=@Species,
                     Age=@Age,
+BirthDate=@BirthDate,
                     WeightKg=@WeightKg,
                     Diet=@Diet,
                     CardTheme=@CardTheme
@@ -2981,6 +3127,48 @@ namespace Shoppet_VetClinic.Services
 
             return
                 cmd.ExecuteNonQuery() > 0;
+        }
+        public string GetUserMobileNumber(
+  int userId)
+        {
+            using var conn =
+                new SqlConnection(
+                    _connectionString);
+
+
+            conn.Open();
+
+
+            using var cmd =
+                new SqlCommand(@"
+            SELECT MobileNumber
+
+            FROM UserAccounts
+
+            WHERE Id = @UserId;",
+                    conn);
+
+
+            cmd.Parameters.AddWithValue(
+                "@UserId",
+                userId);
+
+
+            var result =
+                cmd.ExecuteScalar();
+
+
+            if (result is null ||
+                result == DBNull.Value)
+            {
+                return string.Empty;
+            }
+
+
+            return
+                result.ToString()
+                ??
+                string.Empty;
         }
     }
 }

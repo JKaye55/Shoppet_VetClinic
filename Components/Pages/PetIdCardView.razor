@@ -1,442 +1,383 @@
 ﻿@using Shoppet_VetClinic.Models
-@using Shoppet_VetClinic.Services
 
-@inject CardService Cards
+@if (Pet is not null)
+{
+    <article class="@CardClass">
 
+        <!-- =====================================================
+             TOP IDENTITY BAR
+             ===================================================== -->
 
-<article class="@CardClass">
+        <header class="sc-id-header">
 
-    <!-- =========================================================
-         TOP BRAND
-         ========================================================= -->
+            <div class="sc-id-brand">
 
-    <header class="pid-top">
+                <div class="sc-id-logo">
+                    <img src="/shoppetlogo.png"
+                         alt="ShoppetCare" />
+                </div>
 
-        <div class="pid-brand">
-
-            <div class="pid-logo">
-
-                <img src="/shoppetlogo.png"
-                     alt="ShoppetCare" />
-
-            </div>
-
-
-            <div>
-
-                <strong>
-                    ShoppetCare
-                </strong>
-
-                <span>
-                    DIGITAL PET IDENTITY
-                </span>
+                <div class="sc-id-brand-copy">
+                    <strong>ShoppetCare</strong>
+                    <span>Digital Pet Identity</span>
+                </div>
 
             </div>
 
-        </div>
 
+            <div class="sc-id-title">
+                <span>SHOPPETCARE</span>
+                <strong>PET IDENTIFICATION CARD</strong>
+            </div>
 
-        <div class="pid-tier @(IsPremium ? "premium" : "basic")">
 
             @if (IsPremium)
             {
-                <svg aria-hidden="true">
-                    <use href="/icons/bootstrap-icons.svg#star-fill"></use>
-                </svg>
+                <div class="sc-id-plan premium">
 
-                <span>
-                    Premium Pet ID
-                </span>
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
+                    </svg>
+
+                    PREMIUM PET ID
+
+                </div>
             }
             else
             {
-                <span>
-                    Basic Pet ID
-                </span>
+                <div class="sc-id-plan">
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#person-vcard"></use>
+                    </svg>
+
+                    DIGITAL PET ID
+
+                </div>
             }
 
-        </div>
-
-    </header>
+        </header>
 
 
-    <!-- =========================================================
-         PET IDENTITY
-         ========================================================= -->
+        <!-- =====================================================
+             MAIN PET IDENTITY
+             ===================================================== -->
 
-    <section class="pid-main">
+        <section class="sc-id-main">
 
-        <!-- PHOTO -->
+            <!-- PET PHOTO -->
 
-        <div class="pid-photo-area">
+            <div class="sc-id-photo-column">
 
-            <div class="pid-photo">
+                <div class="sc-id-photo">
 
-                @if (!string.IsNullOrWhiteSpace(PhotoUrl))
-                {
-                    <img src="@PhotoUrl"
-                         alt="@Pet.PetName" />
-                }
-                else
-                {
+                    @if (!string.IsNullOrWhiteSpace(PhotoUrl))
+                    {
+                        <img src="@PhotoUrl"
+                             alt="@Pet.PetName" />
+                    }
+                    else
+                    {
+                        <div class="sc-id-photo-placeholder">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#heart-fill"></use>
+                            </svg>
+
+                        </div>
+                    }
+
+                </div>
+
+
+                <div class="sc-id-active-status">
+
+                    <span class="sc-id-active-dot"></span>
+
                     <span>
-                        @Initial
+                        ACTIVE DIGITAL ID
                     </span>
-                }
+
+                </div>
 
             </div>
 
 
-            <div class="pid-status">
+            <!-- PET DETAILS -->
 
-                <span class="pid-status-dot"></span>
+            <div class="sc-id-pet">
 
-                Active Digital ID
+                <span class="sc-id-kicker">
+                    REGISTERED PET
+                </span>
 
-            </div>
+                <h2>
+                    @Display(Pet.PetName)
+                </h2>
 
-        </div>
+                <p class="sc-id-pet-subtitle">
+                    @Display(Pet.Species)
 
+                    <span>•</span>
 
-        <!-- MAIN PET INFO -->
-
-        <div class="pid-details">
-
-            <span class="pid-label">
-                REGISTERED PET
-            </span>
-
-
-            <h2>
-                @Pet.PetName
-            </h2>
+                    @Display(Pet.Breed)
+                </p>
 
 
-            <p class="pid-description">
-                @Pet.Species
-                @if (!string.IsNullOrWhiteSpace(Pet.Breed))
-                {
-                    <span> · @Pet.Breed</span>
-                }
-            </p>
+                <div class="sc-id-data-grid">
 
+                    <div class="sc-id-data-row">
 
-            <div class="pid-info-grid">
-
-                <div class="pid-info-item">
-
-                    <span class="pid-info-icon">
-
-                        <svg aria-hidden="true">
-                            <use href="/icons/bootstrap-icons.svg#tag-fill"></use>
-                        </svg>
-
-                    </span>
-
-
-                    <span>
-
-                        <small>
-                            Species
-                        </small>
+                        <span>Species</span>
 
                         <strong>
-                            @(string.IsNullOrWhiteSpace(Pet.Species)
-                                ? "Not specified"
-                                : Pet.Species)
+                            @Display(Pet.Species)
                         </strong>
 
-                    </span>
-
-                </div>
+                    </div>
 
 
-                <div class="pid-info-item">
+                    <div class="sc-id-data-row">
 
-                    <span class="pid-info-icon">
-
-                        <svg aria-hidden="true">
-                            <use href="/icons/bootstrap-icons.svg#stars"></use>
-                        </svg>
-
-                    </span>
-
-
-                    <span>
-
-                        <small>
-                            Breed
-                        </small>
+                        <span>Breed</span>
 
                         <strong>
-                            @(string.IsNullOrWhiteSpace(Pet.Breed)
-                                ? "Not specified"
-                                : Pet.Breed)
+                            @Display(Pet.Breed)
                         </strong>
 
-                    </span>
-
-                </div>
+                    </div>
 
 
-                <div class="pid-info-item">
+                    <div class="sc-id-data-row">
 
-                    <span class="pid-info-icon">
-
-                        <svg aria-hidden="true">
-                            <use href="/icons/bootstrap-icons.svg#calendar3"></use>
-                        </svg>
-
-                    </span>
-
-
-                    <span>
-
-                        <small>
-                            Age
-                        </small>
+                        <span>Age</span>
 
                         <strong>
-                            @(string.IsNullOrWhiteSpace(Pet.Age)
-                                ? "Not set"
-                                : Pet.Age)
+                            @Display(Pet.Age)
                         </strong>
 
-                    </span>
-
-                </div>
+                    </div>
 
 
-                <div class="pid-info-item">
+                    <div class="sc-id-data-row">
 
-                    <span class="pid-info-icon">
-
-                        <svg aria-hidden="true">
-                            <use href="/icons/bootstrap-icons.svg#speedometer2"></use>
-                        </svg>
-
-                    </span>
-
-
-                    <span>
-
-                        <small>
-                            Weight
-                        </small>
+                        <span>Weight</span>
 
                         <strong>
                             @(Pet.WeightKg.HasValue
                                 ? $"{Pet.WeightKg.Value:0.##} kg"
-                                : "Not set")
+                                : "Not provided")
                         </strong>
 
-                    </span>
+                    </div>
 
                 </div>
 
             </div>
 
-        </div>
+
+            <!-- QR CODE -->
+
+            <div class="sc-id-qr-column">
+
+                <div class="sc-id-qr-frame">
+
+                    @if (!string.IsNullOrWhiteSpace(QrDataUri))
+                    {
+                        <img src="@QrDataUri"
+                             alt="QR code for @Pet.PetName's Digital Pet ID" />
+                    }
+                    else
+                    {
+                        <div class="sc-id-qr-placeholder">
+
+                            <svg aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#qr-code"></use>
+                            </svg>
+
+                        </div>
+                    }
+
+                </div>
 
 
-        <!-- QR -->
+                <strong class="sc-id-scan-title">
+                    SCAN PET ID
+                </strong>
 
-        <div class="pid-qr-column">
+                <span class="sc-id-scan-copy">
+                    Opens public pet identity
+                </span>
 
-            <div class="pid-qr">
+            </div>
 
-                @if (!string.IsNullOrWhiteSpace(QrDataUri))
+        </section>
+
+
+        <!-- =====================================================
+             OWNER / REGISTRATION
+             ===================================================== -->
+
+        <section class="sc-id-registration">
+
+            <!-- OWNER -->
+
+            <div class="sc-id-registration-block sc-id-owner-block">
+
+                <span class="sc-id-label">
+                    REGISTERED OWNER
+                </span>
+
+                <strong class="sc-id-primary-value">
+                    @(PublicMode
+                        ? "Registered Pet Owner"
+                        : Display(OwnerName))
+                </strong>
+
+                <small>
+                    Owner-managed ShoppetCare account
+                </small>
+
+            </div>
+
+
+            <div class="sc-id-registration-divider"></div>
+
+
+            <!-- CONTACT -->
+
+            <div class="sc-id-registration-block">
+
+                <span class="sc-id-label">
+                    OWNER CONTACT
+                </span>
+
+                @if (CanShowOwnerPhone)
                 {
-                    <img src="@QrDataUri"
-                         alt="@Pet.PetName Pet ID QR code" />
+                    <strong class="sc-id-primary-value sc-id-phone">
+                        @FormattedOwnerPhone
+                    </strong>
+
+                    <small>
+                        Emergency / owner contact
+                    </small>
+                }
+                else if (PublicMode)
+                {
+                    <strong class="sc-id-primary-value">
+                        Contact via Pet ID
+                    </strong>
+
+                    <small>
+                        Mobile number kept private
+                    </small>
+                }
+                else
+                {
+                    <strong class="sc-id-primary-value">
+                        Not provided
+                    </strong>
+
+                    <small>
+                        Add a mobile number to your account
+                    </small>
                 }
 
             </div>
 
 
-            <span class="pid-scan-label">
-                SCAN PET ID
-            </span>
+            <div class="sc-id-registration-divider"></div>
 
 
-            <small>
-                Opens public identity
-            </small>
+            <!-- PET ID -->
 
-        </div>
+            <div class="sc-id-registration-block">
 
-    </section>
+                <span class="sc-id-label">
+                    PET ID NUMBER
+                </span>
 
-
-    <!-- =========================================================
-         OWNER + CARD ID
-         ========================================================= -->
-
-    <section class="pid-identity-bar">
-
-        <div>
-
-            <span class="pid-round-icon">
-
-                <svg aria-hidden="true">
-                    <use href="/icons/bootstrap-icons.svg#person-fill"></use>
-                </svg>
-
-            </span>
-
-
-            <span>
-
-                <small>
-                    @(PublicMode
-                        ? "Owner Privacy"
-                        : "Pet Owner")
-                </small>
-
-                <strong>
-                    @(PublicMode
-                        ? "Protected"
-                        : OwnerName)
+                <strong class="sc-id-primary-value sc-id-mono">
+                    @Display(Pet.CardId)
                 </strong>
 
-            </span>
-
-        </div>
-
-
-        <div>
-
-            <span class="pid-round-icon">
-
-                <svg aria-hidden="true">
-                    <use href="/icons/bootstrap-icons.svg#person-vcard"></use>
-                </svg>
-
-            </span>
-
-
-            <span>
-
                 <small>
-                    Digital Pet ID
+                    Unique ShoppetCare identity
                 </small>
 
-                <strong class="pid-number">
-                    @Pet.CardId
+            </div>
+
+
+            <div class="sc-id-registration-divider"></div>
+
+
+            <!-- ISSUE DATE -->
+
+            <div class="sc-id-registration-block">
+
+                <span class="sc-id-label">
+                    DATE ISSUED
+                </span>
+
+                <strong class="sc-id-primary-value">
+                    @IssueDate
                 </strong>
 
-            </span>
-
-        </div>
-
-    </section>
-
-
-    <!-- =========================================================
-         VALUE / CARE SNAPSHOT
-         ========================================================= -->
-
-    <section class="pid-snapshot">
-
-        @if (PublicMode)
-        {
-            <div>
-
-                <svg aria-hidden="true">
-                    <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
-                </svg>
-
-                <span>
-
-                    <small>
-                        Identity
-                    </small>
-
-                    <strong>
-                        Active
-                    </strong>
-
-                </span>
+                <small>
+                    Digital registry
+                </small>
 
             </div>
 
-
-            <div>
-
-                <svg aria-hidden="true">
-                    <use href="/icons/bootstrap-icons.svg#qr-code-scan"></use>
-                </svg>
-
-                <span>
-
-                    <small>
-                        QR Profile
-                    </small>
-
-                    <strong>
-                        Verified
-                    </strong>
-
-                </span>
-
-            </div>
+        </section>
 
 
-            <div>
+        <!-- =====================================================
+             CARE INFORMATION
+             ===================================================== -->
 
-                <svg aria-hidden="true">
-                    <use href="/icons/bootstrap-icons.svg#shield-lock-fill"></use>
-                </svg>
+        <section class="sc-id-care">
 
-                <span>
+            <div class="sc-id-care-item">
 
-                    <small>
-                        Privacy
-                    </small>
+                <span class="sc-id-care-icon">
 
-                    <strong>
-                        Basic Info Only
-                    </strong>
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#shield-check"></use>
+                    </svg>
 
                 </span>
 
-            </div>
-        }
-        else
-        {
-            <div>
+                <div>
 
-                <svg aria-hidden="true">
-                    <use href="/icons/bootstrap-icons.svg#shield-check"></use>
-                </svg>
-
-                <span>
-
-                    <small>
+                    <span class="sc-id-care-label">
                         Vaccination
-                    </small>
+                    </span>
 
                     <strong>
-                        @VaccinationStatus
+                        @Display(VaccinationStatus)
                     </strong>
 
-                </span>
+                </div>
 
             </div>
 
 
-            <div>
+            <div class="sc-id-care-item">
 
-                <svg aria-hidden="true">
-                    <use href="/icons/bootstrap-icons.svg#clipboard2-pulse-fill"></use>
-                </svg>
+                <span class="sc-id-care-icon">
 
-                <span>
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#clipboard2-pulse"></use>
+                    </svg>
 
-                    <small>
+                </span>
+
+                <div>
+
+                    <span class="sc-id-care-label">
                         Health Records
-                    </small>
+                    </span>
 
                     <strong>
                         @HealthRecordCount
@@ -445,640 +386,1307 @@
                             : "Records")
                     </strong>
 
-                </span>
+                </div>
 
             </div>
 
 
-            <div>
+            <div class="sc-id-care-item sc-id-care-diet">
+
+                <span class="sc-id-care-icon">
+
+                    <svg aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#heart-pulse"></use>
+                    </svg>
+
+                </span>
+
+                <div>
+
+                    <span class="sc-id-care-label">
+                        Usual Diet / Care Profile
+                    </span>
+
+                    <strong>
+                        @Display(Pet.Diet)
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             OFFICIAL CARD FOOTER
+             ===================================================== -->
+
+        <footer class="sc-id-footer">
+
+            <div class="sc-id-footer-status">
+
+                <span></span>
+
+                <strong>
+                    ACTIVE DIGITAL PET ID
+                </strong>
+
+            </div>
+
+
+            <div class="sc-id-website">
 
                 <svg aria-hidden="true">
-                    <use href="/icons/bootstrap-icons.svg#heart-fill"></use>
+                    <use href="/icons/bootstrap-icons.svg#globe2"></use>
+                </svg>
+
+                <strong>
+                    shoppetcare.com
+                </strong>
+
+            </div>
+
+
+            <div class="sc-id-footer-verify">
+
+                <svg aria-hidden="true">
+                    <use href="/icons/bootstrap-icons.svg#qr-code-scan"></use>
                 </svg>
 
                 <span>
-
-                    <small>
-                        Usual Diet
-                    </small>
-
-                    <strong>
-                        @(string.IsNullOrWhiteSpace(Pet.Diet)
-                            ? "Not specified"
-                            : Pet.Diet)
-                    </strong>
-
+                    Scan QR to verify
                 </span>
 
             </div>
-        }
 
-    </section>
+        </footer>
 
-
-    <!-- =========================================================
-         FOOT
-         ========================================================= -->
-
-    <footer class="pid-footer">
-
-        <span>
-            Issued
-            @(Pet.CardIssuedAt?.ToString("MMM yyyy") ?? "—")
-        </span>
-
-
-        <span>
-            ShoppetCare Digital Pet Identity
-        </span>
-
-    </footer>
-
-</article>
+    </article>
+}
 
 
 <style>
 
-    .pid-card {
-        --pid-a: #F7FFFF;
-        --pid-b: #E4F5F2;
-        --pid-accent: #2F9098;
-        --pid-accent-soft: #DDF3F1;
-        --pid-dark: #173D3D;
-        --pid-muted: #71847D;
-        --pid-border: #AFCFC9;
-        position: relative;
-        width: 100%;
-        aspect-ratio: 1.586 / 1;
-        min-height: 470px;
-        padding: clamp(24px,3.2vw,42px);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        border: 1px solid var(--pid-border);
-        border-radius: 28px;
-        background: radial-gradient( circle at 91% 14%, rgba(255,255,255,.86), transparent 19% ), radial-gradient( circle at 89% 88%, rgba(47,144,152,.08), transparent 24% ), linear-gradient( 135deg, var(--pid-a), var(--pid-b) );
-        color: var(--pid-dark);
-        box-shadow: 0 25px 60px rgba(23,61,61,.12);
+    /* =========================================================
+       BASE CARD
+       ========================================================= */
+
+    .sc-pet-id,
+    .sc-pet-id *,
+    .sc-pet-id *::before,
+    .sc-pet-id *::after {
+        box-sizing: border-box;
     }
 
 
-        .pid-card::before {
-            content: "";
-            position: absolute;
-            width: 290px;
-            height: 290px;
-            right: -150px;
-            top: -160px;
-            border: 1px solid rgba(47,144,152,.11);
-            border-radius: 50%;
-        }
+    .sc-pet-id {
+        --id-accent: #F3D27A;
+        --id-accent-text: #FFE99E;
+
+        position: relative;
+
+        width: 100%;
+        min-height: 520px;
+
+        display: flex;
+        flex-direction: column;
+
+        overflow: hidden;
+
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 23px;
+
+        color: #FFFFFF;
+
+        background:
+            radial-gradient(
+                circle at 91% 8%,
+                rgba(255,255,255,.18),
+                transparent 24%
+            ),
+            linear-gradient(
+                135deg,
+                #183E3E 0%,
+                #235E5D 55%,
+                #2A7779 100%
+            );
+
+        box-shadow:
+            0 24px 55px
+            rgba(23,61,61,.18);
+    }
 
 
-        .pid-card.is-premium {
-            border-width: 2px;
-            --pid-border: #E0BF5D;
-        }
+    .sc-pet-id::before {
+        content: "";
+
+        position: absolute;
+
+        width: 370px;
+        height: 370px;
+
+        right: -160px;
+        top: -210px;
+
+        border: 1px solid
+            rgba(255,255,255,.07);
+
+        border-radius: 50%;
+
+        pointer-events: none;
+    }
 
 
-        .pid-card.theme-classic {
-            --pid-a: #F7FFFF;
-            --pid-b: #E6F6F3;
-        }
+    .sc-pet-id::after {
+        content: "";
+
+        position: absolute;
+
+        width: 250px;
+        height: 250px;
+
+        right: -95px;
+        top: -145px;
+
+        border: 1px solid
+            rgba(255,255,255,.055);
+
+        border-radius: 50%;
+
+        pointer-events: none;
+    }
 
 
-        .pid-card.theme-ocean {
-            --pid-a: #EFFCFE;
-            --pid-b: #CFEFF3;
-            --pid-accent: #237F90;
-            --pid-accent-soft: #D3EEF1;
-            --pid-border: #83C6CF;
-        }
+    .sc-pet-id svg {
+        width: 1em;
+        height: 1em;
 
-
-        .pid-card.theme-sunset {
-            --pid-a: #FFF9F5;
-            --pid-b: #FFE4D5;
-            --pid-accent: #B9614D;
-            --pid-accent-soft: #F7DED4;
-            --pid-border: #E19A7E;
-        }
-
-
-        .pid-card.theme-mint {
-            --pid-a: #F4FCF6;
-            --pid-b: #D9EDDF;
-            --pid-accent: #4B886E;
-            --pid-accent-soft: #D8ECE0;
-            --pid-border: #96C2A7;
-        }
-
-
-        .pid-card.theme-royal {
-            --pid-a: #F8F5FF;
-            --pid-b: #E4DAFA;
-            --pid-accent: #5C4B95;
-            --pid-accent-soft: #E4DDF7;
-            --pid-border: #AE9ADA;
-        }
-
-
-        .pid-card *,
-        .pid-card *::before,
-        .pid-card *::after {
-            box-sizing: border-box;
-        }
-
-
-        .pid-card svg {
-            width: 1em;
-            height: 1em;
-            fill: currentColor;
-        }
+        fill: currentColor;
+    }
 
 
     /* =========================================================
-           TOP
-           ========================================================= */
+       THEMES
+       ========================================================= */
 
-    .pid-top {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
+    .sc-pet-id.theme-classic {
+        background:
+            radial-gradient(
+                circle at 91% 8%,
+                rgba(255,255,255,.16),
+                transparent 24%
+            ),
+            linear-gradient(
+                135deg,
+                #173D3D,
+                #276C6D
+            );
     }
 
 
-    .pid-brand {
+    .sc-pet-id.theme-ocean {
+        background:
+            radial-gradient(
+                circle at 91% 8%,
+                rgba(255,255,255,.18),
+                transparent 24%
+            ),
+            linear-gradient(
+                135deg,
+                #17344C,
+                #1F647D
+            );
+    }
+
+
+    .sc-pet-id.theme-sunset {
+        background:
+            radial-gradient(
+                circle at 91% 8%,
+                rgba(255,255,255,.16),
+                transparent 24%
+            ),
+            linear-gradient(
+                135deg,
+                #5E3835,
+                #A25F51
+            );
+    }
+
+
+    .sc-pet-id.theme-mint {
+        background:
+            radial-gradient(
+                circle at 91% 8%,
+                rgba(255,255,255,.17),
+                transparent 24%
+            ),
+            linear-gradient(
+                135deg,
+                #284A40,
+                #4F7968
+            );
+    }
+
+
+    .sc-pet-id.theme-royal {
+        background:
+            radial-gradient(
+                circle at 88% 6%,
+                rgba(255,255,255,.22),
+                transparent 24%
+            ),
+            linear-gradient(
+                135deg,
+                #292244 0%,
+                #3B315E 55%,
+                #514274 100%
+            );
+    }
+
+
+    /* =========================================================
+       HEADER
+       ========================================================= */
+
+    .sc-id-header {
+        position: relative;
+        z-index: 2;
+
+        min-height: 76px;
+
+        padding: 17px 26px;
+
+        display: grid;
+
+        grid-template-columns:
+            minmax(210px,1fr)
+            auto
+            minmax(180px,1fr);
+
+        align-items: center;
+
+        gap: 18px;
+
+        border-bottom:
+            1px solid
+            rgba(255,255,255,.13);
+    }
+
+
+    .sc-id-brand {
         display: flex;
         align-items: center;
+
         gap: 11px;
     }
 
 
-    .pid-logo {
-        width: 50px;
-        height: 50px;
-        padding: 5px;
+    .sc-id-logo {
+        width: 42px;
+        height: 42px;
+
+        padding: 4px;
+
         display: grid;
         place-items: center;
-        border-radius: 16px;
-        background: rgba(255,255,255,.88);
-        box-shadow: 0 6px 16px rgba(23,61,61,.07);
+
+        overflow: hidden;
+
+        border-radius: 11px;
+
+        background: #FFFFFF;
     }
 
 
-        .pid-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
+    .sc-id-logo img {
+        width: 100%;
+        height: 100%;
+
+        object-fit: contain;
+    }
 
 
-    .pid-brand strong,
-    .pid-brand span {
+    .sc-id-brand-copy {
+        min-width: 0;
+
+        display: flex;
+        flex-direction: column;
+    }
+
+
+    .sc-id-brand-copy strong {
+        font-size: 1rem;
+        font-weight: 950;
+
+        letter-spacing: -.025em;
+    }
+
+
+    .sc-id-brand-copy span {
+        margin-top: 1px;
+
+        color:
+            rgba(255,255,255,.54);
+
+        font-size: .45rem;
+        font-weight: 900;
+
+        letter-spacing: .11em;
+
+        text-transform: uppercase;
+    }
+
+
+    .sc-id-title {
+        text-align: center;
+    }
+
+
+    .sc-id-title span,
+    .sc-id-title strong {
         display: block;
     }
 
 
-    .pid-brand strong {
-        color: var(--pid-dark);
-        font-size: clamp( 15px, 1.5vw, 20px );
+    .sc-id-title span {
+        color: var(--id-accent);
+
+        font-size: .42rem;
         font-weight: 950;
-        letter-spacing: -.035em;
+
+        letter-spacing: .19em;
     }
 
 
-    .pid-brand span {
-        margin-top: 2px;
-        color: var(--pid-muted);
-        font-size: 8px;
-        font-weight: 900;
+    .sc-id-title strong {
+        margin-top: 3px;
+
+        color: #FFFFFF;
+
+        font-size: .55rem;
+        font-weight: 950;
+
         letter-spacing: .12em;
     }
 
 
-    .pid-tier {
-        min-height: 34px;
-        padding: 0 12px;
+    .sc-id-plan {
+        justify-self: end;
+
+        min-height: 31px;
+
+        padding: 0 11px;
+
         display: inline-flex;
         align-items: center;
+
         gap: 6px;
+
+        border:
+            1px solid
+            rgba(255,255,255,.2);
+
         border-radius: 999px;
-        font-size: 10px;
-        font-weight: 900;
-        white-space: nowrap;
+
+        background:
+            rgba(255,255,255,.08);
+
+        color:
+            rgba(255,255,255,.82);
+
+        font-size: .46rem;
+        font-weight: 950;
+
+        letter-spacing: .07em;
     }
 
 
-        .pid-tier.basic {
-            background: var(--pid-accent-soft);
-            color: var(--pid-accent);
-        }
+    .sc-id-plan.premium {
+        border-color:
+            rgba(243,210,122,.58);
 
+        background:
+            rgba(243,210,122,.12);
 
-        .pid-tier.premium {
-            border: 1px solid #E2BF58;
-            background: linear-gradient( 180deg, #FFF5D6, #FFE6A1 );
-            color: #74530B;
-            box-shadow: 0 5px 13px rgba(164,121,18,.12);
-        }
+        color:
+            #FFE18A;
+    }
 
 
     /* =========================================================
-           MAIN
-           ========================================================= */
+       MAIN PET
+       ========================================================= */
 
-    .pid-main {
+    .sc-id-main {
         position: relative;
-        z-index: 2;
-        flex: 1;
-        margin-top: clamp( 26px, 4.6%, 44px );
+        z-index: 1;
+
+        padding: 26px 30px;
+
         display: grid;
-        grid-template-columns: minmax(145px,23%) minmax(0,1fr) minmax(135px,20%);
+
+        grid-template-columns:
+            155px
+            minmax(0,1fr)
+            155px;
+
         align-items: center;
-        gap: clamp( 20px, 4%, 45px );
+
+        gap: 28px;
     }
 
 
     /* PHOTO */
 
-    .pid-photo-area {
-        text-align: center;
-    }
-
-
-    .pid-photo {
-        width: 100%;
-        max-width: 205px;
-        aspect-ratio: 1;
-        margin: 0 auto;
-        overflow: hidden;
-        display: grid;
-        place-items: center;
-        border: clamp( 4px, .5vw, 6px ) solid rgba(255,255,255,.98);
-        border-radius: 50%;
-        background: #DCEDEA;
-        box-shadow: 0 14px 30px rgba(23,61,61,.15);
-    }
-
-
-        .pid-photo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-
-        .pid-photo > span {
-            width: 100%;
-            height: 100%;
-            display: grid;
-            place-items: center;
-            background: linear-gradient( 135deg, var(--pid-accent), #173D3D );
-            color: #FFFFFF;
-            font-size: 40px;
-            font-weight: 950;
-        }
-
-
-    .pid-status {
-        margin-top: 10px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: var(--pid-accent);
-        font-size: 9px;
-        font-weight: 900;
-    }
-
-
-    .pid-status-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: var(--pid-accent);
-        box-shadow: 0 0 0 4px rgba(47,144,152,.10);
-    }
-
-
-    /* DETAILS */
-
-    .pid-details {
+    .sc-id-photo-column {
         min-width: 0;
     }
 
 
-    .pid-label {
-        color: var(--pid-accent);
-        font-size: 8px;
-        font-weight: 950;
-        letter-spacing: .12em;
+    .sc-id-photo {
+        width: 145px;
+
+        aspect-ratio: 1;
+
+        overflow: hidden;
+
+        border:
+            4px solid
+            rgba(255,255,255,.96);
+
+        border-radius: 50%;
+
+        background:
+            rgba(255,255,255,.12);
+
+        box-shadow:
+            0 14px 32px
+            rgba(0,0,0,.17);
     }
 
 
-    .pid-details h2 {
-        margin: 4px 0 0;
-        color: var(--pid-dark);
-        font-size: clamp( 26px, 3.7vw, 43px );
-        line-height: .95;
+    .sc-id-photo img {
+        width: 100%;
+        height: 100%;
+
+        object-fit: cover;
+    }
+
+
+    .sc-id-photo-placeholder {
+        width: 100%;
+        height: 100%;
+
+        display: grid;
+        place-items: center;
+
+        color: var(--id-accent);
+
+        font-size: 2rem;
+    }
+
+
+    .sc-id-active-status {
+        margin-top: 10px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        gap: 6px;
+
+        color: #FFE28D;
+
+        font-size: .44rem;
         font-weight: 950;
+
+        letter-spacing: .04em;
+    }
+
+
+    .sc-id-active-dot {
+        width: 7px;
+        height: 7px;
+
+        border-radius: 50%;
+
+        background: #F3D27A;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(243,210,122,.13);
+    }
+
+
+    /* PET INFO */
+
+    .sc-id-kicker {
+        color: var(--id-accent);
+
+        font-size: .45rem;
+        font-weight: 950;
+
+        letter-spacing: .15em;
+    }
+
+
+    .sc-id-pet h2 {
+        margin: 5px 0 0;
+
+        color: #FFFFFF;
+
+        font-size:
+            clamp(2.15rem,3.4vw,3.55rem);
+
+        line-height: .94;
+
+        font-weight: 950;
+
         letter-spacing: -.055em;
     }
 
 
-    .pid-description {
-        margin: 6px 0 0;
-        color: var(--pid-muted);
-        font-size: 12px;
-        font-weight: 750;
+    .sc-id-pet-subtitle {
+        margin: 7px 0 0;
+
+        color:
+            rgba(255,255,255,.8);
+
+        font-size: .67rem;
+        font-weight: 800;
     }
 
 
-    .pid-info-grid {
+    .sc-id-pet-subtitle span {
+        margin: 0 5px;
+
+        color: var(--id-accent);
+    }
+
+
+    .sc-id-data-grid {
         margin-top: 18px;
+
         display: grid;
-        grid-template-columns: repeat( 2, minmax(0,1fr) );
-        gap: 8px;
+
+        grid-template-columns:
+            repeat(2,minmax(0,1fr));
+
+        column-gap: 24px;
+        row-gap: 1px;
     }
 
 
-    .pid-info-item {
+    .sc-id-data-row {
         min-width: 0;
-        padding: 8px;
-        display: flex;
+
+        padding: 8px 0;
+
+        display: grid;
+
+        grid-template-columns:
+            61px
+            minmax(0,1fr);
+
         align-items: center;
+
         gap: 8px;
-        border-radius: 10px;
-        background: rgba(255,255,255,.55);
+
+        border-bottom:
+            1px solid
+            rgba(255,255,255,.11);
     }
 
 
-    .pid-info-icon {
-        width: 30px;
-        height: 30px;
-        flex: 0 0 30px;
-        display: grid;
-        place-items: center;
-        border-radius: 9px;
-        background: var(--pid-accent-soft);
-        color: var(--pid-accent);
-        font-size: 11px;
-    }
+    .sc-id-data-row span {
+        color:
+            rgba(255,255,255,.47);
 
-
-    .pid-info-item > span:last-child {
-        min-width: 0;
-    }
-
-
-    .pid-info-item small,
-    .pid-info-item strong {
-        display: block;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-
-    .pid-info-item small {
-        color: var(--pid-muted);
-        font-size: 7px;
-    }
-
-
-    .pid-info-item strong {
-        margin-top: 2px;
-        color: var(--pid-dark);
-        font-size: 10px;
+        font-size: .43rem;
         font-weight: 900;
+
+        text-transform: uppercase;
+
+        letter-spacing: .06em;
+    }
+
+
+    .sc-id-data-row strong {
+        overflow: hidden;
+
+        color: #FFFFFF;
+
+        font-size: .6rem;
+        font-weight: 850;
+
+        white-space: nowrap;
+
+        text-overflow: ellipsis;
     }
 
 
     /* QR */
 
-    .pid-qr-column {
+    .sc-id-qr-column {
         text-align: center;
     }
 
 
-    .pid-qr {
-        width: 100%;
-        max-width: 175px;
+    .sc-id-qr-frame {
+        width: 137px;
+
+        aspect-ratio: 1;
+
         margin: 0 auto;
-        padding: 11px;
-        border: 2px solid var(--pid-border);
-        border-radius: 17px;
-        background: #FFFFFF;
-        box-shadow: 0 10px 24px rgba(23,61,61,.09);
-    }
 
+        padding: 10px;
 
-        .pid-qr img {
-            width: 100%;
-            display: block;
-        }
-
-
-    .pid-scan-label {
-        display: block;
-        margin-top: 8px;
-        color: var(--pid-dark);
-        font-size: 8px;
-        font-weight: 950;
-        letter-spacing: .09em;
-    }
-
-
-    .pid-qr-column small {
-        display: block;
-        margin-top: 2px;
-        color: var(--pid-muted);
-        font-size: 7px;
-    }
-
-
-    /* =========================================================
-           IDENTITY BAR
-           ========================================================= */
-
-    .pid-identity-bar {
-        position: relative;
-        z-index: 2;
-        margin-top: 24px;
-        padding: 16px 0;
-        display: grid;
-        grid-template-columns: 1.3fr .7fr;
-        gap: 18px;
-        border-top: 1px solid rgba(47,144,152,.16);
-        border-bottom: 1px solid rgba(47,144,152,.12);
-    }
-
-
-        .pid-identity-bar > div {
-            min-width: 0;
-            display: flex;
-            align-items: center;
-            gap: 9px;
-        }
-
-
-    .pid-round-icon {
-        width: 34px;
-        height: 34px;
-        flex: 0 0 34px;
         display: grid;
         place-items: center;
-        border-radius: 10px;
-        background: var(--pid-accent-soft);
-        color: var(--pid-accent);
+
+        border:
+            2px solid
+            rgba(243,210,122,.8);
+
+        border-radius: 15px;
+
+        background: #FFFFFF;
+
+        box-shadow:
+            0 15px 30px
+            rgba(0,0,0,.16);
     }
 
 
-    .pid-identity-bar small,
-    .pid-identity-bar strong {
+    .sc-id-qr-frame img {
+        width: 100%;
+        height: 100%;
+
+        object-fit: contain;
+    }
+
+
+    .sc-id-qr-placeholder {
+        color: #173D3D;
+
+        font-size: 4rem;
+    }
+
+
+    .sc-id-scan-title {
         display: block;
+
+        margin-top: 8px;
+
+        color: #FFFFFF;
+
+        font-size: .45rem;
+        font-weight: 950;
+
+        letter-spacing: .11em;
     }
 
 
-    .pid-identity-bar small {
-        color: var(--pid-muted);
-        font-size: 7px;
-    }
+    .sc-id-scan-copy {
+        display: block;
 
-
-    .pid-identity-bar strong {
         margin-top: 2px;
-        overflow: hidden;
-        color: var(--pid-dark);
-        font-size: 10px;
-        font-weight: 900;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
 
+        color:
+            rgba(255,255,255,.44);
 
-    .pid-number {
-        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-        letter-spacing: .02em;
+        font-size: .4rem;
     }
 
 
     /* =========================================================
-           SNAPSHOT
-           ========================================================= */
+       OWNER / REGISTRATION
+       ========================================================= */
 
-    .pid-snapshot {
-        position: relative;
-        z-index: 2;
-        margin-top: 12px;
-        padding: 11px 13px;
+    .sc-id-registration {
+        margin: 0 30px;
+
+        padding: 14px 0;
+
         display: grid;
-        grid-template-columns: repeat( 3, minmax(0,1fr) );
-        gap: 10px;
-        border: 1px solid rgba(47,144,152,.09);
-        border-radius: 12px;
-        background: rgba(255,255,255,.68);
+
+        grid-template-columns:
+            minmax(0,1.35fr)
+            1px
+            minmax(0,1fr)
+            1px
+            minmax(0,1fr)
+            1px
+            minmax(0,.8fr);
+
+        align-items: center;
+
+        gap: 17px;
+
+        border-top:
+            1px solid
+            rgba(255,255,255,.14);
+
+        border-bottom:
+            1px solid
+            rgba(255,255,255,.14);
     }
 
 
-        .pid-snapshot > div {
-            min-width: 0;
+    .sc-id-registration-block {
+        min-width: 0;
+    }
+
+
+    .sc-id-label {
+        display: block;
+
+        color:
+            rgba(255,255,255,.44);
+
+        font-size: .4rem;
+        font-weight: 950;
+
+        letter-spacing: .1em;
+
+        text-transform: uppercase;
+    }
+
+
+    .sc-id-primary-value {
+        display: block;
+
+        margin-top: 4px;
+
+        overflow: hidden;
+
+        color: #FFFFFF;
+
+        font-size: .59rem;
+        font-weight: 900;
+
+        white-space: nowrap;
+
+        text-overflow: ellipsis;
+    }
+
+
+    .sc-id-registration-block small {
+        display: block;
+
+        margin-top: 2px;
+
+        overflow: hidden;
+
+        color:
+            rgba(255,255,255,.4);
+
+        font-size: .38rem;
+
+        white-space: nowrap;
+
+        text-overflow: ellipsis;
+    }
+
+
+    .sc-id-phone {
+        color: #FFE69A;
+    }
+
+
+    .sc-id-mono {
+        font-family:
+            Consolas,
+            "Courier New",
+            monospace;
+
+        letter-spacing: .045em;
+    }
+
+
+    .sc-id-registration-divider {
+        width: 1px;
+        height: 34px;
+
+        background:
+            rgba(255,255,255,.14);
+    }
+
+
+    /* =========================================================
+       CARE STRIP
+       ========================================================= */
+
+    .sc-id-care {
+        margin: 12px 30px 0;
+
+        display: grid;
+
+        grid-template-columns:
+            .8fr
+            .8fr
+            1.4fr;
+
+        gap: 8px;
+    }
+
+
+    .sc-id-care-item {
+        min-width: 0;
+        min-height: 54px;
+
+        padding: 9px 11px;
+
+        display: flex;
+        align-items: center;
+
+        gap: 9px;
+
+        border:
+            1px solid
+            rgba(255,255,255,.1);
+
+        border-radius: 10px;
+
+        background:
+            rgba(255,255,255,.07);
+    }
+
+
+    .sc-id-care-icon {
+        width: 30px;
+        height: 30px;
+
+        flex: 0 0 30px;
+
+        display: grid;
+        place-items: center;
+
+        border-radius: 8px;
+
+        background:
+            rgba(243,210,122,.12);
+
+        color: var(--id-accent);
+
+        font-size: .72rem;
+    }
+
+
+    .sc-id-care-item > div {
+        min-width: 0;
+    }
+
+
+    .sc-id-care-label {
+        display: block;
+
+        color:
+            rgba(255,255,255,.44);
+
+        font-size: .39rem;
+        font-weight: 850;
+
+        text-transform: uppercase;
+
+        letter-spacing: .045em;
+    }
+
+
+    .sc-id-care-item strong {
+        display: block;
+
+        margin-top: 2px;
+
+        overflow: hidden;
+
+        color: #FFFFFF;
+
+        font-size: .54rem;
+        font-weight: 850;
+
+        white-space: nowrap;
+
+        text-overflow: ellipsis;
+    }
+
+
+    /* =========================================================
+       OFFICIAL FOOTER
+       ========================================================= */
+
+    .sc-id-footer {
+        min-height: 48px;
+
+        margin-top: auto;
+
+        padding: 0 30px;
+
+        display: grid;
+
+        grid-template-columns:
+            minmax(0,1fr)
+            auto
+            minmax(0,1fr);
+
+        align-items: center;
+
+        gap: 18px;
+
+        border-top:
+            1px solid
+            rgba(255,255,255,.1);
+
+        background:
+            rgba(0,0,0,.1);
+    }
+
+
+    .sc-id-footer-status {
+        display: flex;
+        align-items: center;
+
+        gap: 6px;
+    }
+
+
+    .sc-id-footer-status > span {
+        width: 6px;
+        height: 6px;
+
+        border-radius: 50%;
+
+        background: var(--id-accent);
+    }
+
+
+    .sc-id-footer-status strong {
+        color:
+            rgba(255,255,255,.74);
+
+        font-size: .4rem;
+        font-weight: 950;
+
+        letter-spacing: .07em;
+    }
+
+
+    .sc-id-website {
+        display: flex;
+        align-items: center;
+
+        gap: 6px;
+
+        color: #FFFFFF;
+    }
+
+
+    .sc-id-website svg {
+        color: var(--id-accent);
+
+        font-size: .65rem;
+    }
+
+
+    .sc-id-website strong {
+        font-size: .56rem;
+        font-weight: 900;
+
+        letter-spacing: .025em;
+    }
+
+
+    .sc-id-footer-verify {
+        justify-self: end;
+
+        display: flex;
+        align-items: center;
+
+        gap: 5px;
+
+        color:
+            rgba(255,255,255,.48);
+
+        font-size: .4rem;
+        font-weight: 700;
+    }
+
+
+    .sc-id-footer-verify svg {
+        color: var(--id-accent);
+    }
+
+
+    /* =========================================================
+       TABLET
+       ========================================================= */
+
+    @@media (max-width: 850px) {
+
+        .sc-id-header {
+            grid-template-columns:
+                1fr
+                auto;
+        }
+
+
+        .sc-id-title {
+            display: none;
+        }
+
+
+        .sc-id-main {
+            grid-template-columns:
+                130px
+                minmax(0,1fr)
+                130px;
+
+            gap: 18px;
+
+            padding:
+                24px
+                20px;
+        }
+
+
+        .sc-id-photo {
+            width: 120px;
+        }
+
+
+        .sc-id-qr-frame {
+            width: 116px;
+        }
+
+
+        .sc-id-registration {
+            margin:
+                0
+                20px;
+
+            grid-template-columns:
+                repeat(2,minmax(0,1fr));
+
+            gap: 12px;
+        }
+
+
+        .sc-id-registration-divider {
+            display: none;
+        }
+
+
+        .sc-id-care {
+            margin:
+                12px
+                20px
+                0;
+        }
+
+
+        .sc-id-footer {
+            padding:
+                0
+                20px;
+        }
+    }
+
+
+    /* =========================================================
+       MOBILE
+       ========================================================= */
+
+    @@media (max-width: 650px) {
+
+        .sc-pet-id {
+            min-height: 0;
+
+            border-radius: 17px;
+        }
+
+
+        .sc-id-header {
+            padding:
+                14px
+                16px;
+        }
+
+
+        .sc-id-logo {
+            width: 36px;
+            height: 36px;
+        }
+
+
+        .sc-id-brand-copy strong {
+            font-size: .84rem;
+        }
+
+
+        .sc-id-plan {
+            padding:
+                0
+                8px;
+
+            font-size: .38rem;
+        }
+
+
+        .sc-id-main {
+            grid-template-columns:
+                105px
+                minmax(0,1fr);
+
+            gap: 15px;
+
+            padding:
+                20px
+                16px;
+        }
+
+
+        .sc-id-photo {
+            width: 98px;
+        }
+
+
+        .sc-id-pet h2 {
+            font-size: 2rem;
+        }
+
+
+        .sc-id-data-grid {
+            grid-template-columns: 1fr;
+        }
+
+
+        .sc-id-data-row {
+            grid-template-columns:
+                58px
+                minmax(0,1fr);
+        }
+
+
+        .sc-id-qr-column {
+            grid-column: 1 / -1;
+
+            margin-top: 6px;
+
+            display: grid;
+
+            grid-template-columns:
+                88px
+                minmax(0,1fr);
+
+            align-items: center;
+
+            column-gap: 12px;
+
+            text-align: left;
+        }
+
+
+        .sc-id-qr-frame {
+            grid-row: 1 / 3;
+
+            width: 82px;
+
+            margin: 0;
+        }
+
+
+        .sc-id-scan-title {
+            margin: 0;
+        }
+
+
+        .sc-id-registration {
+            margin:
+                0
+                16px;
+
+            grid-template-columns: 1fr;
+
+            gap: 12px;
+
+            padding: 14px 0;
+        }
+
+
+        .sc-id-registration-block {
+            padding-bottom: 9px;
+
+            border-bottom:
+                1px solid
+                rgba(255,255,255,.08);
+        }
+
+
+        .sc-id-registration-block:last-child {
+            padding-bottom: 0;
+
+            border-bottom: 0;
+        }
+
+
+        .sc-id-care {
+            margin:
+                12px
+                16px
+                17px;
+
+            grid-template-columns: 1fr;
+        }
+
+
+        .sc-id-footer {
+            min-height: auto;
+
+            padding:
+                12px
+                16px;
+
+            grid-template-columns:
+                1fr
+                auto;
+        }
+
+
+        .sc-id-footer-verify {
+            display: none;
+        }
+    }
+
+
+    @@media (max-width: 430px) {
+
+        .sc-id-plan svg {
+            display: none;
+        }
+
+
+        .sc-id-main {
+            grid-template-columns: 1fr;
+        }
+
+
+        .sc-id-photo-column {
             display: flex;
             align-items: center;
-            gap: 8px;
+
+            gap: 12px;
         }
 
 
-            .pid-snapshot > div > svg {
-                flex: 0 0 auto;
-                color: var(--pid-accent);
-                font-size: 13px;
-            }
-
-
-        .pid-snapshot small,
-        .pid-snapshot strong {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        .sc-id-active-status {
+            margin: 0;
         }
 
 
-        .pid-snapshot small {
-            color: var(--pid-muted);
-            font-size: 7px;
-        }
-
-
-        .pid-snapshot strong {
-            margin-top: 1px;
-            color: var(--pid-dark);
-            font-size: 9px;
-            font-weight: 900;
-        }
-
-
-    /* =========================================================
-           FOOTER
-           ========================================================= */
-
-    .pid-footer {
-        position: relative;
-        z-index: 2;
-        margin-top: auto;
-        padding-top: 10px;
-        display: flex;
-        justify-content: space-between;
-        gap: 15px;
-        color: var(--pid-muted);
-        font-size: 7px;
-        font-weight: 750;
-    }
-
-
-    @@media (max-width: 640px) {
-
-        .pid-card {
-            aspect-ratio: auto;
-            min-height: auto;
-            padding: 22px;
-            border-radius: 22px;
-        }
-
-
-        .pid-main {
-            grid-template-columns: 105px minmax(0,1fr);
-        }
-
-
-        .pid-qr-column {
-            grid-column: 1 / -1;
-            width: 130px;
-            margin-top: 5px;
-        }
-
-
-        .pid-info-grid {
-            grid-template-columns: 1fr;
-        }
-
-
-        .pid-identity-bar {
-            grid-template-columns: 1fr;
-        }
-
-
-        .pid-snapshot {
-            grid-template-columns: 1fr;
-        }
-
-
-        .pid-footer {
-            margin-top: 15px;
+        .sc-id-website strong {
+            font-size: .48rem;
         }
     }
 
@@ -1087,24 +1695,28 @@
 
 @code {
 
-    [Parameter]
-    public PetProfile Pet { get; set; }
-        = new();
+    [Parameter, EditorRequired]
+    public PetProfile Pet { get; set; } = default!;
 
 
     [Parameter]
-    public string OwnerName { get; set; }
-        = "Pet Owner";
+    public string OwnerName { get; set; } =
+        "Pet Owner";
 
 
     [Parameter]
-    public string PhotoUrl { get; set; }
-        = string.Empty;
+    public string OwnerPhone { get; set; } =
+        string.Empty;
 
 
     [Parameter]
-    public string QrDataUri { get; set; }
-        = string.Empty;
+    public string PhotoUrl { get; set; } =
+        string.Empty;
+
+
+    [Parameter]
+    public string QrDataUri { get; set; } =
+        string.Empty;
 
 
     [Parameter]
@@ -1112,8 +1724,8 @@
 
 
     [Parameter]
-    public string VaccinationStatus { get; set; }
-        = "No Record";
+    public string VaccinationStatus { get; set; } =
+        "No Record";
 
 
     [Parameter]
@@ -1124,12 +1736,31 @@
     public bool PublicMode { get; set; }
 
 
-    private string Initial =>
-        string.IsNullOrWhiteSpace(
-            Pet.PetName)
-            ? "P"
-            : Pet.PetName[..1]
-                .ToUpperInvariant();
+    /*
+        Keep false for now.
+
+        Later, if you add a privacy toggle to the
+        owner's account/public Pet ID settings,
+        pass true only when the owner explicitly
+        allows their phone number to appear publicly.
+    */
+    [Parameter]
+    public bool ShowOwnerPhoneInPublic { get; set; }
+
+
+    private bool CanShowOwnerPhone =>
+        !string.IsNullOrWhiteSpace(OwnerPhone)
+        &&
+        (
+            !PublicMode
+            ||
+            ShowOwnerPhoneInPublic
+        );
+
+
+    private string FormattedOwnerPhone =>
+        FormatPhilippinePhone(
+            OwnerPhone);
 
 
     private string CardClass
@@ -1137,26 +1768,99 @@
         get
         {
             var theme =
-                IsPremium
-                    ? Pet.CardTheme
-                    : "Classic";
+                string.IsNullOrWhiteSpace(
+                    Pet.CardTheme)
+                    ? "classic"
+                    : Pet.CardTheme
+                        .Trim()
+                        .ToLowerInvariant();
 
 
-            var css =
-                "pid-card " +
-                Cards.GetThemeCssClass(
-                    theme);
-
-
-            if (IsPremium)
-            {
-                css +=
-                    " is-premium";
-            }
-
-
-            return css;
+            return
+                $"sc-pet-id theme-{theme}";
         }
+    }
+
+
+    private string IssueDate =>
+        (Pet.CardIssuedAt
+            ??
+            Pet.CreatedAt)
+        .ToString(
+            "MMM dd, yyyy");
+
+
+    private static string Display(
+        string? value)
+    {
+        return
+            string.IsNullOrWhiteSpace(
+                value)
+                ? "Not provided"
+                : value.Trim();
+    }
+
+
+    private static string FormatPhilippinePhone(
+        string? value)
+    {
+        if (string.IsNullOrWhiteSpace(
+            value))
+        {
+            return "Not provided";
+        }
+
+
+        var raw =
+            value.Trim();
+
+
+        var digits =
+            new string(
+                raw
+                    .Where(char.IsDigit)
+                    .ToArray());
+
+
+        /*
+            09171234567
+            becomes
+            +63 917 123 4567
+        */
+
+        if (digits.Length == 11
+            &&
+            digits.StartsWith(
+                "09",
+                StringComparison.Ordinal))
+        {
+            return
+                $"+63 {digits.Substring(1, 3)} " +
+                $"{digits.Substring(4, 3)} " +
+                $"{digits.Substring(7, 4)}";
+        }
+
+
+        /*
+            639171234567
+            becomes
+            +63 917 123 4567
+        */
+
+        if (digits.Length == 12
+            &&
+            digits.StartsWith(
+                "63",
+                StringComparison.Ordinal))
+        {
+            return
+                $"+63 {digits.Substring(2, 3)} " +
+                $"{digits.Substring(5, 3)} " +
+                $"{digits.Substring(8, 4)}";
+        }
+
+
+        return raw;
     }
 
 }

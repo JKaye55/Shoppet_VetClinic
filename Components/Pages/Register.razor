@@ -189,6 +189,26 @@
 
                     </div>
 
+                    <div class="sc-register-field">
+
+    <label for="register-mobile">
+        Mobile Number <span>*</span>
+    </label>
+
+    <input id="register-mobile"
+           type="tel"
+           placeholder="0917 123 4567"
+           @bind="mobileNumber"
+           autocomplete="tel"
+           inputmode="tel"
+           disabled="@isRegistering" />
+
+    <small>
+        Used as the owner contact for your Digital Pet ID.
+    </small>
+
+</div>
+
 
                     <div class="sc-register-field">
 
@@ -636,6 +656,9 @@
     private string fullName =
         string.Empty;
 
+    private string mobileNumber =
+        string.Empty;
+
     private string email =
         string.Empty;
 
@@ -644,6 +667,7 @@
 
     private string confirmPassword =
         string.Empty;
+
 
     private string errorMessage =
         string.Empty;
@@ -666,53 +690,68 @@
 
 
         email =
-            AuthService.NormalizeEmail(
-                email);
+            email
+                .Trim()
+                .ToLowerInvariant();
 
 
-        var nameError =
-            AuthService.ValidateFullName(
-                fullName);
+        mobileNumber =
+            NormalizeMobileNumber(
+                mobileNumber);
 
 
-        if (nameError is not null)
+        // =====================================================
+        // REQUIRED FIELDS
+        // =====================================================
+
+        if (string.IsNullOrWhiteSpace(fullName) ||
+            string.IsNullOrWhiteSpace(mobileNumber) ||
+            string.IsNullOrWhiteSpace(email) ||
+            string.IsNullOrWhiteSpace(password) ||
+            string.IsNullOrWhiteSpace(confirmPassword))
         {
             errorMessage =
-                nameError;
+                "Please complete all required fields.";
 
             return;
         }
 
 
-        if (!AuthService
-            .IsValidEmailAddress(
-                email))
+        // =====================================================
+        // MOBILE VALIDATION
+        // Expected stored format:
+        // 09171234567
+        // =====================================================
+
+        if (mobileNumber.Length != 11 ||
+            !mobileNumber.StartsWith(
+                "09",
+                StringComparison.Ordinal))
         {
             errorMessage =
-                "Please enter a valid email address.";
+                "Please enter a valid Philippine mobile number, for example 09171234567.";
 
             return;
         }
 
 
-        var passwordError =
-            AuthService.ValidateNewPassword(
-                password);
+        // =====================================================
+        // PASSWORD
+        // =====================================================
 
-
-        if (passwordError is not null)
+        if (password.Length < 8)
         {
             errorMessage =
-                passwordError;
+                "Please use a password with at least 8 characters.";
 
             return;
         }
 
 
         if (!string.Equals(
-            password,
-            confirmPassword,
-            StringComparison.Ordinal))
+                password,
+                confirmPassword,
+                StringComparison.Ordinal))
         {
             errorMessage =
                 "The passwords do not match.";
@@ -730,6 +769,7 @@
             var user =
                 DbService.RegisterUser(
                     fullName,
+                    mobileNumber,
                     email,
                     password,
                     "Pet Owner");
@@ -738,7 +778,7 @@
             if (user is null)
             {
                 errorMessage =
-                    "An account is already registered with that email address.";
+                    "That email address is already registered.";
 
                 return;
             }
@@ -754,7 +794,7 @@
 
 
             Nav.NavigateTo(
-                "/dashboard");
+                "/home");
         }
         catch (Exception ex)
         {
@@ -773,6 +813,44 @@
     }
 
 
+    private static string NormalizeMobileNumber(
+        string value)
+    {
+        if (string.IsNullOrWhiteSpace(
+            value))
+        {
+            return string.Empty;
+        }
+
+
+        var digits =
+            new string(
+                value
+                    .Where(char.IsDigit)
+                    .ToArray());
+
+
+        /*
+            +63 917 123 4567
+            becomes:
+            09171234567
+        */
+
+        if (digits.Length == 12 &&
+            digits.StartsWith(
+                "63",
+                StringComparison.Ordinal))
+        {
+            digits =
+                "0" +
+                digits.Substring(2);
+        }
+
+
+        return digits;
+    }
+
+
     private async Task ContinueAsGuestAsync()
     {
         if (isRegistering)
@@ -786,4 +864,5 @@
             "/home");
     }
 
+}
 }

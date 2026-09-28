@@ -67,8 +67,29 @@ namespace Shoppet_VetClinic.Services
                 StringComparison.OrdinalIgnoreCase);
 
 
-        public bool IsPremium =>
-            CurrentUser?.IsPremium == true;
+        public bool IsPremium
+        {
+            get
+            {
+                if (CurrentUser?.IsPremium != true)
+                {
+                    return false;
+                }
+
+                if (!CurrentUser.PremiumActivatedAt.HasValue)
+                {
+                    return false;
+                }
+
+                return
+                    CurrentUser
+                        .PremiumActivatedAt
+                        .Value
+                        .AddMonths(3)
+                    >=
+                    DateTime.Now;
+            }
+        }
 
 
         // Kept for compatibility with existing pages.

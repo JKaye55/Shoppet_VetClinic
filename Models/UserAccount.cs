@@ -18,5 +18,14 @@
         // Cross-device token (for future mobile)
         public string? ApiToken { get; set; }              // ← ADDED BACK
         public DateTime? ApiTokenExpiresAt { get; set; }   // ← ADDED BACK
+        public string PremiumStatus { get; set; } = "Free";
+        public DateTime? PremiumExpiresAt { get; set; }
+        public decimal? PremiumAmount { get; set; }
+        public string? PremiumBillingCycle { get; set; }
+        public DateTime? PremiumNextBillingDate { get; set; }
+
+        public string? MobileNumber { get; set; }
+
+        public bool ShowMobileOnPublicPetId { get; set; }
     }
 }

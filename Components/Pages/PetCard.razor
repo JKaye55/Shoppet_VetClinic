@@ -35,17 +35,14 @@
 
                 </span>
 
-
                 <h2>
                     Pet ID unavailable
                 </h2>
-
 
                 <p>
                     This pet could not be found or
                     does not belong to your account.
                 </p>
-
 
                 <a href="/my-pets">
                     Return to My Pets
@@ -71,12 +68,10 @@
                         DIGITAL PET ID
                     </span>
 
-
                     <h1>
                         @pet.PetName's
                         <em>connected identity.</em>
                     </h1>
-
 
                     <p>
                         A scannable ShoppetCare identity
@@ -85,7 +80,6 @@
                     </p>
 
                 </div>
-
 
                 <div class="petid-header-actions">
 
@@ -124,19 +118,20 @@
 
             <section class="petid-workspace">
 
-
                 <!-- ACTUAL CARD -->
 
                 <div class="petid-card-column">
 
                     <PetIdCardView Pet="@pet"
-                                   OwnerName="@ownerName"
-                                   PhotoUrl="@photoUrl"
-                                   QrDataUri="@qrDataUri"
-                                   IsPremium="@isPremium"
-                                   VaccinationStatus="@vaccinationStatus"
-                                   HealthRecordCount="@healthRecords.Count"
-                                   PublicMode="false" />
+               OwnerName="@ownerName"
+               OwnerPhone="@ownerPhone"
+               PhotoUrl="@photoUrl"
+               QrDataUri="@qrDataUri"
+               IsPremium="@isPremium"
+               VaccinationStatus="@vaccinationStatus"
+               HealthRecordCount="@healthRecords.Count"
+               PublicMode="false"
+               ShowOwnerPhoneInPublic="@showOwnerPhoneInPublic" />
 
 
                     <div class="petid-public-bar">
@@ -148,7 +143,6 @@
                             </svg>
 
                         </span>
-
 
                         <div>
 
@@ -164,7 +158,6 @@
                             </p>
 
                         </div>
-
 
                         <a href="/pet/card/@pet.CardId"
                            target="_blank">
@@ -184,135 +177,231 @@
 
                 <aside class="petid-value-panel">
 
-                    <div class="petid-value-top">
+                    <!-- PLAN STATUS -->
 
-                        <span class="@(isPremium
-                                                                    ? "plan-label premium"
-                                                                    : "plan-label")">
+                    <div class="premium-plan-head">
 
-                            @(isPremium
-                                ? "PREMIUM ACTIVE"
-                                : "BASIC PET ID")
+                        <div>
 
-                        </span>
+                            <span class="@(isPremium
+                                ? "plan-label premium"
+                                : "plan-label")">
 
+                                @(isPremium
+                                    ? "PREMIUM PLAN ACTIVE"
+                                    : "BASIC PET ID")
 
-                        <h2>
+                            </span>
 
                             @if (isPremium)
                             {
-                                <span>
-                                    More than a card.
-                                </span>
-
-                                <em>
-                                    A portable pet identity.
-                                </em>
+                                <h2>
+                                    A better identity for
+                                    <em>@pet.PetName.</em>
+                                </h2>
                             }
                             else
                             {
-                                <span>
-                                    A digital identity
-                                </span>
-
-                                <em>
-                                    ready to grow.
-                                </em>
+                                <h2>
+                                    More than a profile.
+                                    <em>A connected pet identity.</em>
+                                </h2>
                             }
 
-                        </h2>
+                        </div>
 
+                        @if (isPremium)
+                        {
+                            <div class="premium-active-mark">
 
-                        <p>
-                            The Pet ID gives each pet a
-                            recognizable ShoppetCare identity
-                            that can be opened through a QR code
-                            without exposing private account data.
-                        </p>
+                                <svg aria-hidden="true">
+                                    <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
+                                </svg>
+
+                            </div>
+                        }
 
                     </div>
 
 
-                    <!-- VALUE POINTS -->
+                    <p class="premium-intro">
 
-                    <div class="petid-value-list">
+                        @if (isPremium)
+                        {
+                            <span>
+                                @pet.PetName's Digital Pet ID is using
+                                the Premium experience connected to your
+                                active ShoppetCare subscription.
+                            </span>
+                        }
+                        else
+                        {
+                            <span>
+                                Every pet receives a Digital Pet ID.
+                                Premium adds expanded management tools,
+                                personalization, and higher account limits.
+                            </span>
+                        }
 
-                        <div>
+                    </p>
+
+
+                    <!-- SUBSCRIPTION SUMMARY -->
+
+                    <div class="petid-subscription">
+
+                        <div class="subscription-price">
+
+                            <small>
+                                PLAN
+                            </small>
+
+                            <strong>
+                                ₱150
+                            </strong>
 
                             <span>
-
-                                <svg aria-hidden="true">
-                                    <use href="/icons/bootstrap-icons.svg#qr-code-scan"></use>
-                                </svg>
-
+                                / 3 months
                             </span>
-
-
-                            <div>
-
-                                <strong>
-                                    Scannable identity
-                                </strong>
-
-                                <small>
-                                    The QR opens a dedicated
-                                    public Pet ID page.
-                                </small>
-
-                            </div>
 
                         </div>
 
 
-                        <div>
-
-                            <span>
-
-                                <svg aria-hidden="true">
-                                    <use href="/icons/bootstrap-icons.svg#shield-lock-fill"></use>
-                                </svg>
-
-                            </span>
-
+                        <div class="subscription-details">
 
                             <div>
 
-                                <strong>
-                                    Privacy-first sharing
-                                </strong>
+                                <span>
+                                    Status
+                                </span>
 
-                                <small>
-                                    Public visitors see useful
-                                    pet identity information,
-                                    not your private account.
-                                </small>
+                                <strong class="active-text">
+                                    @(isPremium
+                                        ? "Active"
+                                        : "Upgrade Available")
+                                </strong>
 
                             </div>
 
+
+                            <div>
+
+                                <span>
+                                    Access Period
+                                </span>
+
+                                <strong>
+                                    3 Months
+                                </strong>
+
+                            </div>
+
+
+                            @if (isPremium)
+                            {
+                                <div class="wide">
+
+                                    <span>
+                                        Premium Valid Until
+                                    </span>
+
+                                    <strong>
+                                        @PremiumEndDisplay
+                                    </strong>
+
+                                </div>
+                            }
+
                         </div>
 
+                    </div>
 
-                        <div>
 
-                            <span>
+                    <!-- WHY PET ID -->
 
-                                <svg aria-hidden="true">
-                                    <use href="/icons/bootstrap-icons.svg#clipboard2-pulse-fill"></use>
-                                </svg>
+                    <div class="petid-feature-section">
 
-                            </span>
+                        <span class="section-label">
+                            DIGITAL PET ID VALUE
+                        </span>
+
+
+                        <div class="petid-value-list">
+
+                            <div>
+
+                                <span>
+
+                                    <svg aria-hidden="true">
+                                        <use href="/icons/bootstrap-icons.svg#qr-code-scan"></use>
+                                    </svg>
+
+                                </span>
+
+                                <div>
+
+                                    <strong>
+                                        Scannable identity
+                                    </strong>
+
+                                    <small>
+                                        One QR code opens
+                                        @pet.PetName's public Pet ID.
+                                    </small>
+
+                                </div>
+
+                            </div>
 
 
                             <div>
 
-                                <strong>
-                                    Connected care
-                                </strong>
+                                <span>
 
-                                <small>
-                                    The owner view links directly
-                                    to @pet.PetName's health records.
-                                </small>
+                                    <svg aria-hidden="true">
+                                        <use href="/icons/bootstrap-icons.svg#shield-lock-fill"></use>
+                                    </svg>
+
+                                </span>
+
+                                <div>
+
+                                    <strong>
+                                        Privacy-safe public view
+                                    </strong>
+
+                                    <small>
+                                        Useful pet information can be shared
+                                        without exposing private owner details.
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+
+                                    <svg aria-hidden="true">
+                                        <use href="/icons/bootstrap-icons.svg#clipboard2-pulse-fill"></use>
+                                    </svg>
+
+                                </span>
+
+                                <div>
+
+                                    <strong>
+                                        Connected care history
+                                    </strong>
+
+                                    <small>
+                                        Jump from the Pet ID directly to
+                                        @pet.PetName's health records.
+                                    </small>
+
+                                </div>
 
                             </div>
 
@@ -321,31 +410,21 @@
                     </div>
 
 
-                    <!-- PREMIUM BENEFITS -->
+                    <!-- PREMIUM VALUE -->
 
                     <section class="petid-benefits">
 
                         <div class="benefits-heading">
 
                             <span>
-                                @(isPremium
-                                    ? "YOUR PREMIUM ACCESS"
-                                    : "LIFETIME PREMIUM")
+                                PREMIUM INCLUDES
                             </span>
 
-
-                            @if (!isPremium)
-                            {
-                                <strong>
-                                    ₱49 once
-                                </strong>
-                            }
-                            else
-                            {
-                                <strong>
-                                    Lifetime
-                                </strong>
-                            }
+                            <strong>
+                                @(isPremium
+                                    ? "Active"
+                                    : "₱150 / 3 months")
+                            </strong>
 
                         </div>
 
@@ -356,7 +435,7 @@
                                 <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
                             </svg>
 
-                            Premium Pet ID themes
+                            Premium Digital Pet ID themes
 
                         </div>
 
@@ -367,7 +446,7 @@
                                 <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
                             </svg>
 
-                            Unlimited pet profiles
+                            No pet-profile limit while Premium is active
 
                         </div>
 
@@ -378,7 +457,7 @@
                                 <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
                             </svg>
 
-                            Unlimited health records
+                            No health-record limit while Premium is active
 
                         </div>
 
@@ -389,7 +468,7 @@
                                 <use href="/icons/bootstrap-icons.svg#patch-check-fill"></use>
                             </svg>
 
-                            Health document export
+                            Health-record export while Premium is active
 
                         </div>
 
@@ -399,7 +478,18 @@
                             <a href="/premium"
                                class="upgrade-button">
 
-                                Unlock Lifetime Premium
+                                Get 3 Months of Premium
+
+                                <span>→</span>
+
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="/account"
+                               class="manage-plan-link">
+
+                                View Subscription Details
 
                                 <span>→</span>
 
@@ -409,14 +499,13 @@
                     </section>
 
 
-                    <!-- QUICK MANAGEMENT -->
+                    <!-- PET MANAGEMENT -->
 
                     <div class="petid-management">
 
                         <span class="petid-eyebrow">
-                            MANAGE THIS PET
+                            MANAGE @pet.PetName.ToUpperInvariant()
                         </span>
-
 
                         <div>
 
@@ -462,12 +551,10 @@
                         PET ID APPEARANCE
                     </span>
 
-
                     <h2>
                         Make their identity
                         <em>feel like theirs.</em>
                     </h2>
-
 
                     <p>
                         Classic is included with every Pet ID.
@@ -498,11 +585,9 @@
                                     SHOPPETCARE
                                 </span>
 
-
                                 <strong>
                                     @theme
                                 </strong>
-
 
                                 <small>
                                     @pet.PetName
@@ -516,7 +601,6 @@
                                 <span>
                                     @theme
                                 </span>
-
 
                                 @if (locked)
                                 {
@@ -571,19 +655,25 @@
     .petid-page {
         min-height: 100vh;
         color: var(--petid-dark);
-        background: radial-gradient( circle at 93% 5%, rgba(47,144,152,.09), transparent 23% ), var(--petid-cream);
+        background:
+            radial-gradient(
+                circle at 93% 5%,
+                rgba(47,144,152,.09),
+                transparent 23%
+            ),
+            var(--petid-cream);
     }
 
 
-        .petid-page svg {
-            width: 1em;
-            height: 1em;
-            fill: currentColor;
-        }
+    .petid-page svg {
+        width: 1em;
+        height: 1em;
+        fill: currentColor;
+    }
 
 
     .petid-shell {
-        width: min( 1420px, calc(100% - 48px) );
+        width: min(1420px, calc(100% - 48px));
         margin: 0 auto;
     }
 
@@ -605,13 +695,18 @@
 
 
     /* =========================================================
-           HEADER
-           ========================================================= */
+       HEADER
+       ========================================================= */
 
     .petid-header {
         padding: 33px 0;
         border-bottom: 1px solid var(--petid-border);
-        background: linear-gradient( 135deg, #F0F9F7, #FFFDF8 );
+        background:
+            linear-gradient(
+                135deg,
+                #F0F9F7,
+                #FFFDF8
+            );
     }
 
 
@@ -626,19 +721,19 @@
     .petid-header h1 {
         margin: 7px 0 0;
         color: var(--petid-dark);
-        font-size: clamp( 34px, 4vw, 54px );
+        font-size: clamp(34px, 4vw, 54px);
         line-height: .95;
         font-weight: 950;
         letter-spacing: -.05em;
     }
 
 
-        .petid-header h1 em {
-            color: var(--petid-teal);
-            font-family: Georgia, "Times New Roman", serif;
-            font-style: italic;
-            font-weight: 500;
-        }
+    .petid-header h1 em {
+        color: var(--petid-teal);
+        font-family: Georgia, "Times New Roman", serif;
+        font-style: italic;
+        font-weight: 500;
+    }
 
 
     .petid-header p {
@@ -657,24 +752,24 @@
     }
 
 
-        .petid-header-actions a {
-            min-height: 40px;
-            padding: 0 12px;
-            display: inline-flex;
-            align-items: center;
-            border: 1px solid #CFDDD9;
-            border-radius: 9px;
-            background: #FFFFFF;
-            color: #53665F;
-            font-size: 11px;
-            font-weight: 850;
-            text-decoration: none;
-        }
+    .petid-header-actions a {
+        min-height: 40px;
+        padding: 0 12px;
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid #CFDDD9;
+        border-radius: 9px;
+        background: #FFFFFF;
+        color: #53665F;
+        font-size: 11px;
+        font-weight: 850;
+        text-decoration: none;
+    }
 
 
     /* =========================================================
-           CONTENT
-           ========================================================= */
+       CONTENT
+       ========================================================= */
 
     .petid-content {
         padding: 28px 0 76px;
@@ -693,12 +788,14 @@
 
 
     /* =========================================================
-           WORKSPACE
-           ========================================================= */
+       WORKSPACE
+       ========================================================= */
 
     .petid-workspace {
         display: grid;
-        grid-template-columns: minmax(0,1.8fr) minmax(330px,.7fr);
+        grid-template-columns:
+            minmax(0, 1.8fr)
+            minmax(330px, .7fr);
         gap: 16px;
         align-items: stretch;
     }
@@ -709,19 +806,26 @@
     }
 
 
-    /* PUBLIC */
+    /* =========================================================
+       PUBLIC CARD BAR
+       ========================================================= */
 
     .petid-public-bar {
         margin-top: 12px;
         padding: 14px 16px;
         display: grid;
-        grid-template-columns: auto minmax(0,1fr) auto;
+        grid-template-columns:
+            auto
+            minmax(0, 1fr)
+            auto;
         align-items: center;
         gap: 13px;
         border: 1px solid var(--petid-border);
         border-radius: 13px;
         background: #FFFFFF;
-        box-shadow: 0 7px 20px rgba(23,61,61,.035);
+        box-shadow:
+            0 7px 20px
+            rgba(23,61,61,.035);
     }
 
 
@@ -761,8 +865,8 @@
 
 
     /* =========================================================
-           VALUE PANEL
-           ========================================================= */
+       VALUE PANEL
+       ========================================================= */
 
     .petid-value-panel {
         min-height: 100%;
@@ -771,8 +875,16 @@
         flex-direction: column;
         border: 1px solid var(--petid-border);
         border-radius: 22px;
-        background: radial-gradient( circle at 94% 4%, rgba(243,210,122,.25), transparent 26% ), #FFFFFF;
-        box-shadow: 0 12px 32px rgba(23,61,61,.055);
+        background:
+            radial-gradient(
+                circle at 94% 4%,
+                rgba(243,210,122,.25),
+                transparent 26%
+            ),
+            #FFFFFF;
+        box-shadow:
+            0 12px 32px
+            rgba(23,61,61,.055);
     }
 
 
@@ -784,41 +896,8 @@
     }
 
 
-        .plan-label.premium {
-            color: #987016;
-        }
-
-
-    .petid-value-top h2 {
-        margin: 8px 0 0;
-        color: var(--petid-dark);
-        font-size: clamp( 27px, 2.4vw, 38px );
-        line-height: .98;
-        font-weight: 950;
-        letter-spacing: -.045em;
-    }
-
-
-        .petid-value-top h2 span,
-        .petid-value-top h2 em {
-            display: block;
-        }
-
-
-        .petid-value-top h2 em {
-            margin-top: 2px;
-            color: #A0791C;
-            font-family: Georgia, "Times New Roman", serif;
-            font-style: italic;
-            font-weight: 500;
-        }
-
-
-    .petid-value-top > p {
-        margin: 12px 0 0;
-        color: #73847E;
-        font-size: 12px;
-        line-height: 1.62;
+    .plan-label.premium {
+        color: #987016;
     }
 
 
@@ -829,56 +908,244 @@
     }
 
 
-        .petid-value-list > div {
-            padding: 11px;
-            display: grid;
-            grid-template-columns: auto minmax(0,1fr);
-            align-items: center;
-            gap: 10px;
-            border-radius: 11px;
-            background: #F6F9F8;
-        }
+    .petid-value-list > div {
+        padding: 11px;
+        display: grid;
+        grid-template-columns:
+            auto
+            minmax(0,1fr);
+        align-items: center;
+        gap: 10px;
+        border-radius: 11px;
+        background: #F6F9F8;
+    }
 
 
-            .petid-value-list > div > span {
-                width: 36px;
-                height: 36px;
-                display: grid;
-                place-items: center;
-                border-radius: 9px;
-                background: #E2F2EF;
-                color: var(--petid-teal);
-            }
+    .petid-value-list > div > span {
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        border-radius: 9px;
+        background: #E2F2EF;
+        color: var(--petid-teal);
+    }
 
 
-        .petid-value-list strong,
-        .petid-value-list small {
-            display: block;
-        }
+    .petid-value-list strong,
+    .petid-value-list small {
+        display: block;
+    }
 
 
-        .petid-value-list strong {
-            color: var(--petid-dark);
-            font-size: 11px;
-        }
+    .petid-value-list strong {
+        color: var(--petid-dark);
+        font-size: 11px;
+    }
 
 
-        .petid-value-list small {
-            margin-top: 2px;
-            color: #81908B;
-            font-size: 9px;
-            line-height: 1.45;
-        }
+    .petid-value-list small {
+        margin-top: 2px;
+        color: #81908B;
+        font-size: 9px;
+        line-height: 1.45;
+    }
 
 
-    /* BENEFITS */
+    /* =========================================================
+       PREMIUM HEADER
+       ========================================================= */
+
+    .premium-plan-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+
+    .premium-plan-head h2 {
+        margin: 8px 0 0;
+        color: #173D3D;
+        font-size: clamp(1.7rem, 2.4vw, 2.35rem);
+        line-height: .96;
+        font-weight: 950;
+        letter-spacing: -.045em;
+    }
+
+
+    .premium-plan-head h2 em {
+        display: block;
+        margin-top: 3px;
+        color: #A17819;
+        font-family: Georgia, "Times New Roman", serif;
+        font-style: italic;
+        font-weight: 500;
+    }
+
+
+    .premium-active-mark {
+        width: 44px;
+        height: 44px;
+        flex: 0 0 44px;
+        display: grid;
+        place-items: center;
+        border-radius: 13px;
+        background: #173D3D;
+        color: #F3D27A;
+        box-shadow:
+            0 10px 22px
+            rgba(23,61,61,.15);
+    }
+
+
+    .premium-intro {
+        margin: 13px 0 0;
+        color: #71827C;
+        font-size: .72rem;
+        line-height: 1.65;
+    }
+
+
+    /* =========================================================
+       SUBSCRIPTION
+       ========================================================= */
+
+    .petid-subscription {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns:
+            .7fr
+            1.3fr;
+        overflow: hidden;
+        border: 1px solid #E1CC7E;
+        border-radius: 15px;
+        background: #FFFDF7;
+    }
+
+
+    .subscription-price {
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background:
+            linear-gradient(
+                145deg,
+                #173D3D,
+                #245B56
+            );
+        color: #FFFFFF;
+    }
+
+
+    .subscription-price small {
+        color: #F3D27A;
+        font-size: .51rem;
+        font-weight: 950;
+        letter-spacing: .13em;
+    }
+
+
+    .subscription-price strong {
+        margin-top: 5px;
+        font-size: 2.15rem;
+        line-height: 1;
+        font-weight: 950;
+        letter-spacing: -.045em;
+    }
+
+
+    .subscription-price span {
+        margin-top: 4px;
+        color: rgba(255,255,255,.68);
+        font-size: .58rem;
+        font-weight: 750;
+    }
+
+
+    .subscription-details {
+        padding: 11px;
+        display: grid;
+        grid-template-columns:
+            1fr
+            1fr;
+        gap: 7px;
+    }
+
+
+    .subscription-details > div {
+        padding: 10px;
+        border-radius: 9px;
+        background: #FFFFFF;
+    }
+
+
+    .subscription-details .wide {
+        grid-column: 1 / -1;
+    }
+
+
+    .subscription-details span,
+    .subscription-details strong {
+        display: block;
+    }
+
+
+    .subscription-details span {
+        color: #8B9793;
+        font-size: .5rem;
+        font-weight: 850;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+
+    .subscription-details strong {
+        margin-top: 3px;
+        color: #173D3D;
+        font-size: .62rem;
+        font-weight: 900;
+    }
+
+
+    .subscription-details strong.active-text {
+        color: #24815D;
+    }
+
+
+    /* =========================================================
+       PET ID FEATURES
+       ========================================================= */
+
+    .petid-feature-section {
+        margin-top: 20px;
+    }
+
+
+    .section-label {
+        color: #2F9098;
+        font-size: .55rem;
+        font-weight: 950;
+        letter-spacing: .12em;
+    }
+
+
+    /* =========================================================
+       BENEFITS
+       ========================================================= */
 
     .petid-benefits {
         margin-top: 20px;
         padding: 16px;
         border: 1px solid #E7D38B;
         border-radius: 14px;
-        background: linear-gradient( 135deg, #FFF9E7, #FFFDF7 );
+        background:
+            linear-gradient(
+                135deg,
+                #FFF9E7,
+                #FFFDF7
+            );
     }
 
 
@@ -891,18 +1158,18 @@
     }
 
 
-        .benefits-heading > span {
-            color: #8A6918;
-            font-size: 9px;
-            font-weight: 950;
-            letter-spacing: .09em;
-        }
+    .benefits-heading > span {
+        color: #8A6918;
+        font-size: 9px;
+        font-weight: 950;
+        letter-spacing: .09em;
+    }
 
 
-        .benefits-heading > strong {
-            color: var(--petid-dark);
-            font-size: 13px;
-        }
+    .benefits-heading > strong {
+        color: var(--petid-dark);
+        font-size: 13px;
+    }
 
 
     .benefit {
@@ -916,9 +1183,9 @@
     }
 
 
-        .benefit svg {
-            color: var(--petid-teal);
-        }
+    .benefit svg {
+        color: var(--petid-teal);
+    }
 
 
     .upgrade-button {
@@ -937,7 +1204,26 @@
     }
 
 
-    /* MANAGEMENT */
+    .manage-plan-link {
+        min-height: 42px;
+        margin-top: 14px;
+        padding: 0 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 1px solid #C8DBD6;
+        border-radius: 9px;
+        background: #FFFFFF;
+        color: #173D3D;
+        font-size: .63rem;
+        font-weight: 900;
+        text-decoration: none;
+    }
+
+
+    /* =========================================================
+       MANAGEMENT
+       ========================================================= */
 
     .petid-management {
         margin-top: auto;
@@ -945,46 +1231,49 @@
     }
 
 
-        .petid-management > div {
-            margin-top: 8px;
-            display: grid;
-            grid-template-columns: repeat( 2, minmax(0,1fr) );
-            gap: 7px;
-        }
+    .petid-management > div {
+        margin-top: 8px;
+        display: grid;
+        grid-template-columns:
+            repeat(2, minmax(0,1fr));
+        gap: 7px;
+    }
 
 
-        .petid-management a {
-            min-height: 42px;
-            padding: 0 9px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            border: 1px solid #D6E1DE;
-            border-radius: 9px;
-            color: #566A63;
-            font-size: 10px;
-            font-weight: 850;
-            text-decoration: none;
-        }
+    .petid-management a {
+        min-height: 42px;
+        padding: 0 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border: 1px solid #D6E1DE;
+        border-radius: 9px;
+        color: #566A63;
+        font-size: 10px;
+        font-weight: 850;
+        text-decoration: none;
+    }
 
 
-            .petid-management a:hover {
-                border-color: #BBD5D0;
-                background: #F4FAF8;
-                color: var(--petid-teal-dark);
-            }
+    .petid-management a:hover {
+        border-color: #BBD5D0;
+        background: #F4FAF8;
+        color: var(--petid-teal-dark);
+    }
 
 
     /* =========================================================
-           THEMES
-           ========================================================= */
+       THEMES
+       ========================================================= */
 
     .petid-themes {
         margin-top: 32px;
         padding: 26px;
         display: grid;
-        grid-template-columns: minmax(240px,.45fr) minmax(0,1.55fr);
+        grid-template-columns:
+            minmax(240px,.45fr)
+            minmax(0,1.55fr);
         gap: 28px;
         align-items: center;
         border: 1px solid var(--petid-border);
@@ -1003,13 +1292,13 @@
     }
 
 
-        .theme-intro h2 em {
-            display: block;
-            color: var(--petid-teal);
-            font-family: Georgia, "Times New Roman", serif;
-            font-style: italic;
-            font-weight: 500;
-        }
+    .theme-intro h2 em {
+        display: block;
+        color: var(--petid-teal);
+        font-family: Georgia, "Times New Roman", serif;
+        font-style: italic;
+        font-weight: 500;
+    }
 
 
     .theme-intro p {
@@ -1022,7 +1311,8 @@
 
     .theme-grid {
         display: grid;
-        grid-template-columns: repeat( 5, minmax(0,1fr) );
+        grid-template-columns:
+            repeat(5, minmax(0,1fr));
         gap: 8px;
     }
 
@@ -1034,24 +1324,28 @@
         background: #FFFFFF;
         text-align: left;
         cursor: pointer;
-        transition: transform .16s ease, border-color .16s ease;
+        transition:
+            transform .16s ease,
+            border-color .16s ease;
     }
 
 
-        .theme-option:hover {
-            transform: translateY(-2px);
-        }
+    .theme-option:hover {
+        transform: translateY(-2px);
+    }
 
 
-        .theme-option.selected {
-            border-color: var(--petid-teal);
-            box-shadow: 0 0 0 2px rgba(47,144,152,.09);
-        }
+    .theme-option.selected {
+        border-color: var(--petid-teal);
+        box-shadow:
+            0 0 0 2px
+            rgba(47,144,152,.09);
+    }
 
 
-        .theme-option.locked {
-            opacity: .58;
-        }
+    .theme-option.locked {
+        opacity: .58;
+    }
 
 
     .theme-preview {
@@ -1061,46 +1355,71 @@
         flex-direction: column;
         justify-content: space-between;
         border-radius: 8px;
-        background: linear-gradient( 135deg, #F7FFFF, #DDF3F1 );
+        background:
+            linear-gradient(
+                135deg,
+                #F7FFFF,
+                #DDF3F1
+            );
     }
 
 
-        .theme-preview.theme-ocean {
-            background: linear-gradient( 135deg, #EFFCFE, #BEE8ED );
-        }
+    .theme-preview.theme-ocean {
+        background:
+            linear-gradient(
+                135deg,
+                #EFFCFE,
+                #BEE8ED
+            );
+    }
 
 
-        .theme-preview.theme-sunset {
-            background: linear-gradient( 135deg, #FFF7F2, #FFD7C6 );
-        }
+    .theme-preview.theme-sunset {
+        background:
+            linear-gradient(
+                135deg,
+                #FFF7F2,
+                #FFD7C6
+            );
+    }
 
 
-        .theme-preview.theme-mint {
-            background: linear-gradient( 135deg, #F2FBF5, #CBE7D4 );
-        }
+    .theme-preview.theme-mint {
+        background:
+            linear-gradient(
+                135deg,
+                #F2FBF5,
+                #CBE7D4
+            );
+    }
 
 
-        .theme-preview.theme-royal {
-            background: linear-gradient( 135deg, #F7F4FF, #DDD2F8 );
-        }
+    .theme-preview.theme-royal {
+        background:
+            linear-gradient(
+                135deg,
+                #F7F4FF,
+                #DDD2F8
+            );
+    }
 
 
-        .theme-preview span {
-            font-size: 7px;
-            font-weight: 950;
-        }
+    .theme-preview span {
+        font-size: 7px;
+        font-weight: 950;
+    }
 
 
-        .theme-preview strong {
-            color: var(--petid-dark);
-            font-size: 13px;
-        }
+    .theme-preview strong {
+        color: var(--petid-dark);
+        font-size: 13px;
+    }
 
 
-        .theme-preview small {
-            color: #6F817A;
-            font-size: 8px;
-        }
+    .theme-preview small {
+        color: #6F817A;
+        font-size: 8px;
+    }
 
 
     .theme-footer {
@@ -1111,28 +1430,28 @@
     }
 
 
-        .theme-footer > span {
-            color: #52655E;
-            font-size: 10px;
-            font-weight: 850;
-        }
+    .theme-footer > span {
+        color: #52655E;
+        font-size: 10px;
+        font-weight: 850;
+    }
 
 
-        .theme-footer small {
-            color: var(--petid-teal);
-            font-size: 8px;
-            font-weight: 800;
-        }
+    .theme-footer small {
+        color: var(--petid-teal);
+        font-size: 8px;
+        font-weight: 800;
+    }
 
 
-            .theme-footer small.locked {
-                color: #9A7418;
-            }
+    .theme-footer small.locked {
+        color: #9A7418;
+    }
 
 
     /* =========================================================
-           ERROR
-           ========================================================= */
+       ERROR
+       ========================================================= */
 
     .petid-error {
         max-width: 600px;
@@ -1174,22 +1493,23 @@
     }
 
 
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
     @@media (max-width: 1050px) {
 
         .petid-workspace {
             grid-template-columns: 1fr;
         }
 
-
         .petid-value-panel {
             min-height: auto;
         }
 
-
         .petid-management {
             margin-top: 20px;
         }
-
 
         .petid-themes {
             grid-template-columns: 1fr;
@@ -1200,7 +1520,8 @@
     @@media (max-width: 820px) {
 
         .theme-grid {
-            grid-template-columns: repeat( 3, minmax(0,1fr) );
+            grid-template-columns:
+                repeat(3, minmax(0,1fr));
         }
     }
 
@@ -1211,25 +1532,32 @@
             width: calc(100% - 24px);
         }
 
-
         .petid-header-inner {
             align-items: flex-start;
             flex-direction: column;
         }
 
-
         .petid-public-bar {
-            grid-template-columns: auto minmax(0,1fr);
+            grid-template-columns:
+                auto
+                minmax(0,1fr);
         }
 
-
-            .petid-public-bar > a {
-                grid-column: 2;
-            }
-
+        .petid-public-bar > a {
+            grid-column: 2;
+        }
 
         .theme-grid {
-            grid-template-columns: repeat( 2, minmax(0,1fr) );
+            grid-template-columns:
+                repeat(2, minmax(0,1fr));
+        }
+    }
+
+
+    @@media (max-width: 560px) {
+
+        .petid-subscription {
+            grid-template-columns: 1fr;
         }
     }
 
@@ -1242,6 +1570,19 @@
     public int PetId { get; set; }
 
 
+    private DateTime? PremiumEndsAt =>
+        Auth.CurrentUser?
+            .PremiumActivatedAt?
+            .AddMonths(3);
+
+
+    private string PremiumEndDisplay =>
+        PremiumEndsAt?
+            .ToString("MMM dd, yyyy")
+        ??
+        "—";
+
+
     private PetProfile? pet;
 
 
@@ -1250,7 +1591,14 @@
 
 
     private string ownerName =
-        "Pet Owner";
+    "Pet Owner";
+
+
+private string ownerPhone =
+    string.Empty;
+
+
+private bool showOwnerPhoneInPublic;
 
 
     private string photoUrl =
@@ -1278,7 +1626,18 @@
     protected override async Task OnParametersSetAsync()
     {
         await Auth.InitializeAsync();
+var owner =
+    Db.GetUserById(
+        pet.UserId);
 
+ownerName =
+    string.IsNullOrWhiteSpace(owner?.FullName)
+        ? "Pet Owner"
+        : owner.FullName;
+
+ownerPhone =
+    Db.GetUserMobileNumber(
+        pet.UserId);
 
         if (!Auth.IsLoggedIn)
         {
@@ -1322,6 +1681,18 @@
                 Auth.CurrentUser?.FullName)
                 ? "Pet Owner"
                 : Auth.CurrentUser!.FullName;
+
+                ownerPhone =
+    Auth.CurrentUser?.MobileNumber
+    ??
+    string.Empty;
+
+
+showOwnerPhoneInPublic =
+    Auth.CurrentUser?
+        .ShowMobileOnPublicPetId
+    ==
+    true;
 
 
         photoUrl =
@@ -1408,7 +1779,7 @@
             isPremium))
         {
             message =
-                "This card theme is included with Lifetime Premium.";
+                "This card theme is available while ShoppetCare Premium is active.";
 
             return;
         }

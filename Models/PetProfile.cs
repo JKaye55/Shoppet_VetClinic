@@ -16,5 +16,7 @@ namespace Shoppet_VetClinic.Models
         public string CardId { get; set; } = string.Empty;
         public DateTime? CardIssuedAt { get; set; }
         public string? CardTheme { get; set; }   // ← ADDED BACK
+
+        public DateTime? BirthDate { get; set; }
     }
 }
