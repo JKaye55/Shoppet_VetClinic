@@ -933,7 +933,9 @@
             <!-- BRAND -->
 
             <a href="/"
-               class="sp-brand">
+               class="sp-brand"
+               data-enhance-nav="false"
+               title="Return to the ShoppetCare landing page">
 
                 <img src="/shoppetlogo.png"
                      alt="ShoppetCare"
@@ -960,6 +962,7 @@
             <nav class="sp-menu">
 
                 <a href="/home"
+                   title="Open ShoppetCare Home"
                    class="sp-menu-link
                    @(IsActive("/home")
                        ? "active"
@@ -971,6 +974,7 @@
 
 
                 <a href="/services"
+                   title="Explore ShoppetCare services"
                    class="sp-menu-link
                    @(IsActive("/services")
                        ? "active"
@@ -982,6 +986,7 @@
 
 
                 <a href="/clinics"
+                   title="Find veterinary clinics"
                    class="sp-menu-link
                    @(IsActive("/clinics")
                        ? "active"
@@ -991,17 +996,20 @@
 
                 </a>
                 <a href="/marketplace"
+                   title="Browse the pre-loved pet Marketplace"
                    class="sp-menu-link @(IsActive("/marketplace") ? "active" : "")">
                     Marketplace
                 </a>
 
                 <a href="/marketplace/cart"
+                   title="Open your Marketplace cart"
                    class="sp-menu-link @(IsActive("/marketplace/cart") ? "active" : "")">
                     Cart
                 </a>
 
 
                 <a href="/community"
+                   title="Open the ShoppetCare Community"
                    class="sp-menu-link
                    @(IsActive("/community")
                        ? "active"
@@ -1013,6 +1021,7 @@
 
 
                 <a href="/announcements"
+                   title="View ShoppetCare announcements"
                    class="sp-menu-link
                    @(IsActive("/announcements")
                        ? "active"
@@ -1020,6 +1029,18 @@
 
                     Announcements
 
+                </a>
+
+                <a href="/about"
+                   title="Learn about ShoppetCare"
+                   class="sp-menu-link @(IsActive("/about") ? "active" : "")">
+                    About
+                </a>
+
+                <a href="/help"
+                   title="Search the ShoppetCare Help Center"
+                   class="sp-menu-link @(IsActive("/help") ? "active" : "")">
+                    Help
                 </a>
 
 
@@ -1046,7 +1067,7 @@
                 @if (Auth.IsGuest)
                 {
                     <span class="sp-contact sp-contact-locked"
-                          title="Create an account or sign in to request a clinic listing">
+                          title="Locked: create an account or sign in to request a clinic listing">
 
                         <i class="bi bi-lock-fill"
                            aria-hidden="true"></i>
@@ -1058,7 +1079,8 @@
                 else
                 {
                     <a href="/list-your-clinic"
-                       class="sp-contact">
+                       class="sp-contact"
+                       title="Request a clinic listing">
 
                         List Your Clinic
 
@@ -1155,6 +1177,7 @@
 
                         <a href="/guest-dashboard"
                            class="sp-guest-pill"
+                           title="Open your Guest Dashboard"
                            style="text-decoration:none;"
                            title="Open Guest Dashboard">
 
@@ -1168,7 +1191,8 @@
 
 
                         <a href="/login"
-                           class="sp-btn-login">
+                           class="sp-btn-login"
+                           title="Sign in to ShoppetCare">
 
                             Sign In
 
@@ -1176,7 +1200,8 @@
 
 
                         <a href="/register"
-                           class="sp-btn-register">
+                           class="sp-btn-register"
+                           title="Create a free ShoppetCare account">
 
                             Create Account
 
