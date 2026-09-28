@@ -9,6 +9,7 @@
         public string ImageUrl { get; set; } = string.Empty;
         public int LikeCount { get; set; }
         public DateTime PostedAt { get; set; } = DateTime.Now;
+        public bool IsEdited { get; set; }
 
         // For display (populated when joined with UserAccounts/PetProfiles)
         public string AuthorName { get; set; } = string.Empty;
