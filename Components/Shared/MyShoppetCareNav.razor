@@ -1,372 +1,261 @@
-﻿@using Microsoft.AspNetCore.Components.Routing
-
+@using Microsoft.AspNetCore.Components.Routing
 @implements IDisposable
 
 @inject AuthService Auth
 @inject NavigationManager Nav
 
-
 @if (ShouldShow)
 {
     <section class="msc-nav">
-
         <div class="msc-nav-inner">
-
-            <a href="/dashboard"
-               class="msc-nav-brand">
-
+            <a href="/dashboard" class="msc-nav-brand">
                 <span class="msc-brand-mark">
-
                     <svg aria-hidden="true">
                         <use href="/icons/bootstrap-icons.svg#person-heart"></use>
                     </svg>
-
                 </span>
-
 
                 <span class="msc-brand-copy">
-
-                    <strong>
-                        My ShoppetCare
-                    </strong>
-
-                    <small>
-                        Your connected pet space
-                    </small>
-
+                    <strong>My ShoppetCare</strong>
+                    <small>Pet identity, care summaries &amp; account</small>
                 </span>
-
             </a>
 
-
-            <nav class="msc-tabs"
-                 aria-label="My ShoppetCare">
-
-                <a href="/dashboard"
-                   class="@GetLinkClass("overview")">
-
-                    <svg aria-hidden="true">
-                        <use href="/icons/bootstrap-icons.svg#grid"></use>
-                    </svg>
-
+            <nav class="msc-tabs" aria-label="My ShoppetCare">
+                <a href="/dashboard" class="@GetLinkClass("overview")">
+                    <svg aria-hidden="true"><use href="/icons/bootstrap-icons.svg#grid"></use></svg>
                     Overview
-
                 </a>
 
-
-                <a href="/my-pets"
-                   class="@GetLinkClass("pets")">
-
-                    <svg aria-hidden="true">
-                        <use href="/icons/bootstrap-icons.svg#heart-fill"></use>
-                    </svg>
-
+                <a href="/my-pets" class="@GetLinkClass("pets")">
+                    <svg aria-hidden="true"><use href="/icons/bootstrap-icons.svg#heart-fill"></use></svg>
                     My Pets
-
                 </a>
 
-
-                <a href="/account"
-                   class="@GetLinkClass("account")">
-
-                    <svg aria-hidden="true">
-                        <use href="/icons/bootstrap-icons.svg#person-circle"></use>
-                    </svg>
-
-                    Account &amp; Premium
-
+                <a href="/premium" class="@GetLinkClass("premium")">
+                    <svg aria-hidden="true"><use href="/icons/bootstrap-icons.svg#star-fill"></use></svg>
+                    Premium
                 </a>
 
+                <a href="/marketplace" class="@GetLinkClass("marketplace")">
+                    <svg aria-hidden="true"><use href="/icons/bootstrap-icons.svg#bag-heart"></use></svg>
+                    Marketplace
+                </a>
+
+                <a href="/account" class="@GetLinkClass("account")">
+                    <svg aria-hidden="true"><use href="/icons/bootstrap-icons.svg#person-circle"></use></svg>
+                    Account
+                </a>
             </nav>
-
         </div>
-
     </section>
 }
 
-
 <style>
-
     .msc-nav {
         position: relative;
         z-index: 40;
         border-bottom: 1px solid #DDE7E4;
         background: rgba(251,248,242,.97);
         backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
     }
 
-
-        .msc-nav *,
-        .msc-nav *::before,
-        .msc-nav *::after {
-            box-sizing: border-box;
-        }
-
+    .msc-nav *,
+    .msc-nav *::before,
+    .msc-nav *::after {
+        box-sizing: border-box;
+    }
 
     .msc-nav-inner {
-        width: min( 1480px, calc(100% - 48px) );
-        min-height: 72px;
+        width: min(1380px, calc(100% - 48px));
+        min-height: 68px;
         margin: 0 auto;
         display: flex;
         align-items: center;
-        gap: 40px;
+        gap: 34px;
     }
-
 
     .msc-nav a {
         text-decoration: none;
     }
 
-
     .msc-nav-brand {
         flex: 0 0 auto;
         display: flex;
         align-items: center;
-        gap: 11px;
+        gap: 10px;
     }
 
-
     .msc-brand-mark {
-        width: 42px;
-        height: 42px;
+        width: 40px;
+        height: 40px;
         display: grid;
         place-items: center;
-        border-radius: 13px;
-        background: linear-gradient( 135deg, #E4F4F2, #F1F8F6 );
+        border-radius: 12px;
+        background: linear-gradient(135deg, #E4F4F2, #F1F8F6);
         color: #2F9098;
     }
 
-
-        .msc-brand-mark svg {
-            width: 18px;
-            height: 18px;
-            fill: currentColor;
-        }
-
+    .msc-brand-mark svg,
+    .msc-tabs svg {
+        width: 15px;
+        height: 15px;
+        fill: currentColor;
+    }
 
     .msc-brand-copy strong,
     .msc-brand-copy small {
         display: block;
     }
 
-
     .msc-brand-copy strong {
         color: #173D3D;
-        font-size: 14px;
+        font-size: .82rem;
         font-weight: 900;
     }
-
 
     .msc-brand-copy small {
         margin-top: 2px;
         color: #899792;
-        font-size: 10px;
+        font-size: .58rem;
     }
-
 
     .msc-tabs {
         flex: 1;
+        min-width: 0;
         display: flex;
         align-items: center;
-        gap: 7px;
+        gap: 5px;
+        overflow-x: auto;
     }
 
+    .msc-tabs a {
+        min-height: 40px;
+        padding: 0 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        border-radius: 999px;
+        color: #65756F;
+        font-size: .72rem;
+        font-weight: 800;
+        white-space: nowrap;
+        transition: background .16s ease, color .16s ease, transform .16s ease;
+    }
 
-        .msc-tabs a {
-            min-height: 42px;
-            padding: 0 15px;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            border-radius: 999px;
-            color: #65756F;
-            font-size: 13px;
-            font-weight: 800;
-            white-space: nowrap;
-            transition: background .16s ease, color .16s ease, transform .16s ease;
-        }
+    .msc-tabs a:hover {
+        transform: translateY(-1px);
+        background: #EEF6F4;
+        color: #173D3D;
+    }
 
+    .msc-tabs a.active {
+        background: #DFF1EF;
+        color: #217D84;
+        box-shadow: inset 0 0 0 1px rgba(47,144,152,.12);
+    }
 
-            .msc-tabs a:hover {
-                transform: translateY(-1px);
-                background: #EEF6F4;
-                color: #173D3D;
-            }
-
-
-            .msc-tabs a.active {
-                background: #DFF1EF;
-                color: #217D84;
-                box-shadow: inset 0 0 0 1px rgba(47,144,152,.12);
-            }
-
-
-        .msc-tabs svg {
-            width: 14px;
-            height: 14px;
-            fill: currentColor;
-        }
-
-
-    @@media (max-width: 820px) {
-
+    @@media (max-width: 900px) {
         .msc-nav-inner {
             width: calc(100% - 24px);
-            gap: 17px;
+            gap: 18px;
             overflow-x: auto;
         }
-
 
         .msc-brand-copy small {
             display: none;
         }
-
 
         .msc-tabs {
             min-width: max-content;
         }
     }
 
-
-    @@media (max-width: 540px) {
-
+    @@media (max-width: 620px) {
         .msc-brand-copy {
             display: none;
         }
-    }
 
+        .msc-nav-inner {
+            gap: 10px;
+        }
+    }
 </style>
 
-
 @code {
-
     protected override void OnInitialized()
     {
-        Nav.LocationChanged +=
-            HandleLocationChanged;
+        Nav.LocationChanged += HandleLocationChanged;
     }
-
 
     private string CurrentPath
     {
         get
         {
-            var relative =
-                Nav.ToBaseRelativePath(
-                    Nav.Uri);
-
-
-            relative =
-                relative.Split(
-                    '?',
-                    '#')[0];
-
-
-            return
-                "/" +
-                relative.TrimStart('/');
+            var relative = Nav.ToBaseRelativePath(Nav.Uri);
+            relative = relative.Split('?', '#')[0];
+            return "/" + relative.TrimStart('/');
         }
     }
-
 
     private bool ShouldShow
     {
         get
         {
-            if (!Auth.IsLoggedIn ||
-                !Auth.IsPetOwner)
-            {
+            if (!Auth.IsLoggedIn || !Auth.IsPetOwner)
                 return false;
-            }
 
+            var path = CurrentPath;
 
-            var path =
-                CurrentPath;
-
-
-            return
-                path.StartsWith(
-                    "/dashboard",
-                    StringComparison.OrdinalIgnoreCase)
-                ||
-                path.StartsWith(
-                    "/my-pets",
-                    StringComparison.OrdinalIgnoreCase)
-                ||
-                path.StartsWith(
-                    "/pet/",
-                    StringComparison.OrdinalIgnoreCase)
-                ||
-                path.StartsWith(
-                    "/account",
-                    StringComparison.OrdinalIgnoreCase)
-                ||
-                path.StartsWith(
-                    "/premium",
-                    StringComparison.OrdinalIgnoreCase);
+            return path.StartsWith("/dashboard", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/my-pets", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/pet/", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/account", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/premium", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/marketplace", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/checkout/PremiumSubscription", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/checkout/SellerSubscription", StringComparison.OrdinalIgnoreCase);
         }
     }
 
-
-    private string GetLinkClass(
-        string section)
+    private string GetLinkClass(string section)
     {
-        var path =
-            CurrentPath;
+        var path = CurrentPath;
 
+        var active = section switch
+        {
+            "overview" =>
+                path.StartsWith("/dashboard", StringComparison.OrdinalIgnoreCase),
 
-        var active =
-            section switch
-            {
-                "overview" =>
-                    path.StartsWith(
-                        "/dashboard",
-                        StringComparison.OrdinalIgnoreCase),
+            "pets" =>
+                path.StartsWith("/my-pets", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/pet/", StringComparison.OrdinalIgnoreCase),
 
-                "pets" =>
-                    path.StartsWith(
-                        "/my-pets",
-                        StringComparison.OrdinalIgnoreCase)
-                    ||
-                    path.StartsWith(
-                        "/pet/",
-                        StringComparison.OrdinalIgnoreCase),
+            "premium" =>
+                path.StartsWith("/premium", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/checkout/PremiumSubscription", StringComparison.OrdinalIgnoreCase),
 
-                "account" =>
-                    path.StartsWith(
-                        "/account",
-                        StringComparison.OrdinalIgnoreCase)
-                    ||
-                    path.StartsWith(
-                        "/premium",
-                        StringComparison.OrdinalIgnoreCase),
+            "marketplace" =>
+                path.StartsWith("/marketplace", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/checkout/SellerSubscription", StringComparison.OrdinalIgnoreCase),
 
-                _ =>
-                    false
-            };
+            "account" =>
+                path.StartsWith("/account", StringComparison.OrdinalIgnoreCase),
 
+            _ => false
+        };
 
-        return
-            active
-                ? "active"
-                : string.Empty;
+        return active ? "active" : string.Empty;
     }
 
-
-    private void HandleLocationChanged(
-        object? sender,
-        LocationChangedEventArgs args)
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs args)
     {
-        _ =
-            InvokeAsync(
-                StateHasChanged);
+        _ = InvokeAsync(StateHasChanged);
     }
-
 
     public void Dispose()
     {
-        Nav.LocationChanged -=
-            HandleLocationChanged;
+        Nav.LocationChanged -= HandleLocationChanged;
     }
-
 }
