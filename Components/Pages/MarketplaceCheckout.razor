@@ -1,0 +1,176 @@
+@page "/marketplace/checkout/{SellerUserId:int}"
+@rendermode InteractiveServer
+@inject MarketplaceCartService Cart
+@inject MarketplaceOrderService Orders
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Demo Marketplace Checkout | ShoppetCare</PageTitle>
+
+<div class="checkout-page">
+    <section class="checkout-hero">
+        <div class="checkout-shell">
+            <span>DEMO MARKETPLACE CHECKOUT</span>
+            <h1>Review your purchase request.</h1>
+            <p>No real funds are transferred. This checkout demonstrates the e-commerce workflow for the ShoppetCare academic project.</p>
+        </div>
+    </section>
+
+    <main class="checkout-shell checkout-grid">
+        <section class="checkout-card">
+            <span class="kicker">ORDER SUMMARY</span>
+            @if (SellerItems.Count == 0)
+            {
+                <h2>No available cart items for this seller.</h2>
+                <a class="back-link" href="/marketplace/cart">Return to Cart</a>
+            }
+            else
+            {
+                @foreach (var item in SellerItems)
+                {
+                    <div class="order-item">
+                        <div>
+                            <strong>@item.Title</strong>
+                            <span>Quantity 1 · @item.SellerName</span>
+                        </div>
+                        <strong>₱@item.Price.ToString("N2")</strong>
+                    </div>
+                }
+
+                <div class="totals"><span>Subtotal</span><strong>₱@Subtotal.ToString("N2")</strong></div>
+                @if (SelectedVoucher is not null)
+                {
+                    <div class="totals discount"><span>Voucher @SelectedVoucher.Code</span><strong>-₱@Discount.ToString("N2")</strong></div>
+                }
+                <div class="totals grand"><span>Demo total</span><strong>₱@Total.ToString("N2")</strong></div>
+            }
+        </section>
+
+        @if (SellerItems.Count > 0)
+        {
+            <section class="checkout-card">
+                <span class="kicker">PAYMENT & REWARD</span>
+                <h2>Choose a demo payment method</h2>
+
+                <label>Payment method</label>
+                <select @bind="paymentMethod">
+                    <option>Cash on Meet-up</option>
+                    <option>GCash - Demo</option>
+                    <option>Maya - Demo</option>
+                </select>
+
+                <label>Voucher</label>
+                <select @bind="selectedVoucherId">
+                    <option value="0">No voucher</option>
+                    @foreach (var voucher in vouchers)
+                    {
+                        <option value="@voucher.Id">@voucher.Code — ₱@voucher.Amount.ToString("N0") off</option>
+                    }
+                </select>
+                <small>Review vouchers are one-time use, valid for 30 days, and cannot be stacked.</small>
+
+                <div class="demo-note">
+                    <i class="bi bi-shield-check"></i>
+                    <div>
+                        <strong>Project demo only</strong>
+                        <span>GCash and Maya selections are simulated. Do not enter real payment credentials.</span>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(message))
+                {
+                    <div class="message @(isError ? "error" : "")">@message</div>
+                }
+
+                <button class="place-order" disabled="@isSubmitting" @onclick="PlaceOrderAsync">
+                    @(isSubmitting ? "Submitting..." : "Place Demo Order")
+                </button>
+                <a class="back-link" href="/marketplace/cart">Back to Cart</a>
+            </section>
+        }
+    </main>
+</div>
+
+<style>
+    .checkout-page{min-height:100vh;background:#FAF9F6;color:#173D3D}.checkout-shell{width:min(1050px,calc(100% - 32px));margin:auto}
+    .checkout-hero{padding:52px 0;background:#173D3D;color:#fff}.checkout-hero>div>span,.kicker{font-size:.66rem;font-weight:900;letter-spacing:.12em;color:#F3D27A}
+    .checkout-hero h1{margin:8px 0 6px;font-size:clamp(2rem,4vw,3.3rem);letter-spacing:-.04em}.checkout-hero p{margin:0;max-width:760px;color:#D6E4E0}
+    .checkout-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;padding:32px 0 70px}.checkout-card{padding:22px;border:1px solid #DDE7E4;border-radius:18px;background:#fff;box-shadow:0 10px 28px rgba(23,61,61,.05)}
+    .checkout-card .kicker{color:#2F9098}.checkout-card h2{margin:7px 0 18px;font-size:1.15rem}.order-item,.totals{display:flex;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid #EDF1EF}.order-item span{display:block;margin-top:4px;color:#879691;font-size:.7rem}
+    .totals{font-size:.8rem}.totals.discount{color:#267C83}.totals.grand{font-size:1rem;border-bottom:0}.checkout-card label{display:block;margin:14px 0 6px;font-size:.72rem;font-weight:850}.checkout-card select{width:100%;min-height:44px;padding:0 11px;border:1px solid #CBD9D5;border-radius:9px;background:#fff}.checkout-card small{display:block;margin-top:7px;color:#879691}
+    .demo-note{display:flex;gap:10px;margin:18px 0;padding:13px;border-radius:11px;background:#F2F8F6}.demo-note i{color:#2F9098}.demo-note strong,.demo-note span{display:block}.demo-note span{margin-top:3px;color:#6F817B;font-size:.7rem}
+    .place-order{width:100%;min-height:46px;border:0;border-radius:9px;background:#2F9098;color:#fff;font-weight:900;cursor:pointer}.back-link{display:inline-block;margin-top:13px;color:#267C83;font-weight:800;text-decoration:none;font-size:.75rem}.message{margin:12px 0;padding:10px;border-radius:9px;background:#EAF7F1;color:#286B4E}.message.error{background:#FFF0F0;color:#9B3E3E}
+    @@media(max-width:760px){.checkout-grid{grid-template-columns:1fr}}
+</style>
+
+@code {
+    [Parameter] public int SellerUserId { get; set; }
+
+    private string paymentMethod = "Cash on Meet-up";
+    private int selectedVoucherId;
+    private List<MarketplaceVoucher> vouchers = new();
+    private string message = string.Empty;
+    private bool isError;
+    private bool isSubmitting;
+
+    private List<MarketplaceCartItem> SellerItems =>
+        Cart.Items.Where(x => x.SellerUserId == SellerUserId).ToList();
+
+    private decimal Subtotal => SellerItems.Sum(x => x.Price);
+
+    private MarketplaceVoucher? SelectedVoucher =>
+        vouchers.FirstOrDefault(x => x.Id == selectedVoucherId);
+
+    private decimal Discount =>
+        SelectedVoucher is null ? 0m : Math.Min(SelectedVoucher.Amount, Subtotal);
+
+    private decimal Total => Math.Max(0m, Subtotal - Discount);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        await Auth.InitializeAsync();
+
+        if (!Auth.IsLoggedIn || Auth.CurrentUser is null)
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+
+        vouchers = Orders.GetActiveVouchers(Auth.CurrentUser.Id);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task PlaceOrderAsync()
+    {
+        if (Auth.CurrentUser is null || SellerItems.Count == 0) return;
+
+        isSubmitting = true;
+        message = string.Empty;
+
+        try
+        {
+            var ids = SellerItems.Select(x => x.ListingId).ToList();
+            var reference = Orders.CreateOrder(
+                Auth.CurrentUser.Id,
+                SellerUserId,
+                SellerItems,
+                paymentMethod,
+                selectedVoucherId == 0 ? null : selectedVoucherId);
+
+            Cart.RemoveMany(ids);
+            Nav.NavigateTo($"/marketplace/order-confirmation/{reference}");
+        }
+        catch (Exception ex)
+        {
+            isError = true;
+            message = ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}
