@@ -54,10 +54,13 @@ namespace Shoppet_VetClinic.Services
 
 
         public bool IsClinicStaff =>
-            string.Equals(
-                CurrentUser?.Role,
-                "Clinic Staff",
-                StringComparison.OrdinalIgnoreCase);
+            string.Equals(CurrentUser?.Role, "Clinic Staff", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(CurrentUser?.Role, "Clinic Owner", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(CurrentUser?.Role, "Clinic Representative", StringComparison.OrdinalIgnoreCase);
+
+        public bool IsClinicOwner =>
+            string.Equals(CurrentUser?.Role, "Clinic Owner", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(CurrentUser?.Role, "Clinic Representative", StringComparison.OrdinalIgnoreCase);
 
 
         public bool IsPetOwner =>
