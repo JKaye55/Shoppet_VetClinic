@@ -390,7 +390,7 @@
                                         class="@(showMyPosts ? "active" : "")"
                                         @onclick="ShowMyPosts">
 
-                                    My Posts
+                                    My Posts (@MyPostCount)
 
                                 </button>
 
@@ -455,6 +455,11 @@
                                             <span>
 
                                                 @Relative(post.PostedAt)
+
+                                                @if (post.IsEdited)
+                                                {
+                                                    <span> · edited</span>
+                                                }
 
                                                 @if (!string.IsNullOrWhiteSpace(
                                                     post.PetName))
@@ -1625,6 +1630,11 @@
     // =========================================================
 
     private bool showMyPosts;
+
+    private int MyPostCount =>
+        Auth.CurrentUser is null
+            ? 0
+            : posts.Count(x => x.UserId == Auth.CurrentUser.Id);
 
     private string statusMessage = string.Empty;
 
