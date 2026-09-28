@@ -52,7 +52,20 @@ namespace Shoppet_VetClinic.Services
                         ISNULL(BrandsCarried, ''),
                         ISNULL(ServiceCapabilities, ''),
                         ISNULL(MessengerUrl, ''),
-                        ISNULL(IsVerified, 0),
+                        CAST(
+                            CASE WHEN EXISTS
+                            (
+                                SELECT 1
+                                FROM Subscriptions s
+                                WHERE s.ClinicId = ClinicTenants.Id
+                                  AND s.SubscriptionType = 'ClinicSubscription'
+                                  AND s.Status = 'Active'
+                                  AND s.StartsAt <= SYSDATETIME()
+                                  AND s.ExpiresAt >= SYSDATETIME()
+                            )
+                            THEN 1 ELSE 0 END
+                            AS bit
+                        ),
                         VerifiedAt,
                         VerificationFee,
                         VerificationReference,
@@ -472,9 +485,10 @@ namespace Shoppet_VetClinic.Services
                     PremiumActivatedAt,
                     PremiumReference,
                     ApiToken,
-                    ApiTokenExpiresAt
+                    ApiTokenExpiresAt,
+                    MobileNumber
                 FROM UserAccounts
-                WHERE Role='Clinic Staff'
+                WHERE Role IN ('Clinic Staff', 'Clinic Owner', 'Clinic Representative')
                 ORDER BY FullName",
                 conn);
 
@@ -2833,9 +2847,22 @@ FROM UserAccounts",
             conn.Open();
 
             using var cmd = new SqlCommand(@"
-                SELECT Id, UserId, ClinicId, Type, Amount, Reference, PaidAt
-                FROM Transactions
-                ORDER BY PaidAt DESC",
+                SELECT
+                    t.Id,
+                    t.UserId,
+                    t.ClinicId,
+                    t.Type,
+                    t.Amount,
+                    t.Reference,
+                    ISNULL(t.PaymentMethod, ''),
+                    ISNULL(t.Status, 'Paid'),
+                    t.PaidAt,
+                    ISNULL(u.FullName, ''),
+                    ISNULL(c.ClinicName, '')
+                FROM Transactions t
+                LEFT JOIN UserAccounts u ON u.Id = t.UserId
+                LEFT JOIN ClinicTenants c ON c.Id = t.ClinicId
+                ORDER BY t.PaidAt DESC",
                 conn);
 
             using var reader = cmd.ExecuteReader();
@@ -2864,7 +2891,23 @@ FROM UserAccounts",
                         ? string.Empty
                         : reader.GetString(5),
 
-                    PaidAt = reader.GetDateTime(6)
+                    PaymentMethod = reader.IsDBNull(6)
+                        ? string.Empty
+                        : reader.GetString(6),
+
+                    Status = reader.IsDBNull(7)
+                        ? "Paid"
+                        : reader.GetString(7),
+
+                    PaidAt = reader.GetDateTime(8),
+
+                    UserName = reader.IsDBNull(9)
+                        ? string.Empty
+                        : reader.GetString(9),
+
+                    ClinicName = reader.IsDBNull(10)
+                        ? string.Empty
+                        : reader.GetString(10)
                 });
             }
 
@@ -2878,7 +2921,7 @@ FROM UserAccounts",
             conn.Open();
 
             using var cmd = new SqlCommand(
-                "SELECT ISNULL(SUM(Amount), 0) FROM Transactions", conn);
+                "SELECT ISNULL(SUM(Amount), 0) FROM Transactions WHERE ISNULL(Status, 'Paid') = 'Paid'", conn);
 
             var v = cmd.ExecuteScalar();
 
