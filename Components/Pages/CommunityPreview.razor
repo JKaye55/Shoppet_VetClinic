@@ -581,6 +581,52 @@
 
                                     </footer>
 
+                                    @{
+                                        var postComments = GetComments(post.Id);
+                                    }
+
+                                    <section class="sc-community-comments">
+                                        <div class="sc-community-comments-head">
+                                            <strong>Comments</strong>
+                                            <span>@postComments.Count</span>
+                                        </div>
+
+                                        @foreach (var comment in postComments)
+                                        {
+                                            <div class="sc-community-comment">
+                                                <div>
+                                                    <strong>@comment.AuthorName</strong>
+                                                    @if (comment.IsGuest)
+                                                    {
+                                                        <span class="sc-community-guest-tag">Guest</span>
+                                                    }
+                                                    <small>@Relative(comment.CreatedAt)</small>
+                                                </div>
+                                                <p>@comment.Body</p>
+                                            </div>
+                                        }
+
+                                        <div class="sc-community-comment-form">
+                                            @if (Auth.IsGuest)
+                                            {
+                                                <input type="text"
+                                                       maxlength="40"
+                                                       value="@GetGuestName(post.Id)"
+                                                       @oninput="e => SetGuestName(post.Id, e.Value?.ToString() ?? string.Empty)"
+                                                       placeholder="Guest display name" />
+                                            }
+
+                                            <div>
+                                                <input type="text"
+                                                       maxlength="300"
+                                                       value="@GetCommentDraft(post.Id)"
+                                                       @oninput="e => SetCommentDraft(post.Id, e.Value?.ToString() ?? string.Empty)"
+                                                       placeholder="Write a comment..." />
+                                                <button type="button" @onclick="() => SubmitComment(post.Id)">Comment</button>
+                                            </div>
+                                        </div>
+                                    </section>
+
                                 </article>
                             }
 
@@ -1261,6 +1307,104 @@
 
 
     /* =========================================================
+           COMMENTS
+           ========================================================= */
+
+    .sc-community-comments {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #E9EFED;
+    }
+
+    .sc-community-comments-head {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #53645E;
+        font-size: .68rem;
+    }
+
+    .sc-community-comments-head span {
+        color: #8A9793;
+    }
+
+    .sc-community-comment {
+        margin-top: 8px;
+        padding: 9px 10px;
+        border-radius: 9px;
+        background: #F7FAF9;
+    }
+
+    .sc-community-comment > div {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .sc-community-comment strong {
+        color: #42544E;
+        font-size: .66rem;
+    }
+
+    .sc-community-comment small {
+        color: #98A39F;
+        font-size: .58rem;
+    }
+
+    .sc-community-guest-tag {
+        padding: 2px 5px;
+        border-radius: 999px;
+        background: #EEF1F0;
+        color: #72807C;
+        font-size: .52rem;
+        font-weight: 850;
+    }
+
+    .sc-community-comment p {
+        margin: 4px 0 0;
+        color: #5D6D67;
+        font-size: .68rem;
+        line-height: 1.45;
+    }
+
+    .sc-community-comment-form {
+        margin-top: 9px;
+    }
+
+    .sc-community-comment-form > input {
+        margin-bottom: 6px;
+    }
+
+    .sc-community-comment-form > div {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 6px;
+    }
+
+    .sc-community-comment-form input {
+        min-height: 37px;
+        padding: 0 10px;
+        border: 1px solid #D5E0DD;
+        border-radius: 8px;
+        background: #FFFFFF;
+        color: #42544E;
+        font-size: .66rem;
+    }
+
+    .sc-community-comment-form button {
+        min-height: 37px;
+        padding: 0 11px;
+        border: 0;
+        border-radius: 8px;
+        background: #2F9098;
+        color: #FFFFFF;
+        font-size: .64rem;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+
+    /* =========================================================
            POSTS
            ========================================================= */
 
@@ -1596,6 +1740,10 @@
     // DATA
     // =========================================================
 
+    private readonly Dictionary<int, List<CommunityComment>> commentsByPost = new();
+    private readonly Dictionary<int, string> commentDrafts = new();
+    private readonly Dictionary<int, string> guestNames = new();
+
     private List<CommunityPost> posts = new();
 
     private List<PetProfile> myPets = new();
@@ -1785,6 +1933,71 @@
     // =========================================================
     // LOAD
     // =========================================================
+
+    private List<CommunityComment> GetComments(int postId)
+    {
+        if (!commentsByPost.TryGetValue(postId, out var comments))
+        {
+            try
+            {
+                comments = Community.GetComments(postId);
+            }
+            catch
+            {
+                comments = new List<CommunityComment>();
+            }
+
+            commentsByPost[postId] = comments;
+        }
+
+        return comments;
+    }
+
+    private string GetCommentDraft(int postId) =>
+        commentDrafts.TryGetValue(postId, out var value) ? value : string.Empty;
+
+    private void SetCommentDraft(int postId, string value) =>
+        commentDrafts[postId] = value;
+
+    private string GetGuestName(int postId) =>
+        guestNames.TryGetValue(postId, out var value) ? value : "Guest";
+
+    private void SetGuestName(int postId, string value) =>
+        guestNames[postId] = value;
+
+    private void SubmitComment(int postId)
+    {
+        var body = GetCommentDraft(postId).Trim();
+
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            ShowError("Write a comment before submitting.");
+            return;
+        }
+
+        var isGuest = Auth.IsGuest || !Auth.IsLoggedIn;
+        var userId = Auth.CurrentUser?.Id;
+        var authorName = isGuest
+            ? GetGuestName(postId)
+            : Auth.CurrentUser?.FullName ?? "Pet Owner";
+
+        try
+        {
+            if (Community.AddComment(postId, userId, authorName, body, isGuest))
+            {
+                commentDrafts[postId] = string.Empty;
+                commentsByPost[postId] = Community.GetComments(postId);
+                statusMessage = "Comment posted.";
+                isError = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Community Comment] {ex}");
+            ShowError("Your comment could not be posted.");
+        }
+    }
+
 
     private void LoadPosts()
     {
