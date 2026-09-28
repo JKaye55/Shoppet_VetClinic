@@ -42,6 +42,11 @@
                     Marketplace
                 </a>
 
+                <a href="/marketplace/orders" class="@GetLinkClass("orders")">
+                    <svg aria-hidden="true"><use href="/icons/bootstrap-icons.svg#receipt"></use></svg>
+                    Orders &amp; Rewards
+                </a>
+
                 <a href="/account" class="@GetLinkClass("account")">
                     <svg aria-hidden="true"><use href="/icons/bootstrap-icons.svg#person-circle"></use></svg>
                     Account
@@ -239,6 +244,10 @@
             "marketplace" =>
                 path.StartsWith("/marketplace", StringComparison.OrdinalIgnoreCase)
                 || path.StartsWith("/checkout/SellerSubscription", StringComparison.OrdinalIgnoreCase),
+
+            "orders" =>
+                path.StartsWith("/marketplace/orders", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/marketplace/order-confirmation", StringComparison.OrdinalIgnoreCase),
 
             "account" =>
                 path.StartsWith("/account", StringComparison.OrdinalIgnoreCase),
