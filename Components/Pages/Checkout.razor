@@ -1,0 +1,364 @@
+@page "/checkout/{PlanType}"
+@rendermode InteractiveServer
+
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+
+@inject CommerceService Commerce
+@inject AuthService Auth
+@inject DatabaseService Db
+@inject NotificationService Notify
+@inject NavigationManager Nav
+
+<PageTitle>Secure Demo Checkout | ShoppetCare</PageTitle>
+
+<div class="checkout-page">
+    <main class="checkout-shell">
+        @if (!ready)
+        {
+            <div class="checkout-state">Preparing checkout...</div>
+        }
+        else if (!Auth.IsLoggedIn || Auth.CurrentUser is null)
+        {
+            <section class="checkout-card centered">
+                <span class="eyebrow">SIGN IN REQUIRED</span>
+                <h1>Continue with your ShoppetCare account.</h1>
+                <p>Your subscription must be attached to a signed-in account.</p>
+                <a class="primary-link" href="/login">Sign In</a>
+            </section>
+        }
+        else if (offering is null)
+        {
+            <section class="checkout-card centered">
+                <span class="eyebrow">CHECKOUT</span>
+                <h1>Plan not found.</h1>
+                <p>The selected subscription plan is not available.</p>
+                <a class="primary-link" href="/home">Return Home</a>
+            </section>
+        }
+        else if (receipt is not null)
+        {
+            <section class="receipt-card">
+                <div class="success-icon"><i class="bi bi-check-lg"></i></div>
+                <span class="eyebrow">DEMO PAYMENT APPROVED</span>
+                <h1>@receipt.OfferingName activated.</h1>
+                <p>
+                    This is a simulated academic payment. No real money was transferred.
+                    Keep the reference below for your project transaction record.
+                </p>
+
+                <div class="receipt-grid">
+                    <div><span>Reference</span><strong>@receipt.Reference</strong></div>
+                    <div><span>Status</span><strong>@receipt.Status</strong></div>
+                    <div><span>Method</span><strong>@receipt.PaymentMethod</strong></div>
+                    <div><span>Amount</span><strong>₱@receipt.Amount.ToString("N2")</strong></div>
+                    <div><span>Paid at</span><strong>@receipt.PaidAt.ToString("MMM d, yyyy h:mm tt")</strong></div>
+                    <div><span>Access until</span><strong>@receipt.ExpiresAt.ToString("MMM d, yyyy")</strong></div>
+                </div>
+
+                <div class="receipt-actions">
+                    <a class="primary-link" href="@SuccessDestination">Continue</a>
+                    <a class="secondary-link" href="/notifications">Notifications</a>
+                </div>
+            </section>
+        }
+        else
+        {
+            <div class="checkout-grid">
+                <section class="checkout-card">
+                    <span class="eyebrow">SHOPPETCARE CHECKOUT</span>
+                    <h1>Complete your demo payment.</h1>
+                    <p class="lead">
+                        This checkout intentionally resembles a real payment flow for your e-commerce presentation,
+                        but it is a simulation and does not contact a payment provider.
+                    </p>
+
+                    @if (!string.IsNullOrWhiteSpace(errorMessage))
+                    {
+                        <div class="checkout-alert">@errorMessage</div>
+                    }
+
+                    <div class="payment-methods">
+                        @foreach (var method in paymentMethods)
+                        {
+                            <button type="button"
+                                    class="payment-method @(paymentMethod == method ? "active" : "")"
+                                    @onclick="() => paymentMethod = method">
+                                <span class="method-icon">@GetMethodMark(method)</span>
+                                <span>
+                                    <strong>@method</strong>
+                                    <small>@GetMethodCaption(method)</small>
+                                </span>
+                            </button>
+                        }
+                    </div>
+
+                    @if (paymentMethod is "GCash" or "Maya")
+                    {
+                        <div class="field">
+                            <label>Demo mobile number</label>
+                            <input type="tel"
+                                   inputmode="tel"
+                                   maxlength="13"
+                                   placeholder="09XX XXX XXXX"
+                                   @bind="walletNumber" />
+                            <small>Used only to validate the simulation form. It is not sent to an e-wallet.</small>
+                        </div>
+                    }
+                    else if (paymentMethod == "Card")
+                    {
+                        <div class="field-grid">
+                            <div class="field full">
+                                <label>Name on demo card</label>
+                                <input maxlength="100" @bind="cardName" placeholder="Demo Cardholder" />
+                            </div>
+                            <div class="field full">
+                                <label>Demo card number</label>
+                                <input inputmode="numeric" maxlength="19" @bind="cardNumber" placeholder="4242 4242 4242 4242" />
+                                <small>Use the displayed demo number only. Never enter a real card number.</small>
+                            </div>
+                            <div class="field">
+                                <label>Expiry</label>
+                                <input maxlength="5" @bind="cardExpiry" placeholder="12/30" />
+                            </div>
+                            <div class="field">
+                                <label>Demo CVC</label>
+                                <input inputmode="numeric" maxlength="3" @bind="cardCvc" placeholder="123" />
+                            </div>
+                        </div>
+                    }
+
+                    <label class="consent">
+                        <input type="checkbox" @bind="acceptedTerms" />
+                        <span>
+                            I understand this is a mock payment and I agree to the
+                            <a href="/terms" target="_blank">Terms &amp; Conditions</a> and
+                            <a href="/privacy" target="_blank">Data Privacy Notice</a>.
+                        </span>
+                    </label>
+
+                    <button type="button"
+                            class="pay-button"
+                            disabled="@processing"
+                            @onclick="PayAsync">
+                        @if (processing)
+                        {
+                            <span class="spinner-border spinner-border-sm"></span>
+                            <span>Authorizing demo payment...</span>
+                        }
+                        else
+                        {
+                            <span>Pay ₱@offering.Amount.ToString("N2")</span>
+                            <i class="bi bi-lock-fill"></i>
+                        }
+                    </button>
+
+                    <div class="security-note">
+                        <i class="bi bi-shield-lock-fill"></i>
+                        <span>No real funds are transferred. Full card credentials are never stored.</span>
+                    </div>
+                </section>
+
+                <aside class="summary-card">
+                    <span class="eyebrow">ORDER SUMMARY</span>
+                    <h2>@offering.Name</h2>
+                    <p>@offering.ShortDescription</p>
+
+                    <div class="summary-line">
+                        <span>Plan</span>
+                        <strong>@GetDurationLabel()</strong>
+                    </div>
+
+                    @if (PlanType == CommerceService.ClinicType && clinic is not null)
+                    {
+                        <div class="summary-line">
+                            <span>Clinic</span>
+                            <strong>@clinic.ClinicName</strong>
+                        </div>
+                    }
+
+                    <div class="summary-total">
+                        <span>Total</span>
+                        <strong>₱@offering.Amount.ToString("N2")</strong>
+                    </div>
+
+                    <div class="pilot-badge">
+                        <i class="bi bi-info-circle-fill"></i>
+                        Academic demo checkout
+                    </div>
+                </aside>
+            </div>
+        }
+    </main>
+</div>
+
+<style>
+    .checkout-page{min-height:100vh;padding:48px 24px;background:radial-gradient(circle at 10% 10%,rgba(47,144,152,.10),transparent 28%),#FAF9F6;color:#1E2D27}
+    .checkout-shell{width:min(1080px,100%);margin:auto}.checkout-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:22px;align-items:start}
+    .checkout-card,.summary-card,.receipt-card{border:1px solid #DDE7E4;border-radius:24px;background:#fff;box-shadow:0 18px 52px rgba(30,45,39,.07)}
+    .checkout-card{padding:34px}.summary-card{padding:28px;position:sticky;top:110px}.receipt-card{max-width:780px;margin:auto;padding:42px;text-align:center}
+    .centered{max-width:720px;margin:auto;text-align:center}.eyebrow{color:#2F9098;font-size:.68rem;font-weight:900;letter-spacing:.12em}
+    .checkout-card h1,.receipt-card h1{margin:8px 0 10px;font-size:clamp(2rem,4vw,3.4rem);font-weight:900;letter-spacing:-.05em}.lead,.checkout-card>p,.receipt-card>p,.summary-card p{color:#68776F;line-height:1.65}
+    .payment-methods{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0}.payment-method{min-height:78px;padding:12px;border:1px solid #D8E2DF;border-radius:14px;background:#fff;display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer}
+    .payment-method.active{border-color:#2F9098;background:#EEF7F6;box-shadow:0 0 0 2px rgba(47,144,152,.10)}.method-icon{width:38px;height:38px;border-radius:10px;background:#173D3D;color:#fff;display:grid;place-items:center;font-weight:900}
+    .payment-method strong,.payment-method small{display:block}.payment-method small{margin-top:3px;color:#84908B;font-size:.66rem}
+    .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field.full{grid-column:1/-1}.field{margin-top:14px}.field label{display:block;margin-bottom:6px;font-size:.72rem;font-weight:850}.field input{width:100%;min-height:48px;padding:0 13px;border:1px solid #C9D9D5;border-radius:10px;outline:none}.field input:focus{border-color:#2F9098;box-shadow:0 0 0 3px rgba(47,144,152,.10)}.field small{display:block;margin-top:5px;color:#87938E;font-size:.65rem}
+    .consent{display:flex;gap:10px;margin:20px 0;color:#60706A;font-size:.73rem;line-height:1.55}.consent input{margin-top:3px}.consent a{color:#267C83;font-weight:800}.pay-button{width:100%;min-height:52px;border:0;border-radius:12px;background:#173D3D;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;gap:10px}.pay-button:disabled{opacity:.58}.security-note{margin-top:12px;display:flex;gap:8px;align-items:center;color:#7A8983;font-size:.68rem}
+    .checkout-alert{margin-top:16px;padding:12px;border:1px solid #F2B8B8;border-radius:10px;background:#FFF1F1;color:#962F2F;font-size:.75rem}.summary-card h2{margin:8px 0;font-weight:900}.summary-line,.summary-total{display:flex;justify-content:space-between;gap:20px;padding:14px 0;border-top:1px solid #EDF1EF;font-size:.78rem}.summary-total{margin-top:8px;font-size:1rem}.summary-total strong{color:#173D3D;font-size:1.4rem}.pilot-badge{margin-top:16px;padding:10px 12px;border-radius:10px;background:#FFF7D9;color:#725C12;font-size:.7rem;font-weight:800}
+    .success-icon{width:64px;height:64px;margin:0 auto 16px;border-radius:50%;background:#E6F5EC;color:#267A49;display:grid;place-items:center;font-size:1.7rem}.receipt-grid{margin:26px 0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;text-align:left}.receipt-grid div{padding:14px;border:1px solid #E3EAE7;border-radius:12px}.receipt-grid span,.receipt-grid strong{display:block}.receipt-grid span{color:#83908A;font-size:.66rem}.receipt-grid strong{margin-top:4px;font-size:.82rem;word-break:break-word}.receipt-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.primary-link,.secondary-link{display:inline-flex;min-height:44px;padding:0 18px;align-items:center;border-radius:10px;text-decoration:none;font-weight:850}.primary-link{background:#2F9098;color:#fff}.secondary-link{border:1px solid #C9D9D5;color:#173D3D;background:#fff}
+    .checkout-state{text-align:center;padding:80px;color:#68776F}
+    @@media(max-width:800px){.checkout-grid{grid-template-columns:1fr}.summary-card{position:static}.payment-methods{grid-template-columns:1fr}.receipt-grid{grid-template-columns:1fr}.checkout-card{padding:24px}}
+</style>
+
+@code {
+    [Parameter] public string PlanType { get; set; } = string.Empty;
+
+    private readonly string[] paymentMethods = { "GCash", "Maya", "Card" };
+    private SubscriptionOffering? offering;
+    private PaymentReceipt? receipt;
+    private ClinicTenant? clinic;
+    private bool ready;
+    private bool processing;
+    private bool acceptedTerms;
+    private string paymentMethod = "GCash";
+    private string walletNumber = string.Empty;
+    private string cardName = string.Empty;
+    private string cardNumber = "4242 4242 4242 4242";
+    private string cardExpiry = "12/30";
+    private string cardCvc = "123";
+    private string errorMessage = string.Empty;
+
+    private string SuccessDestination =>
+        PlanType switch
+        {
+            CommerceService.SellerType => "/marketplace",
+            CommerceService.ClinicType => "/clinic-portal",
+            _ => "/dashboard"
+        };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Auth.InitializeAsync();
+
+        offering = Commerce.GetOffering(PlanType);
+
+        if (PlanType == CommerceService.ClinicType &&
+            Auth.CurrentUser?.ClinicId is int clinicId)
+        {
+            clinic = Db.GetClinicById(clinicId);
+        }
+
+        ready = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task PayAsync()
+    {
+        if (processing || offering is null || Auth.CurrentUser is null)
+            return;
+
+        errorMessage = string.Empty;
+
+        if (!acceptedTerms)
+        {
+            errorMessage = "Please acknowledge the mock-payment terms and privacy notice.";
+            return;
+        }
+
+        if (paymentMethod is "GCash" or "Maya")
+        {
+            var digits = new string(walletNumber.Where(char.IsDigit).ToArray());
+
+            if (digits.Length != 11 || !digits.StartsWith("09"))
+            {
+                errorMessage = "Enter a valid demo Philippine mobile number, such as 09171234567.";
+                return;
+            }
+        }
+
+        if (paymentMethod == "Card")
+        {
+            var digits = new string(cardNumber.Where(char.IsDigit).ToArray());
+
+            if (string.IsNullOrWhiteSpace(cardName) ||
+                digits != "4242424242424242" ||
+                cardExpiry != "12/30" ||
+                cardCvc != "123")
+            {
+                errorMessage = "For the simulation, use demo card 4242 4242 4242 4242, expiry 12/30 and CVC 123.";
+                return;
+            }
+        }
+
+        if (PlanType == CommerceService.ClinicType &&
+            Auth.CurrentUser.ClinicId is null)
+        {
+            errorMessage = "Your account must have an approved clinic claim before purchasing Verified Clinic.";
+            return;
+        }
+
+        processing = true;
+
+        try
+        {
+            await Task.Delay(900);
+
+            receipt = Commerce.CompleteMockPayment(
+                Auth.CurrentUser.Id,
+                PlanType,
+                paymentMethod,
+                Auth.CurrentUser.ClinicId);
+
+            if (PlanType == CommerceService.PremiumType)
+            {
+                Notify.PremiumActivated(Auth.CurrentUser.Id, receipt.Reference);
+                Auth.RefreshCurrentUser();
+            }
+            else if (PlanType == CommerceService.SellerType)
+            {
+                Notify.SellerActivated(Auth.CurrentUser.Id, receipt.ExpiresAt);
+            }
+            else if (PlanType == CommerceService.ClinicType &&
+                     Auth.CurrentUser.ClinicId is int clinicId)
+            {
+                Notify.ClinicSubscriptionActivated(
+                    Auth.CurrentUser.Id,
+                    clinicId,
+                    receipt.ExpiresAt);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Checkout] {ex}");
+            errorMessage = "The demo payment could not be completed. Please verify the project database migration and try again.";
+        }
+        finally
+        {
+            processing = false;
+        }
+    }
+
+    private string GetDurationLabel() =>
+        offering?.DurationMonths == 1
+            ? "1 month"
+            : $"{offering?.DurationMonths ?? 0} months";
+
+    private static string GetMethodMark(string method) =>
+        method switch
+        {
+            "GCash" => "G",
+            "Maya" => "M",
+            _ => "C"
+        };
+
+    private static string GetMethodCaption(string method) =>
+        method switch
+        {
+            "GCash" => "Demo e-wallet",
+            "Maya" => "Demo e-wallet",
+            _ => "Demo card"
+        };
+}

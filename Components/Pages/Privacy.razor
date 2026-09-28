@@ -1,0 +1,98 @@
+@page "/privacy"
+@using Shoppet_VetClinic.Components.Layout
+@layout LandingLayout
+
+<PageTitle>Data Privacy Notice | ShoppetCare</PageTitle>
+
+<div class="legal-page">
+    <main class="legal-shell">
+        <span class="legal-kicker">DATA PRIVACY</span>
+        <h1>ShoppetCare Data Privacy Notice</h1>
+        <p class="legal-lead">
+            This notice explains what information the current ShoppetCare pilot uses and why. The project should collect
+            only information needed for its pet-care, directory, marketplace, community, and subscription workflows.
+        </p>
+
+        <section>
+            <h2>Information used by the platform</h2>
+            <p>
+                Account information may include name, email address, mobile number, role, account status, and subscription
+                references. Pet-care information may include pet identity, birth date, weight, diet, vaccination and health
+                records, Digital Pet ID information, and uploaded pet images. Marketplace, Community, clinic request,
+                notification, and transaction records are also stored when those features are used.
+            </p>
+        </section>
+
+        <section>
+            <h2>Why the information is used</h2>
+            <p>
+                Information is used to authenticate accounts, connect pet records across ShoppetCare features, generate
+                Digital Pet IDs, support clinic discovery and claiming, manage marketplace and community content, record
+                mock subscription payments, and show relevant notifications.
+            </p>
+        </section>
+
+        <section>
+            <h2>Public and private information</h2>
+            <p>
+                Public clinic listings, marketplace listings, and community posts are visible according to their feature
+                design. Public Pet ID pages must not expose the owner's name, mobile number, private diet details, or
+                private health information. Private pet-care records remain account-controlled.
+            </p>
+        </section>
+
+        <section>
+            <h2>Mock payment information</h2>
+            <p>
+                The academic checkout stores the selected mock payment method, amount, project reference number, status,
+                and date. It does not connect to GCash, Maya, banks, card networks, or a production payment gateway.
+                Real card credentials should never be entered or stored.
+            </p>
+        </section>
+
+        <section>
+            <h2>Uploads</h2>
+            <p>
+                User-uploaded images are limited to supported image formats and are used only for the feature in which
+                they were uploaded, such as pet profiles, marketplace listings, or community posts.
+            </p>
+        </section>
+
+        <section>
+            <h2>Access and correction</h2>
+            <p>
+                Users can update supported account and profile information through the platform. For project data that
+                cannot be edited directly in the interface, the project administrator can review the record during the
+                academic pilot.
+            </p>
+        </section>
+
+        <section>
+            <h2>Project security and limitations</h2>
+            <p>
+                ShoppetCare uses account-based access controls and ownership checks for protected workflows. As an academic
+                pilot, it should not be treated as a production medical-record, financial, or emergency-response system.
+            </p>
+        </section>
+
+        <div class="legal-actions">
+            <a href="/terms">Read Terms &amp; Conditions</a>
+            <a href="/register" class="primary">Create Account</a>
+        </div>
+    </main>
+</div>
+
+<style>
+    .legal-page{min-height:100vh;padding:54px 24px;background:#FAF9F6;color:#1E2D27}
+    .legal-shell{width:min(920px,100%);margin:auto;padding:44px;border:1px solid #E1E8E5;border-radius:24px;background:#fff;box-shadow:0 18px 50px rgba(30,45,39,.06)}
+    .legal-kicker{color:#2F9098;font-size:.7rem;font-weight:900;letter-spacing:.12em}
+    .legal-shell h1{margin:8px 0 10px;font-size:clamp(2.4rem,5vw,4rem);font-weight:900;letter-spacing:-.05em}
+    .legal-lead{font-size:1rem;color:#65746E;line-height:1.7}
+    .legal-shell section{padding:22px 0;border-top:1px solid #EDF1EF}
+    .legal-shell h2{margin:0 0 8px;font-size:1.05rem;font-weight:850}
+    .legal-shell p{margin:0;color:#5E6D67;line-height:1.72}
+    .legal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+    .legal-actions a{padding:12px 18px;border:1px solid #C9D9D5;border-radius:10px;color:#173D3D;text-decoration:none;font-weight:800}
+    .legal-actions .primary{background:#2F9098;border-color:#2F9098;color:#fff}
+    @@media(max-width:640px){.legal-shell{padding:26px}}
+</style>

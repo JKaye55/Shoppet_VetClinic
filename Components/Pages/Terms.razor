@@ -1,0 +1,127 @@
+@page "/terms"
+@using Shoppet_VetClinic.Components.Layout
+@layout LandingLayout
+
+<PageTitle>Terms & Conditions | ShoppetCare</PageTitle>
+
+<div class="legal-page">
+    <main class="legal-shell">
+        <span class="legal-kicker">SHOPPETCARE LEGAL</span>
+        <h1>Terms &amp; Conditions</h1>
+        <p class="legal-lead">
+            These terms describe the rules for using the ShoppetCare student e-commerce pilot platform.
+            They are written for the current web and mobile project scope.
+        </p>
+
+        <section>
+            <h2>1. Platform purpose</h2>
+            <p>
+                ShoppetCare provides pet-care information management, Digital Pet ID features, a clinic directory,
+                community posting, a pre-loved pet-item marketplace, and subscription-based verification features.
+                ShoppetCare is a student project and is not a veterinary hospital, emergency service, bank, payment
+                processor, courier, or insurance provider.
+            </p>
+        </section>
+
+        <section>
+            <h2>2. Accounts and responsibilities</h2>
+            <p>
+                Users are responsible for providing accurate account and pet information, keeping account credentials
+                private, and using the platform lawfully. Clinic representatives and sellers must submit truthful
+                information. ShoppetCare may suspend or remove content that is misleading, unsafe, abusive, or outside
+                the intended project scope.
+            </p>
+        </section>
+
+        <section>
+            <h2>3. Mock payment environment</h2>
+            <p>
+                The current checkout is a simulation for academic demonstration. GCash, Maya, and Card options imitate
+                a real checkout flow, but no real funds are transferred and no bank, e-wallet, or card network is
+                contacted. Do not enter real card credentials. Demo payment references are stored as project transaction
+                records for testing and presentation.
+            </p>
+        </section>
+
+        <section>
+            <h2>4. Subscriptions</h2>
+            <p>
+                The project offers ShoppetCare Premium at ₱150 for 3 months, Verified Seller at ₱50 per month, and
+                Verified Clinic at ₱50 per month. In the pilot environment, a successful mock payment activates the
+                corresponding project entitlement for its stated period. Renewal extends access from the current active
+                expiration when applicable.
+            </p>
+        </section>
+
+        <section>
+            <h2>5. Marketplace</h2>
+            <p>
+                Marketplace listings are posted by users. ShoppetCare does not process the physical-item sale, shipping,
+                delivery, refund, or buyer-seller settlement. Buyers and sellers arrange the transaction directly.
+                Users should avoid unsafe, prohibited, misleading, or inappropriate listings.
+            </p>
+        </section>
+
+        <section>
+            <h2>6. Clinic listings</h2>
+            <p>
+                A listed clinic is not automatically claimed or verified. Claim approval identifies an approved
+                representative for the listing. The Verified Clinic badge is tied to the active project subscription
+                and does not replace professional licensing, regulatory approval, or independent due diligence.
+            </p>
+        </section>
+
+        <section>
+            <h2>7. Pet-care information</h2>
+            <p>
+                Pet profiles, vaccination records, health records, food tracking, and related information are owner-
+                supplied records. They are not a substitute for veterinary diagnosis, treatment, or emergency care.
+            </p>
+        </section>
+
+        <section>
+            <h2>8. Public Digital Pet ID</h2>
+            <p>
+                Public Pet ID views are intentionally limited. Private owner contact information and private health or
+                care information must not be exposed in the public QR view unless the platform explicitly provides a
+                separate owner-controlled feature for that purpose.
+            </p>
+        </section>
+
+        <section>
+            <h2>9. Community content</h2>
+            <p>
+                Users retain responsibility for the content they post. ShoppetCare administrators may remove content
+                that is abusive, misleading, inappropriate, or violates platform rules.
+            </p>
+        </section>
+
+        <section>
+            <h2>10. Pilot limitations</h2>
+            <p>
+                Because this is an academic pilot, features, sample data, payment simulations, and administrative
+                workflows may be reset or revised during development and evaluation.
+            </p>
+        </section>
+
+        <div class="legal-actions">
+            <a href="/privacy">Read Data Privacy Notice</a>
+            <a href="/register" class="primary">Create Account</a>
+        </div>
+    </main>
+</div>
+
+<style>
+    .legal-page{min-height:100vh;padding:54px 24px;background:#FAF9F6;color:#1E2D27}
+    .legal-shell{width:min(920px,100%);margin:auto;padding:44px;border:1px solid #E1E8E5;border-radius:24px;background:#fff;box-shadow:0 18px 50px rgba(30,45,39,.06)}
+    .legal-kicker{color:#2F9098;font-size:.7rem;font-weight:900;letter-spacing:.12em}
+    .legal-shell h1{margin:8px 0 10px;font-size:clamp(2.4rem,5vw,4rem);font-weight:900;letter-spacing:-.05em}
+    .legal-lead{font-size:1rem;color:#65746E;line-height:1.7}
+    .legal-shell section{padding:22px 0;border-top:1px solid #EDF1EF}
+    .legal-shell h2{margin:0 0 8px;font-size:1.05rem;font-weight:850}
+    .legal-shell p{margin:0;color:#5E6D67;line-height:1.72}
+    .legal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+    .legal-actions a{padding:12px 18px;border:1px solid #C9D9D5;border-radius:10px;color:#173D3D;text-decoration:none;font-weight:800}
+    .legal-actions .primary{background:#2F9098;border-color:#2F9098;color:#fff}
+    @@media(max-width:640px){.legal-shell{padding:26px}}
+</style>

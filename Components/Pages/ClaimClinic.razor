@@ -1,0 +1,142 @@
+@page "/claim-clinic/{ClinicId:int}"
+@rendermode InteractiveServer
+
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+
+@inject AuthService Auth
+@inject CommerceService Commerce
+@inject DatabaseService Db
+
+<PageTitle>Claim Clinic | ShoppetCare</PageTitle>
+
+<div class="claim-page">
+    <main class="claim-shell">
+        @if (!ready)
+        {
+            <p>Loading clinic...</p>
+        }
+        else if (clinic is null)
+        {
+            <div class="claim-card"><h1>Clinic not found.</h1><a href="/clinics">Back to Clinics</a></div>
+        }
+        else
+        {
+            <section class="clinic-preview">
+                <span class="eyebrow">CLAIM EXISTING LISTING</span>
+                <h1>@clinic.ClinicName</h1>
+                @if (!string.IsNullOrWhiteSpace(clinic.Branch)){<p><strong>@clinic.Branch</strong></p>}
+                <p>@clinic.Address</p>
+                <div class="preview-meta"><span>@clinic.ContactPhone</span><span>@clinic.OperatingHours</span></div>
+                <p class="note">Claiming does not immediately verify the clinic. Super Admin reviews the request first. After approval, the clinic representative can activate Verified Clinic for ₱50/month.</p>
+            </section>
+
+            <section class="claim-card">
+                @if (!Auth.IsLoggedIn || Auth.CurrentUser is null)
+                {
+                    <h2>Sign in to submit a claim.</h2>
+                    <a class="primary-link" href="/login">Sign In</a>
+                }
+                else if (submitted)
+                {
+                    <div class="success">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <h2>Claim submitted.</h2>
+                        <p>Request #@requestId is pending Super Admin review.</p>
+                        <a class="primary-link" href="/clinics">Back to Clinics</a>
+                    </div>
+                }
+                else
+                {
+                    <span class="eyebrow dark">REPRESENTATIVE DETAILS</span>
+                    <h2>Tell us how you're connected to this clinic.</h2>
+
+                    @if (!string.IsNullOrWhiteSpace(errorMessage))
+                    {
+                        <div class="alert-box">@errorMessage</div>
+                    }
+
+                    <div class="field"><label>Representative Name *</label><input maxlength="150" @bind="form.RepresentativeName" /></div>
+                    <div class="field"><label>Relationship to Clinic *</label>
+                        <select @bind="form.RelationshipToClinic">
+                            <option value="">Select one</option><option>Owner</option><option>Veterinarian</option><option>Staff</option><option>Authorized Representative</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>Contact Number *</label><input maxlength="30" @bind="form.ContactNumber" /></div>
+                    <div class="field"><label>Supporting Details *</label><textarea rows="5" maxlength="1200" @bind="form.SupportingDetails" placeholder="Explain your role and any details the admin can use to review the claim."></textarea></div>
+
+                    <label class="consent"><input type="checkbox" @bind="consent" /><span>I confirm this claim is truthful and I agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy Notice</a>.</span></label>
+                    <button class="submit-btn" @onclick="Submit">Submit Claim</button>
+                }
+            </section>
+        }
+    </main>
+</div>
+
+<style>
+    .claim-page{min-height:100vh;padding:50px 24px;background:#FAF9F6;color:#1E2D27}.claim-shell{width:min(1000px,100%);margin:auto;display:grid;grid-template-columns:.85fr 1.15fr;gap:22px;align-items:start}.clinic-preview,.claim-card{padding:34px;border-radius:24px;border:1px solid #DDE7E4;background:#fff;box-shadow:0 16px 45px rgba(30,45,39,.06)}.clinic-preview{background:#173D3D;color:#fff;position:sticky;top:110px}.eyebrow{font-size:.67rem;font-weight:900;letter-spacing:.12em;color:#83D0D1}.eyebrow.dark{color:#2F9098}.clinic-preview h1,.claim-card h2{margin:8px 0 12px;font-weight:900;letter-spacing:-.04em}.clinic-preview p{color:rgba(255,255,255,.68);line-height:1.6}.preview-meta{display:grid;gap:8px;margin:18px 0}.preview-meta span{padding:10px;border:1px solid rgba(255,255,255,.12);border-radius:10px}.note{padding-top:18px;border-top:1px solid rgba(255,255,255,.12)}.field{margin-top:14px}.field label{display:block;margin-bottom:6px;font-size:.72rem;font-weight:850}.field input,.field select,.field textarea{width:100%;padding:11px 12px;border:1px solid #C9D9D5;border-radius:10px;outline:none;background:#fff}.field input,.field select{min-height:46px}.consent{display:flex;gap:9px;margin:18px 0;font-size:.7rem;color:#68766F}.consent a{color:#267C83;font-weight:800}.submit-btn,.primary-link{min-height:48px;padding:0 18px;border:0;border-radius:11px;background:#2F9098;color:#fff;font-weight:900;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.alert-box{padding:12px;margin-top:14px;border:1px solid #F0B7B7;background:#FFF1F1;color:#9A3030;border-radius:10px;font-size:.74rem}.success{text-align:center;padding:30px 10px}.success i{font-size:2.7rem;color:#3B9460}
+    @@media(max-width:780px){.claim-shell{grid-template-columns:1fr}.clinic-preview{position:static}}
+</style>
+
+@code {
+    [Parameter] public int ClinicId { get; set; }
+
+    private ClinicTenant? clinic;
+    private ClinicClaimRequest form = new();
+    private bool ready;
+    private bool submitted;
+    private bool consent;
+    private int requestId;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        await Auth.InitializeAsync();
+        clinic = Db.GetClinicById(ClinicId);
+        form.ClinicId = ClinicId;
+
+        if (Auth.CurrentUser is not null)
+        {
+            form.RepresentativeName = Auth.CurrentUser.FullName;
+            form.ContactNumber = Auth.CurrentUser.MobileNumber ?? string.Empty;
+        }
+
+        ready = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void Submit()
+    {
+        errorMessage = string.Empty;
+
+        if (Auth.CurrentUser is null || clinic is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(form.RepresentativeName) ||
+            string.IsNullOrWhiteSpace(form.RelationshipToClinic) ||
+            string.IsNullOrWhiteSpace(form.ContactNumber) ||
+            string.IsNullOrWhiteSpace(form.SupportingDetails))
+        {
+            errorMessage = "Please complete all required claim details.";
+            return;
+        }
+
+        if (!consent)
+        {
+            errorMessage = "Please confirm the claim and accept the project terms.";
+            return;
+        }
+
+        try
+        {
+            requestId = Commerce.SubmitClinicClaimRequest(Auth.CurrentUser.Id, form);
+            submitted = true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}

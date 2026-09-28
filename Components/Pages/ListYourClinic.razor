@@ -1,0 +1,195 @@
+@page "/list-your-clinic"
+@rendermode InteractiveServer
+
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+
+@inject AuthService Auth
+@inject CommerceService Commerce
+@inject NavigationManager Nav
+
+<PageTitle>List Your Clinic | ShoppetCare</PageTitle>
+
+<div class="request-page">
+    <main class="request-shell">
+        <section class="request-copy">
+            <span class="eyebrow">CLINIC DIRECTORY REQUEST</span>
+            <h1>Can't find your clinic?</h1>
+            <p>
+                Submit the clinic details for Super Admin review. Listing is free. After the clinic is approved and
+                added to the directory, an authorized representative can claim it and optionally activate
+                Verified Clinic for ₱50/month.
+            </p>
+
+            <div class="flow">
+                <span>1. Submit details</span>
+                <span>2. Admin review</span>
+                <span>3. Directory listing</span>
+                <span>4. Claim &amp; verify</span>
+            </div>
+        </section>
+
+        <section class="request-card">
+            @if (!ready)
+            {
+                <p>Loading...</p>
+            }
+            else if (!Auth.IsLoggedIn || Auth.CurrentUser is null)
+            {
+                <h2>Sign in first</h2>
+                <p>A ShoppetCare account is required so we can attach the request to a representative.</p>
+                <a class="primary-link" href="/login">Sign In</a>
+            }
+            else if (submitted)
+            {
+                <div class="success">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <h2>Request submitted.</h2>
+                    <p>Reference request #@requestId is now pending Super Admin review.</p>
+                    <a class="primary-link" href="/clinics">Back to Clinics</a>
+                </div>
+            }
+            else
+            {
+                <span class="eyebrow">LIST YOUR CLINIC</span>
+                <h2>Clinic information</h2>
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="alert-box">@errorMessage</div>
+                }
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label>Representative Name *</label>
+                        <input maxlength="150" @bind="form.RepresentativeName" />
+                    </div>
+                    <div class="field">
+                        <label>Relationship to Clinic *</label>
+                        <select @bind="form.RelationshipToClinic">
+                            <option value="">Select one</option>
+                            <option>Owner</option>
+                            <option>Veterinarian</option>
+                            <option>Staff</option>
+                            <option>Authorized Representative</option>
+                        </select>
+                    </div>
+                    <div class="field full">
+                        <label>Clinic Name *</label>
+                        <input maxlength="180" @bind="form.ClinicName" />
+                    </div>
+                    <div class="field full">
+                        <label>Address *</label>
+                        <input maxlength="250" @bind="form.Address" />
+                    </div>
+                    <div class="field">
+                        <label>City *</label>
+                        <select @bind="form.City">
+                            <option value="">Select city</option>
+                            <option>Lipa City</option>
+                            <option>Tanauan City</option>
+                            <option>Other Batangas Area</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Contact Number *</label>
+                        <input maxlength="30" @bind="form.ContactNumber" />
+                    </div>
+                    <div class="field full">
+                        <label>Clinic Email *</label>
+                        <input type="email" maxlength="254" @bind="form.ClinicEmail" />
+                    </div>
+                    <div class="field full">
+                        <label>Services Offered *</label>
+                        <textarea rows="4" maxlength="1000" @bind="form.ServicesOffered" placeholder="Vaccination, consultation, deworming..."></textarea>
+                    </div>
+                    <div class="field full">
+                        <label>Additional Message</label>
+                        <textarea rows="3" maxlength="1000" @bind="form.Message"></textarea>
+                    </div>
+                </div>
+
+                <label class="consent">
+                    <input type="checkbox" @bind="consent" />
+                    <span>I confirm the information is accurate and I agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy Notice</a>.</span>
+                </label>
+
+                <button class="submit-btn" type="button" @onclick="Submit">Submit Listing Request</button>
+            }
+        </section>
+    </main>
+</div>
+
+<style>
+    .request-page{min-height:100vh;padding:50px 24px;background:#FAF9F6;color:#1E2D27}.request-shell{width:min(1080px,100%);margin:auto;display:grid;grid-template-columns:.85fr 1.15fr;gap:24px;align-items:start}
+    .request-copy,.request-card{padding:34px;border:1px solid #DDE7E4;border-radius:24px;background:#fff;box-shadow:0 16px 45px rgba(30,45,39,.06)}.request-copy{background:linear-gradient(145deg,#173D3D,#102E2D);color:#fff;position:sticky;top:110px}.eyebrow{color:#71C6C8;font-size:.68rem;font-weight:900;letter-spacing:.12em}.request-card .eyebrow{color:#2F9098}.request-copy h1,.request-card h2{margin:8px 0 12px;font-weight:900;letter-spacing:-.04em}.request-copy h1{font-size:3rem}.request-copy p{color:rgba(255,255,255,.68);line-height:1.7}.flow{margin-top:28px;display:grid;gap:8px}.flow span{padding:11px 12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.05);font-size:.76rem;font-weight:800}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}.field.full{grid-column:1/-1}.field label{display:block;margin-bottom:6px;font-size:.72rem;font-weight:850}.field input,.field select,.field textarea{width:100%;border:1px solid #C9D9D5;border-radius:10px;padding:11px 12px;outline:none;background:#fff}.field input,.field select{min-height:46px}.field input:focus,.field select:focus,.field textarea:focus{border-color:#2F9098;box-shadow:0 0 0 3px rgba(47,144,152,.1)}.consent{display:flex;gap:9px;margin:18px 0;font-size:.7rem;color:#68766F}.consent a{color:#267C83;font-weight:800}.submit-btn,.primary-link{min-height:48px;padding:0 18px;border:0;border-radius:11px;background:#2F9098;color:#fff;font-weight:900;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.alert-box{padding:12px;margin-top:14px;border:1px solid #F0B7B7;background:#FFF1F1;color:#9A3030;border-radius:10px;font-size:.74rem}.success{text-align:center;padding:30px 10px}.success i{font-size:2.7rem;color:#3B9460}
+    @@media(max-width:800px){.request-shell{grid-template-columns:1fr}.request-copy{position:static}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+</style>
+
+@code {
+    private ClinicListingRequest form = new();
+    private bool ready;
+    private bool submitted;
+    private bool consent;
+    private int requestId;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await Auth.InitializeAsync();
+
+        if (Auth.CurrentUser is not null)
+        {
+            form.RepresentativeName = Auth.CurrentUser.FullName;
+            form.ContactNumber = Auth.CurrentUser.MobileNumber ?? string.Empty;
+            form.ClinicEmail = Auth.CurrentUser.Email;
+        }
+
+        ready = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void Submit()
+    {
+        errorMessage = string.Empty;
+
+        if (Auth.CurrentUser is null) return;
+
+        if (string.IsNullOrWhiteSpace(form.RepresentativeName) ||
+            string.IsNullOrWhiteSpace(form.RelationshipToClinic) ||
+            string.IsNullOrWhiteSpace(form.ClinicName) ||
+            string.IsNullOrWhiteSpace(form.Address) ||
+            string.IsNullOrWhiteSpace(form.City) ||
+            string.IsNullOrWhiteSpace(form.ContactNumber) ||
+            string.IsNullOrWhiteSpace(form.ClinicEmail) ||
+            string.IsNullOrWhiteSpace(form.ServicesOffered))
+        {
+            errorMessage = "Please complete all required clinic information.";
+            return;
+        }
+
+        if (!AuthService.IsValidEmailAddress(form.ClinicEmail))
+        {
+            errorMessage = "Enter a valid clinic email address.";
+            return;
+        }
+
+        if (!consent)
+        {
+            errorMessage = "Please confirm the information and accept the project terms.";
+            return;
+        }
+
+        try
+        {
+            requestId = Commerce.SubmitClinicListingRequest(Auth.CurrentUser.Id, form);
+            submitted = true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}
