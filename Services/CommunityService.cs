@@ -572,6 +572,47 @@ namespace Shoppet_VetClinic.Services
 
 
         // =========================================================
+        // ADMIN MODERATION
+        // =========================================================
+
+        public bool AdminDeletePost(int postId)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+
+            using var tx = conn.BeginTransaction();
+
+            try
+            {
+                using (var likes = new SqlCommand(
+                    "DELETE FROM CommunityLikes WHERE PostId = @PostId;",
+                    conn,
+                    tx))
+                {
+                    likes.Parameters.AddWithValue("@PostId", postId);
+                    likes.ExecuteNonQuery();
+                }
+
+                using var post = new SqlCommand(
+                    "DELETE FROM CommunityPosts WHERE Id = @PostId;",
+                    conn,
+                    tx);
+
+                post.Parameters.AddWithValue("@PostId", postId);
+
+                var deleted = post.ExecuteNonQuery() > 0;
+                tx.Commit();
+                return deleted;
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
+        }
+
+
+        // =========================================================
         // PET OWNERSHIP
         // A post may only tag one of that user's pets.
         // =========================================================
