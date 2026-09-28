@@ -158,9 +158,16 @@ BEGIN TRY
             DEFAULT (SYSDATETIME()) FOR PaidAt;
     END;
 
-    UPDATE dbo.Transactions
-       SET Status = 'Paid'
-     WHERE Status IS NULL OR LTRIM(RTRIM(Status)) = '';
+    /*
+       Dynamic SQL is intentional here. Status may have been added earlier in
+       this same batch, and SQL Server can otherwise raise "Invalid column name"
+       during batch compilation before ALTER TABLE gets a chance to run.
+    */
+    EXEC sys.sp_executesql N'
+        UPDATE dbo.Transactions
+           SET Status = ''Paid''
+         WHERE Status IS NULL OR LTRIM(RTRIM(Status)) = '''';
+    ';
 
 
     /* ============================================================
@@ -400,14 +407,22 @@ BEGIN TRY
        10. NORMALIZE EXISTING DATA
        ============================================================ */
 
-    UPDATE dbo.ClinicTenants
-       SET VerificationStatus = 'Unverified'
-     WHERE VerificationStatus IS NULL
-        OR LTRIM(RTRIM(VerificationStatus)) = '';
+    /*
+       These columns can also be introduced by this migration, so use dynamic
+       SQL to avoid SQL Server compile-time column resolution in the same batch.
+    */
+    EXEC sys.sp_executesql N'
+        UPDATE dbo.ClinicTenants
+           SET VerificationStatus = ''Unverified''
+         WHERE VerificationStatus IS NULL
+            OR LTRIM(RTRIM(VerificationStatus)) = '''';
+    ';
 
-    UPDATE dbo.CommunityPosts
-       SET IsEdited = 0
-     WHERE IsEdited IS NULL;
+    EXEC sys.sp_executesql N'
+        UPDATE dbo.CommunityPosts
+           SET IsEdited = 0
+         WHERE IsEdited IS NULL;
+    ';
 
     COMMIT TRANSACTION;
 END TRY
