@@ -1,806 +1,153 @@
-﻿@page "/premium"
+@page "/premium"
 @rendermode InteractiveServer
 
+@using Shoppet_VetClinic.Services
+@using Shoppet_VetClinic.Models
+
 @inject AuthService Auth
-@inject DatabaseService Db
-@inject NavigationManager Nav
-@inject NotificationService Notify
+@inject CommerceService Commerce
 
 <PageTitle>ShoppetCare Premium</PageTitle>
 
+<div class="premium-page">
+    <section class="premium-hero">
+        <div class="premium-shell hero-inner">
+            <div>
+                <span class="eyebrow light">SHOPPETCARE PREMIUM</span>
+                <h1>More value from your pet's connected identity.</h1>
+                <p>
+                    Premium enhances the private Digital Pet ID experience and selected web benefits while Mobile remains
+                    the main pet-care management application.
+                </p>
+            </div>
 
-<div class="sc-premium-page">
-
-    <section class="sc-premium-hero">
-
-        <div class="sc-premium-shell">
-
-            <span class="eyebrow">
-                SHOPPETCARE PREMIUM
-            </span>
-
-            <h1>
-                More room for
-                <em>every pet you love.</em>
-            </h1>
-
-            <p>
-                Expand your pet-management tools with
-                one simple lifetime upgrade.
-            </p>
-
+            <div class="price-card">
+                <span>PREMIUM PLAN</span>
+                <strong>₱150</strong>
+                <small>3 months</small>
+            </div>
         </div>
-
     </section>
 
-
-    <main class="sc-premium-shell sc-premium-content">
-
-        @if (!isReady)
+    <main class="premium-shell premium-content">
+        @if (!ready)
         {
-            <div class="sc-premium-loading">
-                Loading Premium...
-            </div>
+            <div class="loading">Loading Premium status...</div>
         }
-        else if (!Auth.IsLoggedIn)
+        else if (!Auth.IsLoggedIn || Auth.CurrentUser is null)
         {
-            <section class="sc-premium-access">
-
-                <span>
-                    ACCOUNT REQUIRED
-                </span>
-
-                <h2>
-                    Sign in before upgrading.
-                </h2>
-
-                <p>
-                    Premium is attached to your
-                    ShoppetCare Pet Owner account.
-                </p>
-
-                <a href="/login">
-                    Sign In
-                </a>
-
-            </section>
-        }
-        else if (Auth.IsPremium)
-        {
-            <section class="sc-premium-active">
-
-                <div class="check">
-
-                    <svg>
-                        <use href="/icons/bootstrap-icons.svg#check-lg"></use>
-                    </svg>
-
-                </div>
-
-
-                <span>
-                    PREMIUM ACTIVE
-                </span>
-
-                <h2>
-                    Your lifetime Premium access is ready.
-                </h2>
-
-                <p>
-                    Unlimited pet profiles, unlimited
-                    health records, Premium Pet ID themes,
-                    and record export are unlocked.
-                </p>
-
-
-                <div class="sc-premium-reference">
-
-                    <div>
-
-                        <span>
-                            Activated
-                        </span>
-
-                        <strong>
-                            @Auth.CurrentUser?
-                            .PremiumActivatedAt?
-                            .ToString("MMM d, yyyy")
-                        </strong>
-
-                    </div>
-
-
-                    <div>
-
-                        <span>
-                            Reference
-                        </span>
-
-                        <strong>
-                            @Auth.CurrentUser?
-                            .PremiumReference
-                        </strong>
-
-                    </div>
-
-                </div>
-
-
-                <div class="sc-premium-actions">
-
-                    <a href="/my-pets"
-                       class="primary">
-
-                        Manage My Pets
-
-                    </a>
-
-                    <a href="/account"
-                       class="secondary">
-
-                        Account & Premium
-
-                    </a>
-
-                </div>
-
+            <section class="premium-panel centered">
+                <span class="eyebrow">ACCOUNT REQUIRED</span>
+                <h2>Sign in to activate Premium.</h2>
+                <p>Your subscription must be attached to a ShoppetCare account.</p>
+                <a class="primary-link" href="/login">Sign In</a>
             </section>
         }
         else
         {
-            <section class="sc-premium-grid">
+            <div class="premium-grid">
+                <section class="premium-panel">
+                    <span class="eyebrow">YOUR PLAN</span>
 
-                <div class="sc-premium-offer">
-
-                    <span class="offer-label">
-                        LIFETIME UPGRADE
-                    </span>
-
-                    <div class="price">
-
-                        <strong>
-                            ₱49
-                        </strong>
-
-                        <span>
-                            one-time payment
-                        </span>
-
-                    </div>
-
-
-                    <p>
-                        No monthly subscription.
-                        Premium remains active on your
-                        ShoppetCare account.
-                    </p>
-
-
-                    @if (!string.IsNullOrWhiteSpace(
-                        errorMessage))
+                    @if (activeSubscription is not null || Auth.IsPremium)
                     {
-                        <div class="error">
-                            @errorMessage
+                        <div class="active-status">
+                            <i class="bi bi-star-fill"></i>
+                            <div>
+                                <strong>Premium Active</strong>
+                                <span>
+                                    @(activeSubscription is not null
+                                        ? $"Active until {activeSubscription.ExpiresAt:MMM d, yyyy}"
+                                        : $"Active until {Auth.CurrentUser.PremiumActivatedAt?.AddMonths(3):MMM d, yyyy}")
+                                </span>
+                            </div>
                         </div>
+
+                        <h2>Keep your Premium access going.</h2>
+                        <p>
+                            Renewing while active extends your subscription period instead of replacing the remaining time.
+                        </p>
+                        <a class="primary-link" href="/checkout/PremiumSubscription">Extend Premium — ₱150</a>
                     }
+                    else
+                    {
+                        <h2>Activate Premium for 3 months.</h2>
+                        <p>
+                            Complete the realistic mock checkout to activate Premium on your account. The current academic
+                            payment flow does not transfer real money.
+                        </p>
+                        <a class="primary-link" href="/checkout/PremiumSubscription">Get Premium — ₱150</a>
+                    }
+                </section>
 
+                <section class="premium-panel benefits">
+                    <span class="eyebrow">PREMIUM BENEFITS</span>
+                    <h2>Designed around your Digital Pet ID.</h2>
 
-                    <button type="button"
-                            disabled="@isProcessing"
-                            @onclick="PayNow">
+                    <div class="benefit-list">
+                        <article><i class="bi bi-palette-fill"></i><div><strong>Premium Card Themes</strong><span>Ocean, Sunset, Mint and Royal themes in addition to Classic.</span></div></article>
+                        <article><i class="bi bi-person-lines-fill"></i><div><strong>Private Owner Contact</strong><span>Owner mobile contact can appear on your private Premium card while the public QR view stays privacy-safe.</span></div></article>
+                        <article><i class="bi bi-heart-pulse-fill"></i><div><strong>Care Summary</strong><span>Display selected vaccination, weight and health-summary information retrieved from your pet-care records.</span></div></article>
+                        <article><i class="bi bi-file-earmark-arrow-down-fill"></i><div><strong>Health Record Export</strong><span>Export supported vaccination and health information where the web integration is available.</span></div></article>
+                    </div>
+                </section>
+            </div>
 
-                        @(isProcessing
-                            ? "Processing Demo Payment..."
-                            : "Upgrade with GCash Demo")
-
-                    </button>
-
-
-                    <small class="demo">
-                        Pilot payment simulation only.
-                        A production release would connect
-                        to an authorized payment gateway.
-                    </small>
-
+            <section class="comparison">
+                <div class="comparison-head">
+                    <div><span class="eyebrow">FREE VS PREMIUM</span><h2>Clear, focused benefits.</h2></div>
                 </div>
 
-
-                <div class="sc-premium-comparison">
-
-                    <span class="comparison-label">
-                        FREE VS PREMIUM
-                    </span>
-
-                    <h2>
-                        Simple limits.
-                        Clear upgrade.
-                    </h2>
-
-
-                    <div class="comparison-head">
-
-                        <span>
-                            Feature
-                        </span>
-
-                        <strong>
-                            Free
-                        </strong>
-
-                        <strong>
-                            Premium
-                        </strong>
-
-                    </div>
-
-
-                    <div class="comparison-row">
-
-                        <span>
-                            Pet profiles
-                        </span>
-
-                        <strong>
-                            1
-                        </strong>
-
-                        <strong class="premium">
-                            Unlimited
-                        </strong>
-
-                    </div>
-
-
-                    <div class="comparison-row">
-
-                        <span>
-                            Health records / pet
-                        </span>
-
-                        <strong>
-                            5
-                        </strong>
-
-                        <strong class="premium">
-                            Unlimited
-                        </strong>
-
-                    </div>
-
-
-                    <div class="comparison-row">
-
-                        <span>
-                            Digital Pet ID
-                        </span>
-
-                        <strong>
-                            Included
-                        </strong>
-
-                        <strong class="premium">
-                            Included
-                        </strong>
-
-                    </div>
-
-
-                    <div class="comparison-row">
-
-                        <span>
-                            Premium Pet ID themes
-                        </span>
-
-                        <strong>
-                            —
-                        </strong>
-
-                        <strong class="premium">
-                            Included
-                        </strong>
-
-                    </div>
-
-
-                    <div class="comparison-row">
-
-                        <span>
-                            Health-record export
-                        </span>
-
-                        <strong>
-                            —
-                        </strong>
-
-                        <strong class="premium">
-                            Included
-                        </strong>
-
-                    </div>
-
+                <div class="comparison-table">
+                    <div class="row head"><span>Feature</span><span>Free</span><span>Premium</span></div>
+                    <div class="row"><span>Digital Pet ID + QR</span><span>Included</span><span>Included</span></div>
+                    <div class="row"><span>Classic Pet ID Theme</span><span>Included</span><span>Included</span></div>
+                    <div class="row"><span>Premium Pet ID Themes</span><span>—</span><span>Included</span></div>
+                    <div class="row"><span>Private owner mobile on Premium card</span><span>—</span><span>Included</span></div>
+                    <div class="row"><span>Selected care summaries</span><span>Basic</span><span>Expanded</span></div>
+                    <div class="row"><span>Supported record export</span><span>—</span><span>Included</span></div>
                 </div>
-
             </section>
+
+            <div class="legal-note">
+                <i class="bi bi-shield-check"></i>
+                <span>
+                    Premium does not make private health or owner information public. Public QR views remain intentionally limited.
+                    See the <a href="/privacy">Data Privacy Notice</a>.
+                </span>
+            </div>
         }
-
     </main>
-
 </div>
 
-
 <style>
-
-    .sc-premium-page {
-        min-height: 100vh;
-        background: #FAF9F6;
-        color: #173D3D;
-    }
-
-
-        .sc-premium-page svg {
-            width: 1em;
-            height: 1em;
-            fill: currentColor;
-        }
-
-
-    .sc-premium-shell {
-        width: min(1000px,calc(100% - 40px));
-        margin: 0 auto;
-    }
-
-
-    .sc-premium-hero {
-        padding: 55px 0;
-        background: radial-gradient( circle at 85% 15%, rgba(243,210,122,.19), transparent 27% ), linear-gradient( 135deg, #173D3D, #102E2D );
-        color: #FFFFFF;
-    }
-
-
-        .sc-premium-hero .eyebrow {
-            color: #9ADBDD;
-            font-size: .62rem;
-            font-weight: 900;
-            letter-spacing: .12em;
-        }
-
-
-        .sc-premium-hero h1 {
-            max-width: 720px;
-            margin: 8px 0 0;
-            font-size: clamp(2.7rem,5vw,4.5rem);
-            line-height: .96;
-            letter-spacing: -.055em;
-            font-weight: 900;
-        }
-
-
-            .sc-premium-hero h1 em {
-                display: block;
-                color: #F3D27A;
-                font-family: Georgia,serif;
-                font-weight: 500;
-            }
-
-
-        .sc-premium-hero p {
-            margin: 17px 0 0;
-            color: rgba(255,255,255,.66);
-        }
-
-
-    .sc-premium-content {
-        padding: 30px 0 80px;
-    }
-
-
-    .sc-premium-loading {
-        padding: 70px;
-        text-align: center;
-        color: #7D8B87;
-    }
-
-
-    .sc-premium-grid {
-        display: grid;
-        grid-template-columns: minmax(260px,.65fr) minmax(0,1.35fr);
-        gap: 16px;
-    }
-
-
-    .sc-premium-offer,
-    .sc-premium-comparison,
-    .sc-premium-active,
-    .sc-premium-access {
-        border: 1px solid #DDE7E4;
-        border-radius: 20px;
-        background: #FFFFFF;
-        box-shadow: 0 12px 35px rgba(23,61,61,.055);
-    }
-
-
-    .sc-premium-offer {
-        padding: 25px;
-        background: linear-gradient( 145deg, #FFF9E7, #FFFFFF );
-    }
-
-
-    .offer-label,
-    .comparison-label,
-    .sc-premium-active > span,
-    .sc-premium-access > span {
-        color: #9A7419;
-        font-size: .58rem;
-        font-weight: 900;
-        letter-spacing: .1em;
-    }
-
-
-    .price {
-        margin-top: 14px;
-    }
-
-
-        .price strong,
-        .price span {
-            display: block;
-        }
-
-
-        .price strong {
-            color: #173D3D;
-            font-size: 3.4rem;
-            font-weight: 950;
-            letter-spacing: -.06em;
-        }
-
-
-        .price span {
-            margin-top: -7px;
-            color: #7A6B40;
-            font-size: .65rem;
-        }
-
-
-    .sc-premium-offer > p {
-        margin: 16px 0;
-        color: #746943;
-        font-size: .69rem;
-        line-height: 1.55;
-    }
-
-
-    .sc-premium-offer button {
-        width: 100%;
-        min-height: 48px;
-        border: 0;
-        border-radius: 10px;
-        background: #173D3D;
-        color: #FFFFFF;
-        font-size: .68rem;
-        font-weight: 900;
-    }
-
-
-        .sc-premium-offer button:disabled {
-            opacity: .65;
-        }
-
-
-    .demo {
-        display: block;
-        margin-top: 10px;
-        color: #8C805D;
-        font-size: .56rem;
-        line-height: 1.45;
-    }
-
-
-    .error {
-        margin-bottom: 10px;
-        padding: 10px;
-        border-radius: 8px;
-        background: #FFF1F1;
-        color: #963D3D;
-        font-size: .62rem;
-    }
-
-
-    .sc-premium-comparison {
-        padding: 25px;
-    }
-
-
-        .sc-premium-comparison h2 {
-            margin: 5px 0 18px;
-            color: #173D3D;
-            font-size: 1.25rem;
-            font-weight: 900;
-        }
-
-
-    .comparison-head,
-    .comparison-row {
-        display: grid;
-        grid-template-columns: minmax(0,1fr) 105px 105px;
-        gap: 8px;
-        align-items: center;
-    }
-
-
-    .comparison-head {
-        padding: 8px 10px;
-        color: #788782;
-        font-size: .57rem;
-        text-transform: uppercase;
-        letter-spacing: .05em;
-    }
-
-
-    .comparison-row {
-        min-height: 49px;
-        padding: 8px 10px;
-        border-top: 1px solid #EDF1EF;
-        font-size: .64rem;
-    }
-
-
-        .comparison-row > span {
-            color: #596A64;
-        }
-
-
-        .comparison-row strong,
-        .comparison-head strong {
-            text-align: center;
-        }
-
-
-        .comparison-row strong {
-            color: #66756F;
-            font-size: .61rem;
-        }
-
-
-            .comparison-row strong.premium {
-                color: #267C83;
-            }
-
-
-    .sc-premium-active,
-    .sc-premium-access {
-        max-width: 720px;
-        margin: 0 auto;
-        padding: 36px;
-        text-align: center;
-    }
-
-
-        .sc-premium-active .check {
-            width: 58px;
-            height: 58px;
-            margin: 0 auto 14px;
-            display: grid;
-            place-items: center;
-            border-radius: 17px;
-            background: #EAF5F5;
-            color: #2F9098;
-            font-size: 1.35rem;
-        }
-
-
-        .sc-premium-active h2,
-        .sc-premium-access h2 {
-            margin: 6px 0 0;
-            font-size: 1.5rem;
-            font-weight: 900;
-        }
-
-
-        .sc-premium-active > p,
-        .sc-premium-access > p {
-            max-width: 560px;
-            margin: 8px auto 0;
-            color: #74837E;
-            font-size: .7rem;
-            line-height: 1.55;
-        }
-
-
-    .sc-premium-reference {
-        margin-top: 20px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-    }
-
-
-        .sc-premium-reference > div {
-            padding: 12px;
-            border-radius: 10px;
-            background: #F6F9F8;
-        }
-
-
-        .sc-premium-reference span,
-        .sc-premium-reference strong {
-            display: block;
-        }
-
-
-        .sc-premium-reference span {
-            color: #8A9792;
-            font-size: .54rem;
-        }
-
-
-        .sc-premium-reference strong {
-            margin-top: 3px;
-            color: #173D3D;
-            font-size: .64rem;
-        }
-
-
-    .sc-premium-actions {
-        margin-top: 20px;
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-
-        .sc-premium-actions a,
-        .sc-premium-access a {
-            min-height: 42px;
-            padding: 0 14px;
-            display: inline-flex;
-            align-items: center;
-            border-radius: 9px;
-            font-size: .64rem;
-            font-weight: 850;
-            text-decoration: none;
-        }
-
-
-        .sc-premium-actions .primary,
-        .sc-premium-access a {
-            background: #2F9098;
-            color: #FFFFFF;
-        }
-
-
-        .sc-premium-actions .secondary {
-            border: 1px solid #D5E0DC;
-            color: #566761;
-        }
-
-
-    @@media (max-width: 700px) {
-
-        .sc-premium-grid {
-            grid-template-columns: 1fr;
-        }
-
-
-        .comparison-head,
-        .comparison-row {
-            grid-template-columns: minmax(0,1fr) 80px 80px;
-        }
-    }
-
+    .premium-page{min-height:100vh;background:#FAF9F6;color:#1E2D27}.premium-shell{width:min(1120px,calc(100% - 40px));margin:auto}.premium-hero{padding:56px 0;background:linear-gradient(145deg,#173D3D,#102E2D);color:#fff}.hero-inner{display:flex;align-items:end;justify-content:space-between;gap:28px}.eyebrow{color:#2F9098;font-size:.67rem;font-weight:900;letter-spacing:.12em}.eyebrow.light{color:#8FD9DA}.premium-hero h1{max-width:760px;margin:8px 0 12px;font-size:clamp(2.7rem,5vw,4.5rem);line-height:.98;font-weight:900;letter-spacing:-.055em}.premium-hero p{max-width:700px;margin:0;color:rgba(255,255,255,.68);line-height:1.68}.price-card{min-width:210px;padding:18px;border:1px solid rgba(255,255,255,.14);border-radius:18px;background:rgba(255,255,255,.07)}.price-card span,.price-card strong,.price-card small{display:block}.price-card span{color:#F3D27A;font-size:.63rem;font-weight:900;letter-spacing:.1em}.price-card strong{font-size:2.5rem;line-height:1;margin-top:8px}.price-card small{margin-top:4px;color:rgba(255,255,255,.62)}
+    .premium-content{padding:32px 0 60px}.premium-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:18px}.premium-panel,.comparison,.legal-note{border:1px solid #DDE7E4;border-radius:20px;background:#fff;box-shadow:0 12px 34px rgba(30,45,39,.05)}.premium-panel{padding:28px}.premium-panel h2,.comparison h2{margin:7px 0 10px;font-weight:900;letter-spacing:-.04em}.premium-panel p{color:#6A7973;line-height:1.65}.centered{max-width:720px;margin:auto;text-align:center}.loading{padding:80px;text-align:center;color:#74817C}.active-status{display:flex;gap:11px;align-items:center;margin:16px 0;padding:13px;border-radius:12px;background:#FFF7D9;color:#6A5510}.active-status i{font-size:1.5rem}.active-status strong,.active-status span{display:block}.active-status span{margin-top:2px;font-size:.7rem}
+    .primary-link{display:inline-flex;min-height:46px;margin-top:12px;padding:0 18px;align-items:center;justify-content:center;border-radius:10px;background:#2F9098;color:#fff;text-decoration:none;font-weight:900}.benefit-list{display:grid;gap:10px;margin-top:18px}.benefit-list article{display:flex;gap:12px;padding:12px;border:1px solid #E5ECE9;border-radius:12px}.benefit-list i{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;background:#EEF6F4;color:#267C83}.benefit-list strong,.benefit-list span{display:block}.benefit-list span{margin-top:3px;color:#7A8781;font-size:.7rem;line-height:1.5}
+    .comparison{margin-top:18px;padding:28px}.comparison-table{margin-top:18px;border:1px solid #E3EAE7;border-radius:14px;overflow:hidden}.comparison-table .row{display:grid;grid-template-columns:1.7fr .7fr .8fr;padding:12px 14px;border-top:1px solid #EDF1EF;font-size:.74rem}.comparison-table .row:first-child{border-top:0}.comparison-table .head{background:#F6F9F8;font-weight:900}.comparison-table .row span:nth-child(n+2){text-align:center}.legal-note{margin-top:18px;padding:16px;display:flex;gap:10px;color:#68766F;font-size:.71rem;line-height:1.55}.legal-note a{color:#267C83;font-weight:850}
+    @@media(max-width:800px){.hero-inner{align-items:start;flex-direction:column}.price-card{width:100%}.premium-grid{grid-template-columns:1fr}.comparison-table .row{grid-template-columns:1.3fr .6fr .7fr;font-size:.66rem}}
 </style>
 
-
 @code {
+    private bool ready;
+    private SubscriptionRecord? activeSubscription;
 
-    private bool isReady;
-
-    private bool isProcessing;
-
-    private string errorMessage =
-        string.Empty;
-
-
-    protected override async Task OnAfterRenderAsync(
-        bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender)
             return;
 
-
         await Auth.InitializeAsync();
 
+        if (Auth.CurrentUser is not null)
+        {
+            activeSubscription =
+                Commerce.GetActiveSubscription(
+                    CommerceService.PremiumType,
+                    userId: Auth.CurrentUser.Id);
+        }
 
-        isReady =
-            true;
-
-
-        await InvokeAsync(
-            StateHasChanged);
+        ready = true;
+        await InvokeAsync(StateHasChanged);
     }
-
-
-    private async Task PayNow()
-    {
-        if (Auth.CurrentUser is null ||
-            isProcessing)
-        {
-            return;
-        }
-
-
-        errorMessage =
-            string.Empty;
-
-
-        isProcessing =
-            true;
-
-
-        try
-        {
-            // Pilot payment experience.
-            await Task.Delay(
-                700);
-
-
-            var reference =
-                "PP-" +
-                Guid.NewGuid()
-                    .ToString("N")[..8]
-                    .ToUpperInvariant();
-
-
-            var activated =
-                Db.ActivatePremiumUpgrade(
-                    Auth.CurrentUser.Id,
-                    reference);
-
-
-            if (!activated)
-            {
-                errorMessage =
-                    "Premium could not be activated. It may already be active.";
-
-                return;
-            }
-
-
-            Notify.PremiumActivated(
-                Auth.CurrentUser.Id,
-                reference);
-
-
-            var refreshed =
-                Db.GetUserById(
-                    Auth.CurrentUser.Id);
-
-
-            if (refreshed is not null)
-            {
-                Auth.RefreshUser(
-                    refreshed);
-            }
-
-
-            await InvokeAsync(
-                StateHasChanged);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(
-                $"[Premium] {ex}");
-
-
-            errorMessage =
-                "Premium could not be activated right now. Please try again.";
-        }
-        finally
-        {
-            isProcessing =
-                false;
-        }
-    }
-
 }
