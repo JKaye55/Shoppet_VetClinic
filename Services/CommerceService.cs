@@ -343,13 +343,13 @@ namespace Shoppet_VetClinic.Services
                     using var premiumCmd = new SqlCommand(@"
                         UPDATE UserAccounts
                         SET IsPremium = 1,
-                            PremiumActivatedAt = @PaidAt,
+                            PremiumActivatedAt = @StartsAt,
                             PremiumReference = @Reference
                         WHERE Id = @UserId;",
                         conn,
                         tx);
 
-                    premiumCmd.Parameters.AddWithValue("@PaidAt", now);
+                    premiumCmd.Parameters.AddWithValue("@StartsAt", startsAt);
                     premiumCmd.Parameters.AddWithValue("@Reference", reference);
                     premiumCmd.Parameters.AddWithValue("@UserId", userId);
                     premiumCmd.ExecuteNonQuery();
