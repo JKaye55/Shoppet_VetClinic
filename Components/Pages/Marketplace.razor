@@ -7,6 +7,8 @@
 @inject FileStorageService FileStorage
 @inject AuthService Auth
 @inject NavigationManager Nav
+@inject MarketplaceCartService Cart
+@inject MarketplaceOrderService Orders
 
 <PageTitle>Pre-Loved Marketplace | ShoppetCare</PageTitle>
 
@@ -100,9 +102,9 @@
                         </strong>
 
                         <span>
-                            You can browse marketplace listings.
-                            Create an account or sign in to sell an
-                            item or contact a seller.
+                            You can browse listings and add available items to a temporary cart.
+                            Create an account or sign in to submit a purchase request,
+                            contact a seller, review completed purchases, and earn vouchers.
                         </span>
 
                     </div>
@@ -785,72 +787,92 @@
                                 }
                                 else
                                 {
-                                    <!-- =================================
-                                         SIGNED-IN BUYER
-                                         ================================= -->
-                                    @if (Auth.IsLoggedIn)
-                                    {
+                                    <div class="sc-marketplace-buyer-actions">
                                         <button type="button"
-                                                class="sc-marketplace-contact"
-                                                disabled="@IsSold(listing)"
-                                                @onclick="() => ToggleContact(listing.Id)">
-
-                                            <i class="bi bi-envelope"
-                                               aria-hidden="true"></i>
-
-                                            @(IsSold(listing)
-                                                ? "Item Sold"
-                                                : "Contact Seller")
-
+                                                class="sc-marketplace-cart"
+                                                disabled="@(!IsAvailable(listing) || Cart.Contains(listing.Id))"
+                                                @onclick="() => AddToCart(listing)">
+                                            <i class="bi bi-bag-plus" aria-hidden="true"></i>
+                                            @(Cart.Contains(listing.Id)
+                                                ? "In Cart"
+                                                : IsAvailable(listing) ? "Add to Cart" : "Unavailable")
                                         </button>
 
-
-                                        @if (contactListingId == listing.Id)
+                                        @if (Auth.IsLoggedIn)
                                         {
-                                            <div class="sc-marketplace-contact-box">
-
-                                                <span>
-                                                    Seller Contact
-                                                </span>
-
-                                                @if (!string.IsNullOrWhiteSpace(listing.SellerEmail))
-                                                {
-                                                    <a href="@($"mailto:{listing.SellerEmail}")">
-                                                        @listing.SellerEmail
-                                                    </a>
-                                                }
-                                                else
-                                                {
-                                                    <strong>
-                                                        Contact information unavailable.
-                                                    </strong>
-                                                }
-
-                                                <small>
-                                                    ShoppetCare only connects buyers
-                                                    and sellers. Arrange the transaction
-                                                    responsibly with the owner.
-                                                </small>
-
-                                            </div>
+                                            <button type="button"
+                                                    class="sc-marketplace-contact"
+                                                    disabled="@IsSold(listing)"
+                                                    @onclick="() => ToggleContact(listing.Id)">
+                                                <i class="bi bi-envelope" aria-hidden="true"></i>
+                                                @(IsSold(listing) ? "Item Sold" : "Contact Seller")
+                                            </button>
                                         }
-                                    }
-                                    else
+                                        else
+                                        {
+                                            <button type="button"
+                                                    class="sc-marketplace-contact locked"
+                                                    @onclick="GoToLogin">
+                                                <i class="bi bi-lock-fill" aria-hidden="true"></i>
+                                                Sign in to Contact Seller
+                                            </button>
+                                        }
+                                    </div>
+
+                                    @if (Auth.IsLoggedIn && contactListingId == listing.Id)
                                     {
-                                        <!-- =============================
-                                             GUEST
-                                             ============================= -->
+                                        <div class="sc-marketplace-contact-box">
+                                            <span>Seller Contact</span>
+                                            @if (!string.IsNullOrWhiteSpace(listing.SellerEmail))
+                                            {
+                                                <a href="@($"mailto:{listing.SellerEmail}")">@listing.SellerEmail</a>
+                                            }
+                                            else
+                                            {
+                                                <strong>Contact information unavailable.</strong>
+                                            }
+                                            <small>
+                                                ShoppetCare provides a demo purchase-request workflow.
+                                                Arrange the actual item exchange responsibly with the seller.
+                                            </small>
+                                        </div>
+                                    }
 
-                                        <button type="button"
-                                                class="sc-marketplace-contact locked"
-                                                @onclick="GoToLogin">
+                                    @{
+                                        var reviews = GetReviews(listing.Id);
+                                    }
+                                    <div class="sc-marketplace-rating">
+                                        <strong>@GetRatingText(reviews)</strong>
+                                        <span>@(reviews.Count == 0 ? "No verified reviews yet" : $"{reviews.Count} verified review{(reviews.Count == 1 ? "" : "s")}")</span>
+                                        @if (reviews.Count > 0)
+                                        {
+                                            <button type="button" @onclick="() => ToggleReviews(listing.Id)">
+                                                @(reviewListingId == listing.Id ? "Hide Reviews" : "Read Reviews")
+                                            </button>
+                                        }
+                                    </div>
 
-                                            <i class="bi bi-lock-fill"
-                                               aria-hidden="true"></i>
-
-                                            Sign in to Contact Seller
-
-                                        </button>
+                                    @if (reviewListingId == listing.Id)
+                                    {
+                                        <div class="sc-marketplace-reviews">
+                                            @foreach (var review in reviews)
+                                            {
+                                                <article>
+                                                    <div>
+                                                        <strong>@new string('★', review.Rating)@new string('☆', 5 - review.Rating)</strong>
+                                                        <span>@review.BuyerName · Verified Purchase</span>
+                                                    </div>
+                                                    @if (!string.IsNullOrWhiteSpace(review.Comment))
+                                                    {
+                                                        <p>@review.Comment</p>
+                                                    }
+                                                    @if (review.RewardIssued)
+                                                    {
+                                                        <small>Review reward received</small>
+                                                    }
+                                                </article>
+                                            }
+                                        </div>
                                     }
                                 }
 
@@ -1659,6 +1681,88 @@
 
 
     /* =========================================================
+           BUYER ACTIONS / REVIEWS
+           ========================================================= */
+
+    .sc-marketplace-buyer-actions {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+    }
+
+    .sc-marketplace-buyer-actions .sc-marketplace-contact {
+        margin-top: 0;
+    }
+
+    .sc-marketplace-cart {
+        min-height: 42px;
+        border: 1px solid #2F9098;
+        border-radius: 9px;
+        background: #FFFFFF;
+        color: #267C83;
+        font-size: .7rem;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+    .sc-marketplace-cart:disabled {
+        opacity: .55;
+        cursor: not-allowed;
+    }
+
+    .sc-marketplace-rating {
+        margin-top: 11px;
+        padding-top: 10px;
+        border-top: 1px solid #EDF1EF;
+    }
+
+    .sc-marketplace-rating strong {
+        color: #D2A62E;
+        font-size: .75rem;
+    }
+
+    .sc-marketplace-rating span {
+        margin-left: 6px;
+        color: #81908B;
+        font-size: .62rem;
+    }
+
+    .sc-marketplace-rating button {
+        margin-left: 6px;
+        border: 0;
+        background: transparent;
+        color: #267C83;
+        font-size: .62rem;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+    .sc-marketplace-reviews {
+        margin-top: 8px;
+        padding: 10px;
+        border-radius: 9px;
+        background: #FAFCFB;
+    }
+
+    .sc-marketplace-reviews article + article {
+        margin-top: 9px;
+        padding-top: 9px;
+        border-top: 1px solid #E8EEEC;
+    }
+
+    .sc-marketplace-reviews strong,
+    .sc-marketplace-reviews span,
+    .sc-marketplace-reviews small {
+        display: block;
+    }
+
+    .sc-marketplace-reviews strong { color: #D2A62E; font-size: .7rem; }
+    .sc-marketplace-reviews span { color: #6D7D78; font-size: .62rem; }
+    .sc-marketplace-reviews p { margin: 5px 0; color: #596A64; font-size: .68rem; line-height: 1.45; }
+    .sc-marketplace-reviews small { color: #267C83; font-size: .58rem; font-weight: 800; }
+
+    /* =========================================================
            CONTACT SELLER
            ========================================================= */
 
@@ -1961,6 +2065,8 @@
     private bool isError;
 
     private int? contactListingId;
+    private int? reviewListingId;
+    private readonly Dictionary<int, List<MarketplaceReview>> reviewCache = new();
 
 
     // =========================================================
@@ -2726,6 +2832,58 @@
             ShowError(
                 "The listing could not be deleted.");
         }
+    }
+
+
+    // =========================================================
+    // CART / REVIEWS / CONTACT SELLER
+    // =========================================================
+
+    private void AddToCart(MarketplaceListing listing)
+    {
+        if (IsOwnListing(listing))
+        {
+            ShowError("You cannot add your own listing to the cart.");
+            return;
+        }
+
+        if (Cart.Add(listing))
+        {
+            statusMessage = Auth.IsGuest
+                ? "Added to your guest cart. Sign in before checkout."
+                : "Item added to cart.";
+            isError = false;
+        }
+    }
+
+    private List<MarketplaceReview> GetReviews(int listingId)
+    {
+        if (!reviewCache.TryGetValue(listingId, out var reviews))
+        {
+            try
+            {
+                reviews = Orders.GetListingReviews(listingId);
+            }
+            catch
+            {
+                reviews = new List<MarketplaceReview>();
+            }
+
+            reviewCache[listingId] = reviews;
+        }
+
+        return reviews;
+    }
+
+    private static string GetRatingText(List<MarketplaceReview> reviews)
+    {
+        if (reviews.Count == 0) return "New";
+        return $"★ {reviews.Average(x => x.Rating):0.0}";
+    }
+
+    private void ToggleReviews(int listingId)
+    {
+        reviewListingId = reviewListingId == listingId ? null : listingId;
     }
 
 
