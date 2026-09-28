@@ -1,0 +1,77 @@
+@page "/admin/users"
+@rendermode InteractiveServer
+
+@using Shoppet_VetClinic.Components.Shared
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+
+@inject AuthService Auth
+@inject DatabaseService Db
+
+<PageTitle>Admin Users | ShoppetCare</PageTitle>
+
+@if (!ready)
+{
+    <div class="admin-state">Loading users...</div>
+}
+else if (!Auth.IsAdmin)
+{
+    <div class="access">Administrator access required.</div>
+}
+else
+{
+    <AdminNav />
+    <main class="admin-list-shell">
+        <div class="page-head"><div><span>USERS</span><h1>Account Directory</h1><p>Read-only account overview for the finals administration workflow.</p></div><input type="search" @bind="search" @bind:event="oninput" placeholder="Search users..." /></div>
+        <div class="table-card">
+            <table><thead><tr><th>User</th><th>Role</th><th>Mobile</th><th>Clinic</th><th>Premium</th><th>Created</th></tr></thead>
+                <tbody>
+                @foreach(var user in Filtered)
+                {
+                    <tr>
+                        <td><strong>@user.FullName</strong><span>@user.Email</span></td>
+                        <td>@user.Role</td>
+                        <td>@(string.IsNullOrWhiteSpace(user.MobileNumber) ? "—" : user.MobileNumber)</td>
+                        <td>@(user.ClinicId?.ToString() ?? "—")</td>
+                        <td>@(IsPremium(user) ? "Active" : "Free")</td>
+                        <td>@user.CreatedAt.ToString("MMM d, yyyy")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </main>
+}
+
+<style>
+    .admin-list-shell{width:min(1240px,calc(100% - 36px));margin:auto;padding:32px 0 60px;color:#1E2D27}.page-head{display:flex;justify-content:space-between;gap:20px;align-items:end}.page-head>div>span{color:#2F9098;font-size:.65rem;font-weight:900;letter-spacing:.12em}.page-head h1{margin:5px 0 4px;font-weight:900}.page-head p{margin:0;color:#77847F}.page-head input{min-width:280px;min-height:42px;padding:0 12px;border:1px solid #CCD9D5;border-radius:10px}.table-card{margin-top:20px;overflow:auto;border:1px solid #DEE6E3;border-radius:16px;background:#fff}table{width:100%;border-collapse:collapse;min-width:820px}th,td{padding:12px 14px;border-bottom:1px solid #EDF1EF;text-align:left;font-size:.7rem}th{background:#F6F9F8;color:#68766F;font-size:.62rem;text-transform:uppercase}td strong,td span{display:block}td span{margin-top:2px;color:#89948F;font-size:.61rem}.admin-state,.access{padding:80px;text-align:center;color:#6F7D77}@@media(max-width:650px){.page-head{align-items:start;flex-direction:column}.page-head input{width:100%;min-width:0}}
+</style>
+
+@code {
+    private bool ready;
+    private string search = string.Empty;
+    private List<UserAccount> users = new();
+
+    private List<UserAccount> Filtered =>
+        users.Where(u =>
+            string.IsNullOrWhiteSpace(search) ||
+            u.FullName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+            u.Email.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+            u.Role.Contains(search, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(u => u.FullName)
+        .ToList();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await Auth.InitializeAsync();
+        if (Auth.IsAdmin) users = Db.GetAllUsers();
+        ready = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private static bool IsPremium(UserAccount user) =>
+        user.IsPremium &&
+        user.PremiumActivatedAt.HasValue &&
+        user.PremiumActivatedAt.Value.AddMonths(3) >= DateTime.Now;
+}

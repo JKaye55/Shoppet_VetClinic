@@ -1,116 +1,180 @@
-﻿@page "/admin/clinics"
+@page "/admin/clinics"
+@rendermode InteractiveServer
+
+@using Shoppet_VetClinic.Components.Shared
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+
 @inject AuthService Auth
 @inject DatabaseService Db
+@inject CommerceService Commerce
 @inject NotificationService Notify
 
-<PageTitle>Admin — Clinics</PageTitle>
+<PageTitle>Admin Clinics | ShoppetCare</PageTitle>
 
-<div class="container mt-4">
+@if (!ready)
+{
+    <div class="admin-state">Loading clinic management...</div>
+}
+else if (!Auth.IsAdmin || Auth.CurrentUser is null)
+{
+    <div class="admin-state">Administrator access required.</div>
+}
+else
+{
+    <AdminNav />
+    <main class="admin-shell">
+        <div class="page-head">
+            <div><span>CLINIC MANAGEMENT</span><h1>Directory, listing requests &amp; claims</h1><p>A single review center for the final clinic workflow.</p></div>
+        </div>
 
-    @if (!Auth.IsAdmin)
-    {
-        <div class="alert alert-danger">Admin access required.</div>
-    }
-    else
-    {
-        <h2 class="mb-3"><i class="bi bi-hospital"></i> Manage Clinics</h2>
+        @if(!string.IsNullOrWhiteSpace(message)){<div class="message @(isError ? "error" : "")">@message</div>}
 
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Clinic</th>
-                    <th>Address</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var c in clinics)
+        <div class="tabs">
+            <button class="@(tab == "directory" ? "active" : "")" @onclick='() => tab = "directory"'>Directory (@clinics.Count)</button>
+            <button class="@(tab == "listings" ? "active" : "")" @onclick='() => tab = "listings"'>Listing Requests (@listingRequests.Count(x => x.Status == "Pending"))</button>
+            <button class="@(tab == "claims" ? "active" : "")" @onclick='() => tab = "claims"'>Claim Requests (@claimRequests.Count(x => x.Status == "Pending"))</button>
+        </div>
+
+        @if(tab == "directory")
+        {
+            <div class="table-card">
+                <table><thead><tr><th>Clinic</th><th>Location</th><th>Claimed</th><th>Verified</th><th>Services</th></tr></thead>
+                <tbody>
+                @foreach(var clinic in clinics)
                 {
                     <tr>
-                        <td>
-                            <strong>@c.ClinicName</strong>
-                            @if (!string.IsNullOrEmpty(c.Branch))
-                            {
-                                <span class="text-muted"> — @c.Branch</span>
-                            }
-                        </td>
-                        <td>@c.Address</td>
-                        <td>
-                            @if (c.IsVerified)
-                            {
-                                <span class="badge bg-success">
-                                    <i class="bi bi-check-circle-fill"></i> Verified
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">Unverified</span>
-                            }
-                        </td>
-                        <td>
-                            @if (c.IsVerified)
-                            {
-                                <button class="btn btn-sm btn-outline-danger"
-                                        @onclick="() => Unverify(c.Id)">
-                                    Unverify
-                                </button>
-                            }
-                            else
-                            {
-                                <button class="btn btn-sm btn-success"
-                                        @onclick="() => Verify(c.Id)">
-                                    <i class="bi bi-check-circle-fill"></i> Verify
-                                </button>
-                            }
-                        </td>
+                        <td><strong>@clinic.ClinicName</strong><span>@clinic.Branch</span></td>
+                        <td>@clinic.Address</td>
+                        <td>@(clinic.IsClaimed ? "Claimed" : "Unclaimed")</td>
+                        <td>@(clinic.IsVerified ? "Active" : "Inactive")</td>
+                        <td>@Short(clinic.ServiceCapabilities)</td>
                     </tr>
                 }
-            </tbody>
-        </table>
-
-        @if (!string.IsNullOrEmpty(message))
-        {
-            <div class="alert alert-info mt-3">@message</div>
+                </tbody></table>
+            </div>
         }
-    }
-
-</div>
-
-@code {
-    List<ClinicTenant> clinics = new();
-    string message = "";
-
-    protected override async Task OnParametersSetAsync()
-    {
-        await Auth.InitializeAsync();
-        clinics = Db.GetAllClinics();
-    }
-
-    void Verify(int clinicId)
-    {
-        var reference = "BV-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
-        var ok = Db.VerifyClinic(clinicId, reference, 200m);
-
-        if (ok)
+        else if(tab == "listings")
         {
-            // 🔔 Notify clinic staff
-            Notify.ClinicVerified(clinicId);
-
-            message = $"Clinic verified. Reference: {reference}";
+            <div class="request-list">
+                @foreach(var request in listingRequests)
+                {
+                    <article>
+                        <div class="request-head"><div><span>@request.Status</span><h2>@request.ClinicName</h2><small>Submitted @request.CreatedAt.ToString("MMM d, yyyy") by @request.RequesterName</small></div></div>
+                        <div class="request-grid"><div><span>Representative</span><strong>@request.RepresentativeName · @request.RelationshipToClinic</strong></div><div><span>Contact</span><strong>@request.ContactNumber · @request.ClinicEmail</strong></div><div class="wide"><span>Address</span><strong>@request.Address, @request.City</strong></div><div class="wide"><span>Services</span><strong>@request.ServicesOffered</strong></div>@if(!string.IsNullOrWhiteSpace(request.Message)){<div class="wide"><span>Message</span><strong>@request.Message</strong></div>}</div>
+                        @if(request.Status == "Pending")
+                        {
+                            <div class="review-row"><input placeholder="Optional review note" @bind="reviewNote" /><button class="approve" @onclick="() => ApproveListing(request)">Approve & Add Clinic</button><button class="reject" @onclick="() => RejectListing(request)">Reject</button></div>
+                        }
+                        else if(!string.IsNullOrWhiteSpace(request.ReviewNote))
+                        {
+                            <div class="review-note">Review note: @request.ReviewNote</div>
+                        }
+                    </article>
+                }
+            </div>
         }
         else
         {
-            message = "Could not verify clinic.";
+            <div class="request-list">
+                @foreach(var request in claimRequests)
+                {
+                    <article>
+                        <div class="request-head"><div><span>@request.Status</span><h2>@request.ClinicName</h2><small>Submitted @request.CreatedAt.ToString("MMM d, yyyy") by @request.RequesterName</small></div></div>
+                        <div class="request-grid"><div><span>Representative</span><strong>@request.RepresentativeName · @request.RelationshipToClinic</strong></div><div><span>Contact</span><strong>@request.ContactNumber</strong></div><div class="wide"><span>Supporting details</span><strong>@request.SupportingDetails</strong></div></div>
+                        @if(request.Status == "Pending")
+                        {
+                            <div class="review-row"><input placeholder="Optional review note" @bind="reviewNote" /><button class="approve" @onclick="() => ApproveClaim(request)">Approve Claim</button><button class="reject" @onclick="() => RejectClaim(request)">Reject</button></div>
+                        }
+                        else if(!string.IsNullOrWhiteSpace(request.ReviewNote))
+                        {
+                            <div class="review-note">Review note: @request.ReviewNote</div>
+                        }
+                    </article>
+                }
+            </div>
         }
+    </main>
+}
 
-        clinics = Db.GetAllClinics();
-    }
+<style>
+    .admin-shell{width:min(1240px,calc(100% - 36px));margin:auto;padding:32px 0 60px;color:#1E2D27}.page-head>div>span{color:#2F9098;font-size:.64rem;font-weight:900;letter-spacing:.1em}.page-head h1{margin:5px 0}.page-head p{margin:0;color:#75827D}.tabs{display:flex;gap:6px;margin-top:20px;overflow-x:auto}.tabs button{min-height:42px;padding:0 14px;border:1px solid #D6E1DD;border-radius:10px;background:#fff;color:#65736D;font-size:.68rem;font-weight:850;white-space:nowrap}.tabs button.active{background:#173D3D;color:#fff;border-color:#173D3D}.table-card{margin-top:14px;overflow:auto;border:1px solid #DEE6E3;border-radius:15px;background:#fff}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:12px 14px;border-bottom:1px solid #EDF1EF;text-align:left;font-size:.69rem}th{background:#F6F9F8;color:#6C7974;font-size:.61rem;text-transform:uppercase}td strong,td span{display:block}td span{margin-top:2px;color:#8B9691;font-size:.61rem}
+    .request-list{display:grid;gap:11px;margin-top:14px}.request-list article{padding:20px;border:1px solid #DEE6E3;border-radius:15px;background:#fff}.request-head span{display:inline-flex;padding:4px 7px;border-radius:999px;background:#F1F4F3;color:#66736E;font-size:.57rem;font-weight:900}.request-head h2{margin:7px 0 3px;font-size:1.05rem}.request-head small{color:#8A9590}.request-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}.request-grid div{padding:10px;border:1px solid #E7ECEA;border-radius:9px;background:#FBFCFB}.request-grid .wide{grid-column:1/-1}.request-grid span,.request-grid strong{display:block}.request-grid span{color:#89958F;font-size:.58rem;text-transform:uppercase;font-weight:800}.request-grid strong{margin-top:3px;font-size:.69rem;font-weight:750}.review-row{display:flex;gap:7px;margin-top:13px}.review-row input{flex:1;min-height:38px;padding:0 10px;border:1px solid #CFDAD6;border-radius:9px}.review-row button{padding:0 11px;border-radius:9px;font-size:.64rem;font-weight:850}.approve{border:1px solid #2F9098;background:#2F9098;color:#fff}.reject{border:1px solid #F0B6B6;background:#FFF1F1;color:#963232}.review-note{margin-top:12px;color:#76837D;font-size:.67rem}.message{margin-top:15px;padding:11px;border:1px solid #C6E1D1;border-radius:10px;background:#EEF8F2;color:#2E6B48;font-size:.7rem}.message.error{border-color:#F0BBBB;background:#FFF1F1;color:#963232}.admin-state{padding:80px;text-align:center;color:#6F7D77}@@media(max-width:700px){.request-grid{grid-template-columns:1fr}.request-grid .wide{grid-column:auto}.review-row{flex-direction:column}}
+</style>
 
-    void Unverify(int clinicId)
+@code {
+    private bool ready;
+    private string tab = "directory";
+    private string reviewNote = string.Empty;
+    private string message = string.Empty;
+    private bool isError;
+    private List<ClinicTenant> clinics = new();
+    private List<ClinicListingRequest> listingRequests = new();
+    private List<ClinicClaimRequest> claimRequests = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var ok = Db.UnverifyClinic(clinicId);
-        message = ok ? "Clinic unverified." : "Could not unverify clinic.";
-        clinics = Db.GetAllClinics();
+        if (!firstRender) return;
+        await Auth.InitializeAsync();
+        if (Auth.IsAdmin) Load();
+        ready = true;
+        await InvokeAsync(StateHasChanged);
     }
+
+    private void Load()
+    {
+        clinics = Db.GetAllClinics();
+        listingRequests = Commerce.GetClinicListingRequests();
+        claimRequests = Commerce.GetClinicClaimRequests();
+    }
+
+    private void ApproveListing(ClinicListingRequest request)
+    {
+        try
+        {
+            var clinicId = Commerce.ApproveClinicListingRequest(request.Id, Auth.CurrentUser!.Id, reviewNote);
+            Notify.ClinicListingApproved(request.UserId, clinicId);
+            ShowSuccess($"Added {request.ClinicName} to the directory.");
+            reviewNote = string.Empty;
+            Load();
+        }
+        catch(Exception ex){ ShowError(ex.Message); }
+    }
+
+    private void RejectListing(ClinicListingRequest request)
+    {
+        if (Commerce.RejectClinicListingRequest(request.Id, Auth.CurrentUser!.Id, reviewNote))
+        {
+            Notify.ClinicRequestRejected(request.UserId, "Clinic listing");
+            ShowSuccess($"Rejected listing request for {request.ClinicName}.");
+            reviewNote = string.Empty;
+            Load();
+        }
+    }
+
+    private void ApproveClaim(ClinicClaimRequest request)
+    {
+        if (Commerce.ApproveClinicClaimRequest(request.Id, Auth.CurrentUser!.Id, reviewNote))
+        {
+            Notify.ClinicClaimApproved(request.UserId, request.ClinicId);
+            ShowSuccess($"Approved clinic claim for {request.ClinicName}.");
+            reviewNote = string.Empty;
+            Load();
+        }
+    }
+
+    private void RejectClaim(ClinicClaimRequest request)
+    {
+        if (Commerce.RejectClinicClaimRequest(request.Id, Auth.CurrentUser!.Id, reviewNote))
+        {
+            Notify.ClinicRequestRejected(request.UserId, "Clinic claim");
+            ShowSuccess($"Rejected clinic claim for {request.ClinicName}.");
+            reviewNote = string.Empty;
+            Load();
+        }
+    }
+
+    private void ShowSuccess(string value){ message=value; isError=false; }
+    private void ShowError(string value){ message=value; isError=true; }
+    private static string Short(string? value) => string.IsNullOrWhiteSpace(value) ? "—" : value.Length <= 90 ? value : value[..90] + "...";
 }

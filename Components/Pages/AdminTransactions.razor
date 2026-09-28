@@ -1,76 +1,100 @@
-﻿@page "/admin/transactions"
+@page "/admin/transactions"
+@rendermode InteractiveServer
+
+@using Shoppet_VetClinic.Components.Shared
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+
 @inject AuthService Auth
 @inject DatabaseService Db
 
-<PageTitle>Admin — Transactions</PageTitle>
+<PageTitle>Admin Transactions | ShoppetCare</PageTitle>
 
-<div class="container mt-4">
+@if (!ready)
+{
+    <div class="admin-state">Loading transactions...</div>
+}
+else if (!Auth.IsAdmin)
+{
+    <div class="admin-state">Administrator access required.</div>
+}
+else
+{
+    <AdminNav />
+    <main class="admin-shell">
+        <div class="page-head"><div><span>TRANSACTION AUDIT</span><h1>Mock payment transactions</h1><p>Premium, Verified Seller, and Verified Clinic project payments.</p></div></div>
 
-    @if (!Auth.IsAdmin)
-    {
-        <div class="alert alert-danger">Admin access required.</div>
-    }
-    else
-    {
-        <h2 class="mb-3">💰 Transactions</h2>
+        <section class="summary">
+            <div><span>Paid Transactions</span><strong>@transactions.Count(x => x.Status == "Paid")</strong></div>
+            <div><span>Mock Revenue</span><strong>₱@total.ToString("N2")</strong></div>
+        </section>
 
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <div class="card text-bg-success">
-                    <div class="card-body">
-                        <small>Total Revenue</small>
-                        <h3>₱ @total.ToString("N2")</h3>
-                    </div>
-                </div>
-            </div>
+        <div class="filters">
+            <select @bind="typeFilter"><option value="">All types</option><option value="PremiumSubscription">Premium</option><option value="SellerSubscription">Verified Seller</option><option value="ClinicSubscription">Verified Clinic</option></select>
+            <input type="search" @bind="search" @bind:event="oninput" placeholder="Search reference or account..." />
         </div>
 
-        <table class="table table-sm table-hover">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Reference</th>
-                </tr>
-            </thead>
+        <div class="table-card">
+            <table><thead><tr><th>Reference</th><th>Type</th><th>Account / Clinic</th><th>Method</th><th>Status</th><th>Amount</th><th>Paid At</th></tr></thead>
             <tbody>
-                @foreach (var t in transactions)
-                {
-                    <tr>
-                        <td>@t.PaidAt.ToString("MMM d, yyyy HH:mm")</td>
-                        <td>
-                            @if (t.Type == "PremiumUpgrade")
-                            {
-                                <span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i> Premium</span>
-                            }
-                            else if (t.Type == "BusinessVerification")
-                            {
-                                <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Verification</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">@t.Type</span>
-                            }
-                        </td>
-                        <td>₱ @t.Amount.ToString("N2")</td>
-                        <td><code>@t.Reference</code></td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
+            @foreach(var t in Filtered)
+            {
+                <tr><td><strong>@t.Reference</strong></td><td>@FriendlyType(t.Type)</td><td>@Subject(t)</td><td>@Display(t.PaymentMethod)</td><td>@t.Status</td><td>₱@t.Amount.ToString("N2")</td><td>@t.PaidAt.ToString("MMM d, yyyy h:mm tt")</td></tr>
+            }
+            </tbody></table>
+        </div>
 
-</div>
+        <div class="audit-note"><i class="bi bi-info-circle-fill"></i><span>These are academic mock-payment records. No real GCash, Maya, bank, or card transaction is processed by the current project.</span></div>
+    </main>
+}
+
+<style>
+    .admin-shell{width:min(1240px,calc(100% - 36px));margin:auto;padding:32px 0 60px;color:#1E2D27}.page-head>div>span,.summary span{color:#2F9098;font-size:.64rem;font-weight:900;letter-spacing:.1em}.page-head h1{margin:5px 0}.page-head p{margin:0;color:#75827D}.summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:20px}.summary div{padding:16px;border:1px solid #DEE6E3;border-radius:14px;background:#fff}.summary strong{display:block;margin-top:5px;font-size:1.35rem}.filters{display:flex;gap:8px;margin-top:14px}.filters select,.filters input{min-height:42px;padding:0 11px;border:1px solid #CFDAD6;border-radius:9px;background:#fff}.filters input{flex:1}.table-card{margin-top:12px;overflow:auto;border:1px solid #DEE6E3;border-radius:15px;background:#fff}table{width:100%;border-collapse:collapse;min-width:940px}th,td{padding:12px 13px;border-bottom:1px solid #EDF1EF;text-align:left;font-size:.68rem}th{background:#F6F9F8;color:#6B7873;font-size:.59rem;text-transform:uppercase}.audit-note{display:flex;gap:8px;margin-top:14px;padding:12px;border-radius:10px;background:#FFF7D9;color:#715A13;font-size:.67rem;line-height:1.5}.admin-state{padding:80px;text-align:center;color:#6F7D77}@@media(max-width:650px){.summary{grid-template-columns:1fr}.filters{flex-direction:column}}
+</style>
 
 @code {
-    List<Transaction> transactions = new();
-    decimal total;
+    private bool ready;
+    private string typeFilter = string.Empty;
+    private string search = string.Empty;
+    private List<Transaction> transactions = new();
+    private decimal total;
 
-    protected override async Task OnParametersSetAsync()
+    private List<Transaction> Filtered =>
+        transactions.Where(t =>
+            (string.IsNullOrWhiteSpace(typeFilter) || t.Type == typeFilter) &&
+            (string.IsNullOrWhiteSpace(search) ||
+             t.Reference.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+             t.UserName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+             t.ClinicName.Contains(search, StringComparison.OrdinalIgnoreCase)))
+        .ToList();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender) return;
         await Auth.InitializeAsync();
-        transactions = Db.GetAllTransactions();
-        total = Db.GetTotalRevenue();
+        if (Auth.IsAdmin)
+        {
+            transactions = Db.GetAllTransactions();
+            total = Db.GetTotalRevenue();
+        }
+        ready = true;
+        await InvokeAsync(StateHasChanged);
     }
+
+    private static string FriendlyType(string value) => value switch
+    {
+        CommerceService.PremiumType => "Premium",
+        CommerceService.SellerType => "Verified Seller",
+        CommerceService.ClinicType => "Verified Clinic",
+        "PremiumUpgrade" => "Premium (Legacy)",
+        "BusinessVerification" => "Clinic Verification (Legacy)",
+        _ => value
+    };
+
+    private static string Subject(Transaction t) =>
+        !string.IsNullOrWhiteSpace(t.ClinicName) ? t.ClinicName :
+        !string.IsNullOrWhiteSpace(t.UserName) ? t.UserName :
+        t.UserId.HasValue ? $"User #{t.UserId}" : "—";
+
+    private static string Display(string? value) => string.IsNullOrWhiteSpace(value) ? "—" : value;
 }

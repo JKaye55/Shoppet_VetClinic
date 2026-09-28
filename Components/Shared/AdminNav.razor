@@ -1,0 +1,42 @@
+@namespace Shoppet_VetClinic.Components.Shared
+@inject NavigationManager Nav
+
+<nav class="sc-admin-nav">
+    <div class="sc-admin-nav-inner">
+        <a href="/admin-portal" class="admin-brand">
+            <img src="/shoppetlogo.png" alt="ShoppetCare" />
+            <span><strong>ShoppetCare Admin</strong><small>Platform Operations</small></span>
+        </a>
+
+        <div class="admin-links">
+            <a class="@LinkClass("/admin-portal")" href="/admin-portal">Dashboard</a>
+            <a class="@LinkClass("/admin/users")" href="/admin/users">Users</a>
+            <a class="@LinkClass("/admin/clinics")" href="/admin/clinics">Clinics</a>
+            <a class="@LinkClass("/admin/sellers")" href="/admin/sellers">Sellers</a>
+            <a class="@LinkClass("/admin/marketplace")" href="/admin/marketplace">Marketplace</a>
+            <a class="@LinkClass("/admin/community")" href="/admin/community">Community</a>
+            <a class="@LinkClass("/admin/announcements")" href="/admin/announcements">Announcements</a>
+            <a class="@LinkClass("/admin/transactions")" href="/admin/transactions">Transactions</a>
+        </div>
+    </div>
+</nav>
+
+<style>
+    .sc-admin-nav{position:sticky;top:0;z-index:900;border-bottom:1px solid #DDE7E4;background:rgba(255,255,255,.97);backdrop-filter:blur(14px)}
+    .sc-admin-nav-inner{width:min(1280px,calc(100% - 32px));min-height:72px;margin:auto;display:flex;align-items:center;gap:24px}
+    .admin-brand{display:flex;align-items:center;gap:9px;color:#173D3D;text-decoration:none;flex:0 0 auto}.admin-brand img{width:38px;height:38px;object-fit:contain}.admin-brand span,.admin-brand strong,.admin-brand small{display:block}.admin-brand strong{font-size:.82rem}.admin-brand small{margin-top:2px;color:#81908A;font-size:.58rem}
+    .admin-links{display:flex;align-items:center;gap:3px;overflow-x:auto}.admin-links a{min-height:40px;padding:0 10px;display:flex;align-items:center;border-radius:9px;color:#64726C;text-decoration:none;font-size:.68rem;font-weight:800;white-space:nowrap}.admin-links a:hover,.admin-links a.active{background:#EEF6F4;color:#267C83}
+    @@media(max-width:700px){.sc-admin-nav-inner{align-items:flex-start;flex-direction:column;padding:10px 0;gap:8px}.admin-links{width:100%}}
+</style>
+
+@code {
+    private string LinkClass(string route)
+    {
+        var path = "/" + Nav.ToBaseRelativePath(Nav.Uri).Split('?', '#')[0].TrimStart('/');
+
+        if (route == "/admin-portal")
+            return string.Equals(path, route, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
+
+        return path.StartsWith(route, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
+    }
+}

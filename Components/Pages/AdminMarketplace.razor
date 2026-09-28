@@ -1,0 +1,89 @@
+@page "/admin/marketplace"
+@rendermode InteractiveServer
+
+@using Shoppet_VetClinic.Components.Shared
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+
+@inject AuthService Auth
+@inject MarketplaceService Marketplace
+@inject FileStorageService FileStorage
+
+<PageTitle>Admin Marketplace | ShoppetCare</PageTitle>
+
+@if (!ready)
+{
+    <div class="admin-state">Loading marketplace...</div>
+}
+else if (!Auth.IsAdmin)
+{
+    <div class="admin-state">Administrator access required.</div>
+}
+else
+{
+    <AdminNav />
+    <main class="admin-shell">
+        <div class="page-head"><div><span>MARKETPLACE MODERATION</span><h1>Pre-loved listings</h1><p>Review marketplace content and remove inappropriate listings.</p></div><input type="search" @bind="search" @bind:event="oninput" placeholder="Search listings..." /></div>
+
+        @if(!string.IsNullOrWhiteSpace(message)){<div class="message">@message</div>}
+
+        <div class="listing-grid">
+            @foreach(var item in Filtered)
+            {
+                <article>
+                    <div class="image-box">
+                        @if(!string.IsNullOrWhiteSpace(item.ImageUrl)){<img src="@item.ImageUrl" alt="@item.Title" />}
+                        else{<i class="bi bi-image"></i>}
+                    </div>
+                    <div class="listing-body">
+                        <div class="line"><span>@item.Category · @item.ItemCondition</span><strong>₱@item.Price.ToString("N2")</strong></div>
+                        <h2>@item.Title</h2>
+                        <p>@item.Description</p>
+                        <div class="seller"><strong>@item.SellerName</strong><span>@(item.IsVerifiedSeller ? "Verified Seller" : "Seller subscription inactive") · @item.Status</span></div>
+                        <button @onclick="() => Remove(item)">Remove Listing</button>
+                    </div>
+                </article>
+            }
+        </div>
+    </main>
+}
+
+<style>
+    .admin-shell{width:min(1180px,calc(100% - 36px));margin:auto;padding:32px 0 60px;color:#1E2D27}.page-head{display:flex;justify-content:space-between;align-items:end;gap:20px}.page-head>div>span{color:#2F9098;font-size:.64rem;font-weight:900;letter-spacing:.1em}.page-head h1{margin:5px 0}.page-head p{margin:0;color:#75827D}.page-head input{min-width:280px;min-height:42px;padding:0 12px;border:1px solid #CCD9D5;border-radius:10px}.listing-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:20px}.listing-grid article{display:grid;grid-template-columns:145px 1fr;overflow:hidden;border:1px solid #DEE6E3;border-radius:15px;background:#fff}.image-box{min-height:180px;background:#F0F4F2;display:grid;place-items:center;color:#83908A}.image-box img{width:100%;height:100%;object-fit:cover}.listing-body{padding:16px}.line,.seller{display:flex;justify-content:space-between;gap:12px}.line span{color:#78857F;font-size:.62rem}.line strong{font-size:.75rem}.listing-body h2{margin:7px 0 5px;font-size:1rem}.listing-body p{margin:0;color:#77847F;font-size:.67rem;line-height:1.5}.seller{margin-top:12px;padding-top:10px;border-top:1px solid #EDF1EF;flex-direction:column}.seller strong,.seller span{display:block}.seller span{margin-top:2px;color:#89948F;font-size:.61rem}.listing-body button{margin-top:12px;padding:8px 10px;border:1px solid #F0B6B6;border-radius:8px;background:#FFF1F1;color:#963232;font-size:.65rem;font-weight:850}.message{margin-top:15px;padding:11px;border-radius:10px;background:#EEF6F4;color:#286566}.admin-state{padding:80px;text-align:center;color:#6F7D77}@@media(max-width:850px){.listing-grid{grid-template-columns:1fr}}@@media(max-width:600px){.page-head{align-items:start;flex-direction:column}.page-head input{width:100%;min-width:0}.listing-grid article{grid-template-columns:1fr}.image-box{height:180px}}
+</style>
+
+@code {
+    private bool ready;
+    private string search = string.Empty;
+    private string message = string.Empty;
+    private List<MarketplaceListing> listings = new();
+
+    private List<MarketplaceListing> Filtered =>
+        listings.Where(x =>
+            string.IsNullOrWhiteSpace(search) ||
+            x.Title.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+            x.Category.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+            x.SellerName.Contains(search, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await Auth.InitializeAsync();
+        if (Auth.IsAdmin) Load();
+        ready = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void Load() => listings = Marketplace.GetAllListings();
+
+    private void Remove(MarketplaceListing item)
+    {
+        if (Marketplace.AdminDeleteListing(item.Id))
+        {
+            try { FileStorage.DeleteImage("marketplace", item.Id); } catch { }
+            message = $"Removed marketplace listing: {item.Title}.";
+            Load();
+        }
+    }
+}

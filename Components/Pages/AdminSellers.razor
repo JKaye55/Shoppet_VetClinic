@@ -1,0 +1,84 @@
+@page "/admin/sellers"
+@rendermode InteractiveServer
+
+@using Shoppet_VetClinic.Components.Shared
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+
+@inject AuthService Auth
+@inject CommerceService Commerce
+@inject MarketplaceService Marketplace
+
+<PageTitle>Admin Sellers | ShoppetCare</PageTitle>
+
+@if (!ready)
+{
+    <div class="admin-state">Loading sellers...</div>
+}
+else if (!Auth.IsAdmin)
+{
+    <div class="admin-state">Administrator access required.</div>
+}
+else
+{
+    <AdminNav />
+    <main class="admin-shell">
+        <div class="page-head"><div><span>VERIFIED SELLERS</span><h1>Seller subscriptions</h1><p>Review active and historical seller access. Seller verification comes from the ₱50/month subscription.</p></div></div>
+
+        @if (!string.IsNullOrWhiteSpace(message)){<div class="message">@message</div>}
+
+        <div class="summary"><div><span>Active Sellers</span><strong>@subscriptions.Count(x => x.IsActive)</strong></div><div><span>Seller Listings</span><strong>@listings.Count</strong></div></div>
+
+        <div class="cards">
+            @foreach(var s in subscriptions)
+            {
+                <article>
+                    <div class="seller-head"><div><strong>@Display(s.UserName)</strong><span>@s.Reference</span></div><span class="status @(s.IsActive ? "active" : "")">@(s.IsActive ? "Active" : s.Status)</span></div>
+                    <div class="meta"><span>Starts @s.StartsAt.ToString("MMM d, yyyy")</span><span>Expires @s.ExpiresAt.ToString("MMM d, yyyy")</span><span>@ListingCount(s.UserId) listing(s)</span></div>
+                    @if(s.IsActive){<button @onclick="() => Suspend(s)">Suspend Seller Access</button>}
+                </article>
+            }
+        </div>
+    </main>
+}
+
+<style>
+    .admin-shell{width:min(1180px,calc(100% - 36px));margin:auto;padding:32px 0 60px;color:#1E2D27}.page-head span,.summary span{color:#2F9098;font-size:.64rem;font-weight:900;letter-spacing:.1em}.page-head h1{margin:5px 0}.page-head p{margin:0;color:#75827D}.summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:20px}.summary div{padding:16px;border:1px solid #DEE6E3;border-radius:14px;background:#fff}.summary strong{display:block;margin-top:5px;font-size:1.35rem}.cards{display:grid;gap:10px;margin-top:16px}.cards article{padding:18px;border:1px solid #DEE6E3;border-radius:15px;background:#fff}.seller-head{display:flex;justify-content:space-between;gap:14px}.seller-head strong,.seller-head span{display:block}.seller-head>div>span{margin-top:3px;color:#89948F;font-size:.63rem}.status{padding:5px 8px;border-radius:999px;background:#F0F2F1;color:#68756F;font-size:.6rem;font-weight:900}.status.active{background:#E9F6EE;color:#287048}.meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:13px;color:#74817C;font-size:.67rem}.cards button{margin-top:13px;padding:9px 12px;border:1px solid #F0B6B6;border-radius:9px;background:#FFF1F1;color:#9A3030;font-size:.66rem;font-weight:850}.message{margin-top:15px;padding:11px;border-radius:10px;background:#EEF6F4;color:#286566}.admin-state{padding:80px;text-align:center;color:#6F7D77}
+</style>
+
+@code {
+    private bool ready;
+    private string message = string.Empty;
+    private List<SubscriptionRecord> subscriptions = new();
+    private List<MarketplaceListing> listings = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await Auth.InitializeAsync();
+        if (Auth.IsAdmin) Load();
+        ready = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void Load()
+    {
+        subscriptions = Commerce.GetSubscriptions(CommerceService.SellerType);
+        listings = Marketplace.GetAllListings();
+    }
+
+    private int ListingCount(int? userId) =>
+        userId.HasValue ? listings.Count(x => x.SellerUserId == userId.Value) : 0;
+
+    private void Suspend(SubscriptionRecord subscription)
+    {
+        if (Commerce.DeactivateSubscription(subscription.Id))
+        {
+            message = $"Seller access suspended for {Display(subscription.UserName)}.";
+            Load();
+        }
+    }
+
+    private static string Display(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "Unknown User" : value;
+}

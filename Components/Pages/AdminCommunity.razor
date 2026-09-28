@@ -1,0 +1,82 @@
+@page "/admin/community"
+@rendermode InteractiveServer
+
+@using Shoppet_VetClinic.Components.Shared
+@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Services
+
+@inject AuthService Auth
+@inject CommunityService Community
+@inject FileStorageService FileStorage
+
+<PageTitle>Admin Community | ShoppetCare</PageTitle>
+
+@if (!ready)
+{
+    <div class="admin-state">Loading Community...</div>
+}
+else if (!Auth.IsAdmin)
+{
+    <div class="admin-state">Administrator access required.</div>
+}
+else
+{
+    <AdminNav />
+    <main class="admin-shell">
+        <div class="page-head"><div><span>COMMUNITY MODERATION</span><h1>Community posts</h1><p>Search and remove inappropriate Community content.</p></div><input type="search" @bind="search" @bind:event="oninput" placeholder="Search posts or authors..." /></div>
+
+        @if(!string.IsNullOrWhiteSpace(message)){<div class="message">@message</div>}
+
+        <div class="post-list">
+            @foreach(var post in Filtered)
+            {
+                <article>
+                    <div class="post-head"><div><strong>@post.AuthorName</strong><span>@post.PostedAt.ToString("MMM d, yyyy h:mm tt") @(string.IsNullOrWhiteSpace(post.PetName) ? "" : $" · {post.PetName}")</span></div><button @onclick="() => Remove(post)">Remove</button></div>
+                    <p>@post.Caption</p>
+                    @if(!string.IsNullOrWhiteSpace(post.ImageUrl)){<img src="@post.ImageUrl" alt="Community post image" />}
+                    <div class="likes"><i class="bi bi-heart-fill"></i> @post.LikeCount like@(post.LikeCount == 1 ? "" : "s")</div>
+                </article>
+            }
+        </div>
+    </main>
+}
+
+<style>
+    .admin-shell{width:min(1000px,calc(100% - 36px));margin:auto;padding:32px 0 60px;color:#1E2D27}.page-head{display:flex;justify-content:space-between;align-items:end;gap:20px}.page-head>div>span{color:#2F9098;font-size:.64rem;font-weight:900;letter-spacing:.1em}.page-head h1{margin:5px 0}.page-head p{margin:0;color:#75827D}.page-head input{min-width:280px;min-height:42px;padding:0 12px;border:1px solid #CCD9D5;border-radius:10px}.post-list{display:grid;gap:10px;margin-top:20px}.post-list article{padding:18px;border:1px solid #DEE6E3;border-radius:15px;background:#fff}.post-head{display:flex;justify-content:space-between;gap:16px}.post-head strong,.post-head span{display:block}.post-head span{margin-top:3px;color:#89948F;font-size:.62rem}.post-head button{height:34px;padding:0 10px;border:1px solid #F0B6B6;border-radius:8px;background:#FFF1F1;color:#963232;font-size:.63rem;font-weight:850}.post-list p{white-space:pre-wrap;color:#52615B;line-height:1.55}.post-list img{max-width:420px;max-height:300px;border-radius:12px;object-fit:cover}.likes{margin-top:10px;color:#8B6B75;font-size:.65rem}.message{margin-top:15px;padding:11px;border-radius:10px;background:#EEF6F4;color:#286566}.admin-state{padding:80px;text-align:center;color:#6F7D77}@@media(max-width:650px){.page-head{align-items:start;flex-direction:column}.page-head input{width:100%;min-width:0}}
+</style>
+
+@code {
+    private bool ready;
+    private string search = string.Empty;
+    private string message = string.Empty;
+    private List<CommunityPost> posts = new();
+
+    private List<CommunityPost> Filtered =>
+        posts.Where(x =>
+            string.IsNullOrWhiteSpace(search) ||
+            x.AuthorName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+            x.Caption.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+            x.PetName.Contains(search, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await Auth.InitializeAsync();
+        if (Auth.IsAdmin) Load();
+        ready = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void Load() => posts = Community.GetRecentPosts(200);
+
+    private void Remove(CommunityPost post)
+    {
+        if (Community.AdminDeletePost(post.Id))
+        {
+            try { FileStorage.DeleteImage("community", post.Id); } catch { }
+            message = $"Removed Community post by {post.AuthorName}.";
+            Load();
+        }
+    }
+}
