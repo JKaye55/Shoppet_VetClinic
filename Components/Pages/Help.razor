@@ -1,0 +1,188 @@
+@page "/help"
+
+<PageTitle>Help Center | ShoppetCare</PageTitle>
+
+<div class="help-page">
+    <section class="help-hero">
+        <div class="help-shell">
+            <span>SHOPPETCARE HELP CENTER</span>
+            <h1>Search for help.</h1>
+            <p>Find guidance for Guest Mode, pets, Marketplace, Community, clinics, subscriptions, payments, and account access.</p>
+
+            <div class="help-search-wrap">
+                <i class="bi bi-search"></i>
+                <input id="helpSearch"
+                       type="search"
+                       placeholder="Try: marketplace checkout, pet ID, guest mode, clinic claim..."
+                       aria-label="Search ShoppetCare help"
+                       oninput="window.shoppetHelp.search()" />
+                <button type="button"
+                        onclick="window.shoppetHelp.clear()"
+                        title="Clear help search">
+                    Clear
+                </button>
+            </div>
+
+            <div class="help-chips" aria-label="Popular help searches">
+                <button type="button" onclick="window.shoppetHelp.setQuery('guest mode')">Guest Mode</button>
+                <button type="button" onclick="window.shoppetHelp.setQuery('marketplace')">Marketplace</button>
+                <button type="button" onclick="window.shoppetHelp.setQuery('pet id')">Pet ID</button>
+                <button type="button" onclick="window.shoppetHelp.setQuery('clinic')">Clinics</button>
+                <button type="button" onclick="window.shoppetHelp.setQuery('premium')">Premium</button>
+            </div>
+        </div>
+    </section>
+
+    <main class="help-shell help-main">
+        <div class="help-head" id="helpResults">
+            <div>
+                <span class="eyebrow">HELP TOPICS</span>
+                <h2>What do you need help with?</h2>
+            </div>
+            <span id="helpResultCount">12 help topics</span>
+        </div>
+
+        <section class="help-grid">
+            <article class="help-card" data-help-topic data-title="Guest Mode" data-tags="guest preview temporary pet photo community comment session cart">
+                <i class="bi bi-person-heart"></i>
+                <div>
+                    <h3>Guest Mode</h3>
+                    <p>Try one temporary pet, browse clinics and Marketplace, keep a session cart, and comment in Community as Guest.</p>
+                    <a href="/guest-dashboard">Open Guest Dashboard</a>
+                </div>
+            </article>
+
+            <article class="help-card" data-help-topic data-title="Create Account and Sign In" data-tags="register login password account authentication">
+                <i class="bi bi-person-check"></i>
+                <div>
+                    <h3>Create Account &amp; Sign In</h3>
+                    <p>Create a persistent account to unlock permanent pet profiles, checkout, notifications, posting, and synchronization.</p>
+                    <a href="/register">Create Account</a>
+                </div>
+            </article>
+
+            <article class="help-card" data-help-topic data-title="My Pets" data-tags="pet profile add pet edit pet mobile care health records">
+                <i class="bi bi-heart-pulse"></i>
+                <div>
+                    <h3>My Pets</h3>
+                    <p>Registered Pet Owners can manage their pet workspace. Day-to-day care records remain Mobile-primary.</p>
+                    <a href="/my-pets">Open My Pets</a>
+                </div>
+            </article>
+
+            <article class="help-card" data-help-topic data-title="Digital Pet ID" data-tags="pet id qr card public private premium">
+                <i class="bi bi-qr-code"></i>
+                <div>
+                    <h3>Digital Pet ID</h3>
+                    <p>View your pet card and QR identity. Public QR views intentionally hide private owner and care information.</p>
+                    <a href="/dashboard">Open My ShoppetCare</a>
+                </div>
+            </article>
+
+            <article class="help-card" data-help-topic data-title="Marketplace Browse and Cart" data-tags="marketplace cart pre-loved add to cart guest">
+                <i class="bi bi-bag-heart"></i>
+                <div>
+                    <h3>Marketplace Browse &amp; Cart</h3>
+                    <p>Browse pre-loved pet items, add unique listings to a quantity-one cart, and group checkout by seller.</p>
+                    <a href="/marketplace">Browse Marketplace</a>
+                </div>
+            </article>
+
+            <article class="help-card" data-help-topic data-title="Marketplace Checkout" data-tags="checkout purchase request demo gcash maya cash meetup voucher">
+                <i class="bi bi-credit-card"></i>
+                <div>
+                    <h3>Marketplace Demo Checkout</h3>
+                    <p>Registered users can submit a demo purchase request. No real funds are transferred by ShoppetCare.</p>
+                    <a href="/marketplace/cart">Open Cart</a>
+                </div>
+            </article>
+
+            <article class="help-card" data-help-topic data-title="Reviews and Vouchers" data-tags="verified purchase rating stars review voucher reward 20 pesos">
+                <i class="bi bi-star"></i>
+                <div>
+                    <h3>Reviews &amp; ₱20 Voucher</h3>
+                    <p>After a seller marks a purchase completed, the buyer may submit one honest verified-purchase review and earn a demo voucher.</p>
+                    <a href="/marketplace/orders">Orders &amp; Rewards</a>
+                </div>
+            </article>
+
+            <article class="help-card" data-help-topic data-title="Community" data-tags="community post comment like edit delete guest comments">
+                <i class="bi bi-people"></i>
+                <div>
+                    <h3>Community</h3>
+                    <p>Guests may read and comment as Guest. Registered Pet Owners can post, like, edit and delete their own stories.</p>
+                    <a href="/community">Open Community</a>
+                </div>
+            </article>
+
+            <article class="help-card" data-help-topic data-title="Clinic Directory" data-tags="clinic directory verified clinic search filter services">
+                <i class="bi bi-hospital"></i>
+                <div>
+                    <h3>Clinic Directory</h3>
+                    <p>Search local veterinary clinics, view services, and recognize Verified Clinic status.</p>
+                    <a href="/clinics">Browse Clinics</a>
+                </div>
+            </article>
+
+            <article class="help-card" data-help-topic data-title="List or Claim a Clinic" data-tags="clinic owner representative listing request claim verify subscription">
+                <i class="bi bi-building-check"></i>
+                <div>
+                    <h3>List or Claim a Clinic</h3>
+                    <p>Authenticated representatives can request a missing clinic listing or claim an existing clinic for admin review.</p>
+                    <a href="/list-your-clinic">List Your Clinic</a>
+                </div>
+            </article>
+
+            <article class="help-card" data-help-topic data-title="Premium and Seller Subscription" data-tags="premium seller subscription 150 3 months 50 month mock payment">
+                <i class="bi bi-gem"></i>
+                <div>
+                    <h3>Subscriptions</h3>
+                    <p>ShoppetCare Premium is ₱150 for 3 months. Verified Seller and Verified Clinic subscriptions are ₱50 per month.</p>
+                    <a href="/premium">View Premium</a>
+                </div>
+            </article>
+
+            <article class="help-card" data-help-topic data-title="Mock Payment Safety" data-tags="payment demo card gcash maya no real funds project checkout">
+                <i class="bi bi-shield-check"></i>
+                <div>
+                    <h3>Mock Payment Safety</h3>
+                    <p>Subscription and marketplace payment screens are academic demonstrations. Do not enter real payment credentials.</p>
+                    <a href="/terms">Read Terms</a>
+                </div>
+            </article>
+        </section>
+
+        <section id="helpEmpty" class="help-empty" style="display:none">
+            <i class="bi bi-search"></i>
+            <h2>No matching help topic</h2>
+            <p>Try a shorter phrase such as “pet”, “marketplace”, “clinic”, “guest”, or “premium”.</p>
+            <button type="button" onclick="window.shoppetHelp.clear()">Show all topics</button>
+        </section>
+
+        <section class="help-support">
+            <div>
+                <span class="eyebrow">NEED A PATH?</span>
+                <h2>Use the Help Center as your system guide.</h2>
+                <p>
+                    This search covers the documented ShoppetCare workflows. It is not an AI medical assistant and does not replace veterinary advice.
+                </p>
+            </div>
+            <div class="help-support-actions">
+                <a href="/about">About ShoppetCare</a>
+                <a href="/clinics" class="secondary">Find Veterinary Care</a>
+            </div>
+        </section>
+    </main>
+</div>
+
+<style>
+    .help-page{min-height:100vh;background:#FAF9F6;color:#1E2D27}.help-page *{box-sizing:border-box}.help-shell{width:min(1180px,calc(100% - 40px));margin:auto}
+    .help-hero{padding:58px 0 48px;background:radial-gradient(circle at 85% 15%,rgba(47,144,152,.18),transparent 26%),linear-gradient(145deg,#173D3D,#102E2D);color:#fff}.help-hero>div>span,.eyebrow{font-size:.65rem;font-weight:900;letter-spacing:.12em;color:#78CDD0}.help-hero h1{margin:8px 0 8px;font-size:clamp(2.7rem,5vw,4.6rem);letter-spacing:-.055em}.help-hero p{max-width:720px;color:rgba(255,255,255,.68);line-height:1.6}
+    .help-search-wrap{margin-top:24px;max-width:850px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:8px 9px 8px 14px;border:1px solid rgba(255,255,255,.15);border-radius:14px;background:#fff;color:#173D3D;box-shadow:0 18px 45px rgba(0,0,0,.12)}.help-search-wrap i{color:#2F9098}.help-search-wrap input{min-height:44px;border:0;outline:0;background:transparent;font-size:.88rem}.help-search-wrap button{min-height:38px;padding:0 13px;border:0;border-radius:9px;background:#EEF4F1;color:#53635E;font-weight:850;cursor:pointer}
+    .help-chips{margin-top:12px;display:flex;gap:7px;flex-wrap:wrap}.help-chips button{padding:7px 10px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(255,255,255,.07);color:#E7F0ED;font-size:.66rem;font-weight:800;cursor:pointer}
+    .help-main{padding:34px 0 70px}.help-head{display:flex;align-items:end;justify-content:space-between;gap:20px}.help-head .eyebrow{color:#2F9098}.help-head h2{margin:5px 0 0;font-size:1.55rem;letter-spacing:-.035em}.help-head>span{color:#87948F;font-size:.7rem}
+    .help-grid{margin-top:17px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.help-card{min-height:200px;padding:20px;border:1px solid #DDE7E4;border-radius:17px;background:#fff;box-shadow:0 8px 22px rgba(23,61,61,.04);display:grid;grid-template-columns:42px 1fr;gap:13px}.help-card>i{width:42px;height:42px;display:grid;place-items:center;border-radius:11px;background:#EAF5F5;color:#2F9098;font-size:1rem}.help-card h3{margin:2px 0 6px;font-size:.9rem}.help-card p{margin:0;color:#71817B;font-size:.7rem;line-height:1.55}.help-card a{display:inline-block;margin-top:12px;color:#267C83;text-decoration:none;font-size:.68rem;font-weight:900}.help-card a:hover{text-decoration:underline}
+    .help-empty{margin-top:18px;padding:55px 20px;border:1px dashed #C9D8D4;border-radius:17px;background:#fff;text-align:center}.help-empty i{font-size:1.6rem;color:#2F9098}.help-empty h2{margin:9px 0 5px}.help-empty p{color:#7A8883}.help-empty button{margin-top:10px;padding:10px 14px;border:0;border-radius:9px;background:#2F9098;color:#fff;font-weight:850;cursor:pointer}
+    .help-support{margin-top:24px;padding:25px;border-radius:18px;background:#173D3D;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:24px}.help-support h2{margin:6px 0}.help-support p{max-width:720px;margin:0;color:rgba(255,255,255,.67);font-size:.76rem;line-height:1.6}.help-support-actions{display:flex;gap:8px;flex-wrap:wrap}.help-support-actions a{min-height:42px;padding:0 14px;border-radius:9px;background:#2F9098;color:#fff;text-decoration:none;display:inline-flex;align-items:center;font-size:.7rem;font-weight:900}.help-support-actions a.secondary{border:1px solid rgba(255,255,255,.16);background:transparent}
+    @@media(max-width:900px){.help-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.help-support{align-items:flex-start;flex-direction:column}}@@media(max-width:600px){.help-grid{grid-template-columns:1fr}.help-head{align-items:flex-start;flex-direction:column}.help-search-wrap{grid-template-columns:auto 1fr}.help-search-wrap button{grid-column:2}}
+</style>
