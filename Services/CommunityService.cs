@@ -49,6 +49,7 @@ namespace Shoppet_VetClinic.Services
                         c.ImageUrl,
                         c.LikeCount,
                         c.PostedAt,
+                        ISNULL(c.IsEdited, 0),
 
                         ISNULL(
                             u.FullName,
@@ -406,7 +407,8 @@ namespace Shoppet_VetClinic.Services
 
                     SET
                         PetId = @PetId,
-                        Caption = @Caption
+                        Caption = @Caption,
+                        IsEdited = 1
 
                     WHERE
                         Id = @PostId
@@ -708,15 +710,19 @@ namespace Shoppet_VetClinic.Services
                 PostedAt =
                     reader.GetDateTime(6),
 
+                IsEdited =
+                    !reader.IsDBNull(7)
+                    && reader.GetBoolean(7),
+
                 AuthorName =
-                    reader.IsDBNull(7)
+                    reader.IsDBNull(8)
                         ? "ShoppetCare User"
-                        : reader.GetString(7),
+                        : reader.GetString(8),
 
                 PetName =
-                    reader.IsDBNull(8)
+                    reader.IsDBNull(9)
                         ? string.Empty
-                        : reader.GetString(8)
+                        : reader.GetString(9)
             };
         }
     }
