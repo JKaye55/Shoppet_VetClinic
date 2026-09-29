@@ -6,6 +6,7 @@
 
 @inject DatabaseService Db
 @inject NavigationManager Nav
+@inject AuthService Auth
 
 <PageTitle>Verified Clinics | ShoppetCare</PageTitle>
 
@@ -22,7 +23,22 @@
             </div>
 
             <div class="hero-actions">
-                <a href="/list-your-clinic" class="secondary-link">List Your Clinic</a>
+                @if (Auth.IsGuest)
+                {
+                    <span class="secondary-link disabled-link"
+                          title="Sign in or create an account to request a clinic listing">
+                        <i class="bi bi-lock-fill"></i>
+                        List Your Clinic
+                    </span>
+                }
+                else
+                {
+                    <a href="/list-your-clinic"
+                       class="secondary-link"
+                       title="Request a clinic listing">
+                        List Your Clinic
+                    </a>
+                }
             </div>
         </div>
     </section>
@@ -34,7 +50,7 @@
                 <input type="search"
                        @bind="searchText"
                        @bind:event="oninput"
-                       placeholder="Search clinic, service, brand, or location..." />
+                       placeholder="Search clinic, service, or location..." />
             </div>
 
             <select @bind="locationFilter">
@@ -157,10 +173,22 @@
 
                             @if (!clinic.IsClaimed)
                             {
-                                <a href="@($"/claim-clinic/{clinic.Id}")"
-                                   class="secondary-link">
-                                    Claim This Clinic
-                                </a>
+                                @if (Auth.IsGuest)
+                                {
+                                    <span class="secondary-link disabled-link"
+                                          title="Sign in or create an account to claim a clinic">
+                                        <i class="bi bi-lock-fill"></i>
+                                        Claim This Clinic
+                                    </span>
+                                }
+                                else
+                                {
+                                    <a href="@($"/claim-clinic/{clinic.Id}")"
+                                       class="secondary-link"
+                                       title="Claim this clinic as an authorized representative">
+                                        Claim This Clinic
+                                    </a>
+                                }
                             }
                             else
                             {
@@ -184,13 +212,24 @@
                     directory listing before starting the claim process.
                 </p>
             </div>
-            <a href="/list-your-clinic" class="primary-link">Request a Listing</a>
+            @if (Auth.IsGuest)
+            {
+                <span class="primary-link disabled-primary"
+                      title="Sign in or create an account to request a clinic listing">
+                    <i class="bi bi-lock-fill"></i>
+                    Request a Listing
+                </span>
+            }
+            else
+            {
+                <a href="/list-your-clinic" class="primary-link">Request a Listing</a>
+            }
         </section>
     </main>
 </div>
 
 <style>
-    .clinic-directory-page{min-height:100vh;background:#FAF9F6;color:#1E2D27}.directory-shell{width:min(1180px,calc(100% - 40px));margin:auto}.directory-hero{padding:54px 0;background:linear-gradient(145deg,#173D3D,#102E2D);color:#fff}.hero-inner{display:flex;align-items:end;justify-content:space-between;gap:30px}.eyebrow{color:#2F9098;font-size:.67rem;font-weight:900;letter-spacing:.12em}.eyebrow.light{color:#8DD6D8}.directory-hero h1{max-width:760px;margin:8px 0 12px;font-size:clamp(2.7rem,5vw,4.4rem);line-height:.98;font-weight:900;letter-spacing:-.055em}.directory-hero p{max-width:760px;margin:0;color:rgba(255,255,255,.67);line-height:1.68}.primary-link,.secondary-link{min-height:43px;padding:0 15px;border-radius:10px;text-decoration:none;font-size:.74rem;font-weight:850;display:inline-flex;align-items:center;justify-content:center}.primary-link{background:#2F9098;color:#fff}.secondary-link{border:1px solid #CAD9D5;background:#fff;color:#173D3D}
+    .clinic-directory-page{min-height:100vh;background:#FAF9F6;color:#1E2D27}.directory-shell{width:min(1180px,calc(100% - 40px));margin:auto}.directory-hero{padding:54px 0;background:linear-gradient(145deg,#173D3D,#102E2D);color:#fff}.hero-inner{display:flex;align-items:end;justify-content:space-between;gap:30px}.eyebrow{color:#2F9098;font-size:.67rem;font-weight:900;letter-spacing:.12em}.eyebrow.light{color:#8DD6D8}.directory-hero h1{max-width:760px;margin:8px 0 12px;font-size:clamp(2.7rem,5vw,4.4rem);line-height:.98;font-weight:900;letter-spacing:-.055em}.directory-hero p{max-width:760px;margin:0;color:rgba(255,255,255,.67);line-height:1.68}.primary-link,.secondary-link{min-height:43px;padding:0 15px;border-radius:10px;text-decoration:none;font-size:.74rem;font-weight:850;display:inline-flex;align-items:center;justify-content:center}.primary-link{background:#2F9098;color:#fff}.secondary-link{border:1px solid #CAD9D5;background:#fff;color:#173D3D}.disabled-link,.disabled-primary{gap:6px;opacity:.58;cursor:not-allowed;user-select:none}.disabled-primary{background:#DCE5E2;color:#75827D}
     .directory-content{padding:28px 0 60px}.search-card{display:grid;grid-template-columns:minmax(280px,1.5fr) .7fr .8fr auto auto;gap:9px;padding:14px;border:1px solid #DDE7E4;border-radius:16px;background:#fff;box-shadow:0 10px 30px rgba(30,45,39,.045)}.search-card input,.search-card select{width:100%;min-height:44px;border:1px solid #D2DDD9;border-radius:10px;background:#fff;padding:0 11px;outline:none}.search-input{position:relative}.search-input i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#7D8A85}.search-input input{padding-left:37px}.verified-toggle{display:flex;align-items:center;gap:7px;padding:0 9px;white-space:nowrap;font-size:.7rem;font-weight:800}.search-card button{border:1px solid #D2DDD9;border-radius:10px;background:#F8FAF9;color:#4D5B55;font-size:.7rem;font-weight:850}
     .result-head{margin:28px 0 16px;display:flex;align-items:end;justify-content:space-between;gap:20px}.result-head h2{margin:5px 0 0;font-weight:900;letter-spacing:-.035em}.legend{color:#65736D;font-size:.68rem}.legend i{color:#2F9098}.clinic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.clinic-card{padding:22px;border:1px solid #DDE7E4;border-radius:18px;background:#fff;box-shadow:0 10px 28px rgba(30,45,39,.045)}.card-head{display:flex;gap:13px}.clinic-icon{width:44px;height:44px;flex:0 0 44px;border-radius:12px;background:#EEF6F4;color:#267C83;display:grid;place-items:center}.clinic-title{min-width:0;flex:1}.title-row{display:flex;gap:8px;align-items:center;justify-content:space-between}.title-row h3{margin:0;font-size:1.08rem;font-weight:900}.branch{display:block;margin-top:4px;color:#82908A;font-size:.68rem}.verified-badge{display:inline-flex;gap:5px;align-items:center;padding:5px 8px;border-radius:999px;background:#EAF5F5;color:#267C83;font-size:.58rem;font-weight:900;white-space:nowrap}.clinic-info{display:grid;gap:7px;margin:18px 0}.clinic-info div{display:flex;gap:8px;color:#63716B;font-size:.72rem}.clinic-info i{color:#2F9098}.provider-tags{display:flex;flex-wrap:wrap;gap:6px}.provider-tags span{padding:5px 8px;border-radius:999px;background:#F2F5F4;color:#63716B;font-size:.61rem;font-weight:800}.services{margin-top:16px;padding-top:15px;border-top:1px solid #EBEFED}.services strong{font-size:.67rem}.services p{margin:5px 0 0;color:#76837E;font-size:.69rem;line-height:1.55}.card-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:18px}.claimed-label{display:inline-flex;gap:6px;align-items:center;color:#71807A;font-size:.67rem;font-weight:800}.empty-state{padding:55px;text-align:center;border:1px dashed #CBD8D4;border-radius:18px;background:#fff}.empty-state>i{font-size:2.3rem;color:#2F9098}.empty-state h3{margin:10px 0 5px}.empty-state p{color:#74817C}.clinic-owner-cta{margin-top:24px;padding:28px;border:1px solid #DDE7E4;border-radius:20px;background:linear-gradient(135deg,#fff,#F2F8F6);display:flex;align-items:center;justify-content:space-between;gap:24px}.clinic-owner-cta h2{margin:6px 0 7px;font-weight:900}.clinic-owner-cta p{max-width:760px;margin:0;color:#6D7B75;line-height:1.6}
     @@media(max-width:950px){.search-card{grid-template-columns:1fr 1fr}.search-input{grid-column:1/-1}.clinic-grid{grid-template-columns:1fr}}@@media(max-width:650px){.hero-inner,.result-head,.clinic-owner-cta{align-items:flex-start;flex-direction:column}.search-card{grid-template-columns:1fr}.search-input{grid-column:auto}.title-row{align-items:flex-start;flex-direction:column}}
@@ -203,9 +242,40 @@
     private string providerFilter = string.Empty;
     private bool verifiedOnly;
 
+    [SupplyParameterFromQuery(Name = "search")]
+    public string? SearchQuery { get; set; }
+
+    [SupplyParameterFromQuery(Name = "location")]
+    public string? LocationQuery { get; set; }
+
+    [SupplyParameterFromQuery(Name = "provider")]
+    public string? ProviderQuery { get; set; }
+
     protected override void OnInitialized()
     {
         allClinics = Db.GetAllClinics();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrWhiteSpace(SearchQuery))
+            searchText = SearchQuery.Trim();
+
+        if (!string.IsNullOrWhiteSpace(LocationQuery))
+            locationFilter = LocationQuery.Trim();
+
+        if (!string.IsNullOrWhiteSpace(ProviderQuery))
+        {
+            providerFilter = ProviderQuery.Trim().ToLowerInvariant() switch
+            {
+                "veterinary" => "vet",
+                "veterinary clinic" => "vet",
+                "pet shop" => "petshop",
+                "petshop" => "petshop",
+                "both" => "both",
+                _ => string.Empty
+            };
+        }
     }
 
     private List<ClinicTenant> Filtered
@@ -222,8 +292,7 @@
                     Contains(c.ClinicName, s) ||
                     Contains(c.Branch, s) ||
                     Contains(c.Address, s) ||
-                    Contains(c.ServiceCapabilities, s) ||
-                    Contains(c.BrandsCarried, s));
+                    Contains(c.ServiceCapabilities, s));
             }
 
             if (!string.IsNullOrWhiteSpace(locationFilter))
