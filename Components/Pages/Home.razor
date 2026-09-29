@@ -308,16 +308,16 @@
                     </button>
 
                     <button type="button"
-                            @onclick='() => QuickHomeSearch("Royal Canin")'>
+                            @onclick='() => QuickHomeSearch("Grooming")'>
 
-                        Royal Canin
+                        Grooming
 
                     </button>
 
                     <button type="button"
-                            @onclick='() => QuickHomeSearch("Hills")'>
+                            @onclick='() => QuickHomeSearch("Emergency")'>
 
-                        Hill's
+                        Emergency Care
 
                     </button>
 
@@ -421,28 +421,28 @@
                 </div>
 
 
-                <!-- PET FOOD -->
+                <!-- MARKETPLACE -->
                 <div class="col-12 col-md-6 col-lg-3">
 
                     <button type="button"
                             class="quick-card"
-                            @onclick='() => QuickHomeSearch("Pet Food")'>
+                            @onclick="GoToMarketplace">
 
                         <div class="quick-card-icon">
-                            FOOD
+                            SHOP
                         </div>
 
                         <h4>
-                            Pet Food
+                            Pre-Loved Marketplace
                         </h4>
 
                         <p>
-                            Discover pet food and
-                            available brands.
+                            Browse durable pre-loved pet items
+                            listed by pet owners.
                         </p>
 
                         <span>
-                            Find pet food →
+                            Open Marketplace →
                         </span>
 
                     </button>
@@ -450,28 +450,28 @@
                 </div>
 
 
-                <!-- SUPPLIES -->
+                <!-- COMMUNITY -->
                 <div class="col-12 col-md-6 col-lg-3">
 
                     <button type="button"
                             class="quick-card"
-                            @onclick='() => QuickHomeSearch("Pet Supplies")'>
+                            @onclick="GoToCommunity">
 
                         <div class="quick-card-icon">
-                            SUPPLY
+                            TALK
                         </div>
 
                         <h4>
-                            Pet Supplies
+                            Pet Owner Community
                         </h4>
 
                         <p>
-                            Browse useful products and
-                            supplies for your pet.
+                            Read local pet stories and connect
+                            through posts and comments.
                         </p>
 
                         <span>
-                            Explore supplies →
+                            Open Community →
                         </span>
 
                     </button>
@@ -2121,6 +2121,11 @@
     private void GoToHelp()
     {
         Nav.NavigateTo("/help");
+    }
+
+    private void GoToCommunity()
+    {
+        Nav.NavigateTo("/community");
     }
 
 }
