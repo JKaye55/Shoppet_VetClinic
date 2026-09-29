@@ -30,9 +30,9 @@
                     </h1>
 
                     <p class="hero-description">
-                        Find trusted veterinary clinics, pet supplies,
-                        food, services, and helpful information for your
-                        pets around Lipa City and Tanauan.
+                        Find trusted veterinary clinics, browse the pre-loved Marketplace,
+                        connect with the pet-owner Community, and manage your
+                        ShoppetCare experience around Lipa City and Tanauan.
                     </p>
 
                     <div class="hero-buttons">
@@ -45,8 +45,8 @@
 
                         <button type="button"
                                 class="btn secondary-btn"
-                                @onclick="GoToPetShop">
-                            Explore Pet Shop
+                                @onclick="GoToMarketplace">
+                            Explore Marketplace
                         </button>
 
                     </div>
@@ -109,7 +109,7 @@
                         </h3>
 
                         <p>
-                            Search clinics, pet shops, services, and brands.
+                            Search clinics, pet-care services, and locations.
                         </p>
 
                     </div>
@@ -890,9 +890,9 @@
 
                     <button type="button"
                             class="btn primary-btn"
-                            @onclick="GoToInquire">
+                            @onclick="GoToHelp">
 
-                        Ask About Pet Care
+                        Search Help Center
 
                     </button>
 
@@ -2112,15 +2112,15 @@
     }
 
 
-    private void GoToPetShop()
+    private void GoToMarketplace()
     {
-        Nav.NavigateTo("/clinics?provider=Pet%20Shop");
+        Nav.NavigateTo("/marketplace");
     }
 
 
-    private void GoToInquire()
+    private void GoToHelp()
     {
-        Nav.NavigateTo("/clinics");
+        Nav.NavigateTo("/help");
     }
 
 }
