@@ -163,6 +163,8 @@
                         <input id="register-name"
                                type="text"
                                maxlength="150"
+                               required
+                               aria-required="true"
                                placeholder="Juan Dela Cruz"
                                @bind="fullName"
                                autocomplete="name"
@@ -181,6 +183,8 @@
                         <input id="register-email"
                                type="email"
                                maxlength="254"
+                               required
+                               aria-required="true"
                                placeholder="you@example.com"
                                @bind="email"
                                autocomplete="email"
@@ -196,7 +200,9 @@
 
     <input id="register-mobile"
            type="tel"
-           placeholder="0917 123 4567"
+           required
+                               aria-required="true"
+                               placeholder="0917 123 4567"
            @bind="mobileNumber"
            autocomplete="tel"
            inputmode="tel"
@@ -219,6 +225,8 @@
                         <input id="register-password"
                                type="password"
                                maxlength="64"
+                               required
+                               aria-required="true"
                                placeholder="Use at least 15 characters"
                                @bind="password"
                                autocomplete="new-password"
@@ -241,6 +249,8 @@
                         <input id="register-confirm"
                                type="password"
                                maxlength="64"
+                               required
+                               aria-required="true"
                                placeholder="Enter the same password again"
                                @bind="confirmPassword"
                                autocomplete="new-password"
@@ -251,6 +261,8 @@
                     <label class="sc-register-consent">
                         <input type="checkbox"
                                @bind="acceptedTerms"
+                               required
+                               aria-required="true"
                                disabled="@isRegistering" />
                         <span>
                             I agree to the
