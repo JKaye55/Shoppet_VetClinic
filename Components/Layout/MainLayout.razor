@@ -181,7 +181,7 @@
     .sp-navigation-inner {
         max-width: 1380px;
 
-        min-height: 78px;
+        min-height: 82px;
 
         margin: 0 auto;
 
@@ -213,8 +213,8 @@
 
 
     .sp-logo {
-        width: 43px;
-        height: 43px;
+        width: 54px;
+        height: 54px;
 
         object-fit: contain;
     }
@@ -278,7 +278,7 @@
     .sp-menu-link {
         position: relative;
 
-        height: 78px;
+        height: 82px;
 
         padding: 0 12px;
 
@@ -1140,7 +1140,8 @@
                         @if (Auth.IsAdmin)
                         {
                             <a href="/admin-portal"
-                               class="sp-btn-portal">
+                               class="sp-btn-portal"
+                               title="Open Super Admin dashboard">
 
                                 Admin Portal
 
@@ -1149,7 +1150,8 @@
                         else if (Auth.IsClinicStaff)
                         {
                             <a href="/clinic-portal"
-                               class="sp-btn-portal">
+                               class="sp-btn-portal"
+                               title="Open Clinic dashboard">
 
                                 Clinic Portal
 
@@ -1159,6 +1161,7 @@
 
                         <button type="button"
                                 class="sp-btn-signout"
+                                title="Sign out of ShoppetCare"
                                 @onclick="LogoutAsync">
 
                             Sign Out
@@ -1178,8 +1181,7 @@
                         <a href="/guest-dashboard"
                            class="sp-guest-pill"
                            title="Open your Guest Dashboard"
-                           style="text-decoration:none;"
-                           title="Open Guest Dashboard">
+                           style="text-decoration:none;">
 
                             <i class="bi bi-person-heart"
                                aria-hidden="true">
@@ -1210,6 +1212,7 @@
 
                         <button type="button"
                                 class="sp-btn-exit-preview"
+                                title="Exit Guest Mode and return to Landing"
                                 @onclick="ExitGuestModeAsync">
 
                             Exit
@@ -1225,7 +1228,8 @@
                          ========================================= -->
 
                     <a href="/login"
-                       class="sp-btn-login">
+                       class="sp-btn-login"
+                       title="Sign in to ShoppetCare">
 
                         Sign In
 
@@ -1233,7 +1237,8 @@
 
 
                     <a href="/register"
-                       class="sp-btn-register">
+                       class="sp-btn-register"
+                       title="Create a free ShoppetCare account">
 
                         Register
 
