@@ -1064,10 +1064,10 @@
 
             <div class="sp-actions">
 
-                @if (Auth.IsGuest)
+                @if (!Auth.IsLoggedIn)
                 {
                     <span class="sp-contact sp-contact-locked"
-                          title="Locked: create an account or sign in to request a clinic listing">
+                          title="Locked: sign in or create an account to request a clinic listing">
 
                         <i class="bi bi-lock-fill"
                            aria-hidden="true"></i>
