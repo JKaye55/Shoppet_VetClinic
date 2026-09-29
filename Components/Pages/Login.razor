@@ -123,14 +123,20 @@
 
                 <div class="sc-auth-form">
 
+                    <p class="sc-auth-required-note">
+                        <span aria-hidden="true">*</span> Required fields
+                    </p>
+
                     <div class="sc-auth-field">
 
                         <label for="login-email">
-                            Email Address
+                            Email Address <span aria-hidden="true">*</span>
                         </label>
 
                         <input id="login-email"
                                type="email"
+                               required
+                               aria-required="true"
                                placeholder="you@example.com"
                                @bind="email"
                                autocomplete="email"
@@ -142,11 +148,13 @@
                     <div class="sc-auth-field">
 
                         <label for="login-password">
-                            Password
+                            Password <span aria-hidden="true">*</span>
                         </label>
 
                         <input id="login-password"
                                type="password"
+                               required
+                               aria-required="true"
                                placeholder="Enter your password"
                                @bind="password"
                                autocomplete="current-password"
@@ -218,6 +226,17 @@
 
 
 <style>
+    .sc-auth-required-note {
+        margin: 0 0 4px;
+        color: #87948F;
+        font-size: .63rem;
+    }
+
+    .sc-auth-required-note span {
+        color: #A55252;
+        font-weight: 900;
+    }
+
     .sc-auth-password-row {
         margin-top: 6px;
         display: flex;
