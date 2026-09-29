@@ -23,7 +23,7 @@
             </div>
 
             <div class="hero-actions">
-                @if (Auth.IsGuest)
+                @if (!Auth.IsLoggedIn)
                 {
                     <span class="secondary-link disabled-link"
                           title="Sign in or create an account to request a clinic listing">
@@ -173,7 +173,7 @@
 
                             @if (!clinic.IsClaimed)
                             {
-                                @if (Auth.IsGuest)
+                                @if (!Auth.IsLoggedIn)
                                 {
                                     <span class="secondary-link disabled-link"
                                           title="Sign in or create an account to claim a clinic">
@@ -212,7 +212,7 @@
                     directory listing before starting the claim process.
                 </p>
             </div>
-            @if (Auth.IsGuest)
+            @if (!Auth.IsLoggedIn)
             {
                 <span class="primary-link disabled-primary"
                       title="Sign in or create an account to request a clinic listing">
