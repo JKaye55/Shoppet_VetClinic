@@ -262,6 +262,7 @@
 
     .sp-menu {
         flex: 1;
+        min-width: 0;
 
         height: 100%;
 
@@ -272,6 +273,12 @@
         justify-content: center;
 
         gap: 5px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .sp-menu::-webkit-scrollbar {
+        display: none;
     }
 
 
