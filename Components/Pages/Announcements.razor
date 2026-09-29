@@ -1,62 +1,87 @@
-﻿@page "/announcements"
+@page "/announcements"
 @inject DatabaseService Db
 
-<PageTitle>Announcements</PageTitle>
+<PageTitle>Announcements | ShoppetCare</PageTitle>
 
-<div class="container mt-4" style="max-width: 720px;">
-
-    <h1 class="mb-4"><i class="bi bi-bell"></i> Announcements</h1>
-
-    @if (list.Count == 0)
-    {
-        <div class="alert alert-light border">
-            No announcements right now. Check back soon!
+<div class="ann-page">
+    <section class="ann-hero">
+        <div class="ann-shell ann-hero-inner">
+            <div>
+                <span class="ann-eyebrow">SHOPPETCARE UPDATES</span>
+                <h1>Announcements</h1>
+                <p>Platform notices, clinic-related updates, and important information for ShoppetCare users.</p>
+            </div>
+            <a href="/help" class="ann-help" title="Search the ShoppetCare Help Center">
+                <i class="bi bi-search"></i> Search Help
+            </a>
         </div>
-    }
-    else
-    {
-        @foreach (var a in list)
+    </section>
+
+    <main class="ann-shell ann-main">
+        @if (list.Count == 0)
         {
-            <div class="card mb-3 border-start border-4 @PriorityBorder(a.Priority)">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-2">
-                        <h5 class="card-title mb-0">@a.Title</h5>
-                        <span class="badge bg-secondary">@a.Category</span>
-                    </div>
-                    <p class="card-text mb-2">@a.Body</p>
-                    <small class="text-muted">
-                        Posted @Relative(a.PostedAt)
-                        @if (a.ExpiresAt.HasValue)
-                        {
-                            <span> · expires @a.ExpiresAt.Value.ToString("MMM d")</span>
-                        }
-                    </small>
-                </div>
+            <section class="ann-empty">
+                <i class="bi bi-bell"></i>
+                <h2>No announcements right now.</h2>
+                <p>You're all caught up. Check again later for ShoppetCare updates.</p>
+            </section>
+        }
+        else
+        {
+            <div class="ann-list">
+                @foreach (var a in list)
+                {
+                    <article class="ann-card @PriorityClass(a.Priority)">
+                        <div class="ann-card-head">
+                            <div>
+                                <span class="ann-category">@a.Category</span>
+                                <h2>@a.Title</h2>
+                            </div>
+                            <span class="ann-time">@Relative(a.PostedAt)</span>
+                        </div>
+
+                        <p>@a.Body</p>
+
+                        <footer>
+                            <span>Posted @a.PostedAt.ToString("MMM d, yyyy")</span>
+                            @if (a.ExpiresAt.HasValue)
+                            {
+                                <span>Expires @a.ExpiresAt.Value.ToString("MMM d, yyyy")</span>
+                            }
+                        </footer>
+                    </article>
+                }
             </div>
         }
-    }
-
+    </main>
 </div>
 
+<style>
+    .ann-page{min-height:100vh;background:#FAF9F6;color:#1E2D27}.ann-shell{width:min(1100px,calc(100% - 40px));margin:auto}
+    .ann-hero{padding:50px 0;background:linear-gradient(145deg,#173D3D,#102E2D);color:#fff}.ann-hero-inner{display:flex;align-items:end;justify-content:space-between;gap:24px}.ann-eyebrow{color:#8DD6D8;font-size:.66rem;font-weight:900;letter-spacing:.12em}.ann-hero h1{margin:7px 0 7px;font-size:clamp(2.5rem,5vw,4rem);letter-spacing:-.05em}.ann-hero p{max-width:680px;margin:0;color:rgba(255,255,255,.67);line-height:1.6}.ann-help{min-height:42px;padding:0 14px;display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.18);border-radius:9px;color:#fff;text-decoration:none;font-size:.72rem;font-weight:850}
+    .ann-main{padding:30px 0 70px}.ann-list{display:grid;gap:12px}.ann-card{padding:20px;border:1px solid #DDE7E4;border-left:4px solid #2F9098;border-radius:16px;background:#fff;box-shadow:0 9px 24px rgba(23,61,61,.04)}.ann-card.high{border-left-color:#B94D4D}.ann-card.low{border-left-color:#91A29C}.ann-card-head{display:flex;justify-content:space-between;gap:20px;align-items:start}.ann-category{display:inline-block;padding:5px 8px;border-radius:999px;background:#EEF6F4;color:#267C83;font-size:.57rem;font-weight:900;letter-spacing:.07em;text-transform:uppercase}.ann-card h2{margin:8px 0 0;font-size:1rem}.ann-time{color:#8A9692;font-size:.63rem;white-space:nowrap}.ann-card>p{margin:13px 0 0;color:#61706A;line-height:1.6;font-size:.75rem}.ann-card footer{margin-top:15px;padding-top:12px;border-top:1px solid #EDF1EF;display:flex;gap:14px;flex-wrap:wrap;color:#8B9792;font-size:.61rem}.ann-empty{padding:70px 20px;text-align:center;border:1px dashed #CBD8D4;border-radius:18px;background:#fff}.ann-empty i{font-size:2rem;color:#2F9098}.ann-empty h2{margin:11px 0 5px}.ann-empty p{color:#7B8883}
+    @@media(max-width:650px){.ann-hero-inner{align-items:flex-start;flex-direction:column}.ann-card-head{flex-direction:column;gap:8px}}
+</style>
+
 @code {
-    List<Shoppet_VetClinic.Models.Announcement> list = new();
+    private List<Shoppet_VetClinic.Models.Announcement> list = new();
 
     protected override void OnParametersSet()
     {
         list = Db.GetActiveAnnouncements(null, 20);
     }
 
-    string PriorityBorder(string priority) => priority switch
+    private static string PriorityClass(string priority) => priority switch
     {
-        "High" => "border-danger",
-        "Low" => "border-secondary",
-        _ => "border-primary"
+        "High" => "high",
+        "Low" => "low",
+        _ => "normal"
     };
 
-    string Relative(DateTime dt)
+    private static string Relative(DateTime dt)
     {
         var span = DateTime.Now - dt;
-        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+        if (span.TotalMinutes < 60) return $"{Math.Max(1, (int)span.TotalMinutes)}m ago";
         if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
         if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
         return dt.ToString("MMM d");
