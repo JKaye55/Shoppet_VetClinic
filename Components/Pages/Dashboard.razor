@@ -1470,10 +1470,9 @@
             return;
         }
 
-        // 🎯 Redirect clinic staff to their portal
-        if (Auth.IsClinicStaff)
+        if (!Auth.IsPetOwner)
         {
-            Nav.NavigateTo("/clinic-portal", replace: true);
+            Nav.NavigateTo("/login", replace: true);
             return;
         }
 
@@ -1506,10 +1505,7 @@
         userEmail =
             user.Email ?? string.Empty;
 
-        userRole =
-            string.IsNullOrWhiteSpace(user.Role)
-                ? "Pet Owner"
-                : user.Role;
+        userRole = "Pet Owner";
 
         pets =
             DbService.GetPetsByUser(user.Id);
