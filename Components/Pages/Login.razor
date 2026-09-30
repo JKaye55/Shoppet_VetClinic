@@ -637,24 +637,23 @@
             }
 
 
-            var role =
-                user.Role?.Trim()
-                ??
-                string.Empty;
+            var activeRole =
+                AuthService.NormalizeRole(
+                    user.Role);
 
 
-            if (string.Equals(
-                role,
-                "Clinic Staff",
-                StringComparison.OrdinalIgnoreCase)
-                &&
-                !user.ClinicId.HasValue)
+            if (string.IsNullOrWhiteSpace(
+                    activeRole))
             {
                 errorMessage =
-                    "This clinic staff account has not been assigned to a clinic yet.";
+                    "This legacy account role is no longer part of the active ShoppetCare flow. Use a Pet Owner or Admin account.";
 
                 return;
             }
+
+
+            user.Role =
+                activeRole;
 
 
             await Auth.LoginAsync(
@@ -662,23 +661,9 @@
 
 
             var destination =
-                role switch
-                {
-                    "Admin" =>
-                        "/admin-portal",
-
-                    "SuperAdmin" =>
-                        "/admin-portal",
-
-                    "Super Admin" =>
-                        "/admin-portal",
-
-                    "Clinic Staff" =>
-                        "/clinic-portal",
-
-                    _ =>
-                        "/dashboard"
-                };
+                activeRole == "Admin"
+                    ? "/admin-portal"
+                    : "/dashboard";
 
 
             Nav.NavigateTo(
