@@ -829,13 +829,7 @@
                                 Admin Portal
                             </a>
                         }
-                        else if (IsClinicStaff())
-                        {
-                            <a href="/clinic-portal"
-                               class="sp-btn-portal">
-                                Clinic Portal
-                            </a>
-                        }
+
 
 
                         <!-- SIGN OUT -->
@@ -933,40 +927,9 @@
        ROLE CHECKS
        ========================================================= */
 
-    private bool IsPetOwner()
-    {
-        if (Auth.CurrentUser is null)
-            return false;
+    private bool IsPetOwner() => Auth.IsPetOwner;
 
-        return string.Equals(
-            Auth.CurrentUser.Role,
-            "Pet Owner",
-            StringComparison.OrdinalIgnoreCase);
-    }
-
-
-    private bool IsClinicStaff()
-    {
-        if (Auth.CurrentUser is null)
-            return false;
-
-        return string.Equals(
-            Auth.CurrentUser.Role,
-            "Clinic Staff",
-            StringComparison.OrdinalIgnoreCase);
-    }
-
-
-    private bool IsAdmin()
-    {
-        if (Auth.CurrentUser is null)
-            return false;
-
-        return string.Equals(
-            Auth.CurrentUser.Role,
-            "Admin",
-            StringComparison.OrdinalIgnoreCase);
-    }
+    private bool IsAdmin() => Auth.IsAdmin;
 
 
     /* =========================================================
@@ -975,13 +938,9 @@
 
     private string GetProfileDestination()
     {
-        if (IsAdmin())
-            return "/admin-portal";
-
-        if (IsClinicStaff())
-            return "/clinic-portal";
-
-        return "/dashboard";
+        return IsAdmin()
+            ? "/admin-portal"
+            : "/dashboard";
     }
 
 
@@ -1012,12 +971,8 @@
         if (Auth.CurrentUser is null)
             return "Account";
 
-        var role = Auth.CurrentUser.Role?.Trim();
-
-        if (string.IsNullOrWhiteSpace(role))
-            return "Account";
-
-        return role;
+        var role = AuthService.NormalizeRole(Auth.CurrentUser.Role);
+        return string.IsNullOrWhiteSpace(role) ? "Legacy Account" : role;
     }
 
 
