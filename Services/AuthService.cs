@@ -37,34 +37,15 @@ namespace Shoppet_VetClinic.Services
 
 
         public bool IsAdmin =>
-            string.Equals(
-                CurrentUser?.Role,
-                "Admin",
-                StringComparison.OrdinalIgnoreCase)
-            ||
-            string.Equals(
-                CurrentUser?.Role,
-                "SuperAdmin",
-                StringComparison.OrdinalIgnoreCase)
-            ||
-            string.Equals(
-                CurrentUser?.Role,
-                "Super Admin",
-                StringComparison.OrdinalIgnoreCase);
-
-
-        public bool IsClinicStaff =>
-            string.Equals(
-                CurrentUser?.Role,
-                "Clinic Staff",
-                StringComparison.OrdinalIgnoreCase);
+            NormalizeRole(CurrentUser?.Role) == "Admin";
 
 
         public bool IsPetOwner =>
-            string.Equals(
-                CurrentUser?.Role,
-                "Pet Owner",
-                StringComparison.OrdinalIgnoreCase);
+            NormalizeRole(CurrentUser?.Role) == "Pet Owner";
+
+
+        // Legacy compatibility only. Clinic Staff is not active in Final Scope v4.0.
+        public bool IsClinicStaff => false;
 
 
         public bool IsPremium
@@ -94,7 +75,7 @@ namespace Shoppet_VetClinic.Services
 
         // Kept for compatibility with existing pages.
         public bool CanAddMorePets =>
-            !IsPetOwner ||
+            IsPetOwner &&
             IsPremium;
 
 
@@ -659,55 +640,64 @@ namespace Shoppet_VetClinic.Services
                 return false;
             }
 
+            var activeRole =
+                NormalizeRole(
+                    CurrentUser.Role);
 
-            if (string.Equals(
-                requiredRole,
-                "Pet Owner",
-                StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
+            var required =
+                NormalizeRole(
+                    requiredRole);
 
-
-            if (string.Equals(
-                requiredRole,
-                "Clinic Staff",
-                StringComparison.OrdinalIgnoreCase))
-            {
-                return
-                    IsClinicStaff ||
-                    IsAdmin;
-            }
-
-
-            if (string.Equals(
-                requiredRole,
-                "Admin",
-                StringComparison.OrdinalIgnoreCase))
-            {
-                return IsAdmin;
-            }
-
-
-            if (string.Equals(
-                requiredRole,
-                "SuperAdmin",
-                StringComparison.OrdinalIgnoreCase))
-            {
-                return
-                    string.Equals(
-                        CurrentUser.Role,
-                        "SuperAdmin",
-                        StringComparison.OrdinalIgnoreCase)
-                    ||
-                    string.Equals(
-                        CurrentUser.Role,
-                        "Super Admin",
-                        StringComparison.OrdinalIgnoreCase);
-            }
-
-
-            return false;
+            return
+                !string.IsNullOrWhiteSpace(activeRole)
+                &&
+                activeRole == required;
         }
+
+
+        public static string NormalizeRole(
+            string? role)
+        {
+            var value =
+                (role ?? string.Empty)
+                    .Trim();
+
+            if (value.Equals(
+                    "Admin",
+                    StringComparison.OrdinalIgnoreCase)
+                ||
+                value.Equals(
+                    "SuperAdmin",
+                    StringComparison.OrdinalIgnoreCase)
+                ||
+                value.Equals(
+                    "Super Admin",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return "Admin";
+            }
+
+            if (value.Equals(
+                    "Pet Owner",
+                    StringComparison.OrdinalIgnoreCase)
+                ||
+                value.Equals(
+                    "PetOwner",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return "Pet Owner";
+            }
+
+            return string.Empty;
+        }
+
+
+        public bool HasActiveRole =>
+            CurrentUser is not null
+            &&
+            !string.IsNullOrWhiteSpace(
+                NormalizeRole(
+                    CurrentUser.Role));
+
     }
 }
