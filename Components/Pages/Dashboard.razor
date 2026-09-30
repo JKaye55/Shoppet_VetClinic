@@ -1649,9 +1649,7 @@
             Nav.NavigateTo(
                 Auth.IsAdmin
                     ? "/admin-portal"
-                    : Auth.IsClinicStaff
-                        ? "/clinic-portal"
-                        : "/home");
+                    : "/login");
 
             return;
         }
