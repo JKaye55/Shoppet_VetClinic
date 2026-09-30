@@ -12,20 +12,18 @@ namespace Shoppet_VetClinic.Services
         public bool IsLoggedIn => CurrentUser != null;
 
         public bool IsAdmin =>
-            string.Equals(CurrentUser?.Role, "Admin",
-                StringComparison.OrdinalIgnoreCase);
-
-        public bool IsClinicStaff =>
-            string.Equals(CurrentUser?.Role, "Clinic Staff",
-                StringComparison.OrdinalIgnoreCase);
+            NormalizeRole(CurrentUser?.Role) == "Admin";
 
         public bool IsPetOwner =>
-            string.Equals(CurrentUser?.Role, "Pet Owner",
-                StringComparison.OrdinalIgnoreCase);
+            NormalizeRole(CurrentUser?.Role) == "Pet Owner";
+
+        // Legacy role retained only so old code can compile.
+        // It is never active in Final Scope v4.0.
+        public bool IsClinicStaff => false;
 
         public bool IsPremium => CurrentUser?.IsPremium == true;
 
-        public bool CanAddMorePets => !IsPetOwner || IsPremium;
+        public bool CanAddMorePets => IsPetOwner && IsPremium;
 
         private Action? _listener;
         private bool _initialized;
@@ -144,34 +142,32 @@ namespace Shoppet_VetClinic.Services
             if (CurrentUser == null)
                 return false;
 
-            if (requiredRole == "Pet Owner")
-                return true;
+            var activeRole = NormalizeRole(CurrentUser.Role);
+            var required = NormalizeRole(requiredRole);
 
-            if (requiredRole == "Clinic Staff" &&
-                (CurrentUser.Role == "Clinic Staff" ||
-                 CurrentUser.Role == "Admin" ||
-                 CurrentUser.Role == "SuperAdmin" ||
-                 CurrentUser.Role == "Super Admin"))
-            {
-                return true;
-            }
-
-            if (requiredRole == "Admin" &&
-                (CurrentUser.Role == "Admin" ||
-                 CurrentUser.Role == "SuperAdmin" ||
-                 CurrentUser.Role == "Super Admin"))
-            {
-                return true;
-            }
-
-            if (requiredRole == "SuperAdmin" &&
-                (CurrentUser.Role == "SuperAdmin" ||
-                 CurrentUser.Role == "Super Admin"))
-            {
-                return true;
-            }
-
-            return false;
+            return activeRole == required;
         }
+
+        public static string NormalizeRole(string? role)
+        {
+            var value = (role ?? string.Empty).Trim();
+
+            if (value.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("Super Admin", StringComparison.OrdinalIgnoreCase))
+                return "Admin";
+
+            if (value.Equals("Pet Owner", StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("PetOwner", StringComparison.OrdinalIgnoreCase))
+                return "Pet Owner";
+
+            // Clinic Staff / Business Owner / other legacy roles are
+            // outside the active Final Scope v4.0.
+            return string.Empty;
+        }
+
+        public bool HasActiveRole =>
+            CurrentUser is not null &&
+            !string.IsNullOrEmpty(NormalizeRole(CurrentUser.Role));
     }
 }
