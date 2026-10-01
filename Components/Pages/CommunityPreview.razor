@@ -149,7 +149,18 @@
                             <div class="sc-community-composer-head">
 
                                 <div class="sc-community-avatar">
-                                    @GetUserInitials()
+                                    @{
+                                        var currentPhoto = GetUserProfilePhotoUrl();
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(currentPhoto))
+                                    {
+                                        <img src="@currentPhoto" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+                                        <span style="display:none;">@GetUserInitials()</span>
+                                    }
+                                    else
+                                    {
+                                        @GetUserInitials()
+                                    }
                                 </div>
 
                                 <div>
@@ -442,7 +453,18 @@
                                     <header class="sc-community-post-header">
 
                                         <div class="sc-community-avatar small">
-                                            @GetInitials(post.AuthorName)
+                                            @{
+                                                var authorPhoto = GetAuthorAvatarUrl(post);
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(authorPhoto))
+                                            {
+                                                <img src="@authorPhoto" alt="@post.AuthorName" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+                                                <span style="display:none;">@GetInitials(post.AuthorName)</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@GetInitials(post.AuthorName)</span>
+                                            }
                                         </div>
 
                                         <div class="sc-community-post-author">
@@ -787,7 +809,8 @@
                                         <div class="sc-ranking-avatar">
                                             @if (!string.IsNullOrWhiteSpace(ranker.Avatar))
                                             {
-                                                <img src="@ranker.Avatar" alt="@ranker.FullName" />
+                                                <img src="@ranker.Avatar" alt="@ranker.FullName" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                                                <div class="sc-ranking-avatar-fallback" style="display:none;">@((ranker.FullName?.FirstOrDefault() ?? 'U').ToString().ToUpper())</div>
                                             }
                                             else
                                             {
@@ -2947,6 +2970,23 @@
             "there";
     }
 
+
+    private string GetUserProfilePhotoUrl()
+    {
+        if (Auth.CurrentUser is null)
+        {
+            return string.Empty;
+        }
+
+        return FileStorage.GetImageUrl("users", Auth.CurrentUser.Id) ?? string.Empty;
+    }
+
+    private string GetAuthorAvatarUrl(CommunityPost post)
+    {
+        if (post is null) return string.Empty;
+        if (!string.IsNullOrWhiteSpace(post.AuthorAvatar)) return post.AuthorAvatar;
+        return FileStorage.GetImageUrl("users", post.UserId) ?? string.Empty;
+    }
 
     private string GetUserInitials()
     {

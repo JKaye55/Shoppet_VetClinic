@@ -31,7 +31,7 @@ namespace Shoppet_VetClinic.Services
             if (cartItems.Any(x => x.SellerUserId != sellerUserId))
                 throw new InvalidOperationException("Checkout one seller at a time.");
 
-            var allowed = new[] { "Cash on Meet-up", "GCash - Demo", "Maya - Demo" };
+            var allowed = new[] { "Cash on Meet-up", "GCash - Demo", "Maya - Demo", "Credit Card", "Card", "Mock Payment Gateway", "Debit Card" };
             if (!allowed.Contains(paymentMethod, StringComparer.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Choose a valid demo payment method.");
 

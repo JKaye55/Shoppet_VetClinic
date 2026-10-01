@@ -55,10 +55,35 @@
 
                 <label>Payment method</label>
                 <select @bind="paymentMethod">
-                    <option>Cash on Meet-up</option>
-                    <option>GCash - Demo</option>
-                    <option>Maya - Demo</option>
+                    <option value="Credit Card">Credit / Debit Card (Mock Gateway)</option>
+                    <option value="GCash - Demo">GCash - Demo</option>
+                    <option value="Maya - Demo">Maya - Demo</option>
+                    <option value="Cash on Meet-up">Cash on Meet-up</option>
                 </select>
+
+                @if (paymentMethod == "Credit Card")
+                {
+                    <div style="background:#FAF9F6;border:1px solid #DDE7E4;border-radius:14px;padding:14px;margin:12px 0;">
+                        <span style="font-size:.7rem;font-weight:800;color:#2F9098;text-transform:uppercase;letter-spacing:.05em;">🔒 Secure Mock Payment Gateway</span>
+                        
+                        <label style="display:block;margin-top:8px;font-size:.78rem;font-weight:700;">Cardholder Name *</label>
+                        <input type="text" placeholder="e.g. Maria Santos" @bind="cardholderName" disabled="@isSubmitting" style="width:100%;padding:9px 12px;border:1px solid #DDE7E4;border-radius:8px;font-size:.85rem;background:#fff;" />
+
+                        <label style="display:block;margin-top:8px;font-size:.78rem;font-weight:700;">Card Number *</label>
+                        <input type="text" placeholder="4532 8901 2345 6789" maxlength="19" @bind="cardNumber" disabled="@isSubmitting" style="width:100%;padding:9px 12px;border:1px solid #DDE7E4;border-radius:8px;font-size:.85rem;background:#fff;" />
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+                            <div>
+                                <label style="display:block;font-size:.78rem;font-weight:700;">Expiry (MM/YY) *</label>
+                                <input type="text" placeholder="12/28" maxlength="5" @bind="cardExpiry" disabled="@isSubmitting" style="width:100%;padding:9px 12px;border:1px solid #DDE7E4;border-radius:8px;font-size:.85rem;background:#fff;" />
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:.78rem;font-weight:700;">CVV *</label>
+                                <input type="password" placeholder="123" maxlength="4" @bind="cardCvv" disabled="@isSubmitting" style="width:100%;padding:9px 12px;border:1px solid #DDE7E4;border-radius:8px;font-size:.85rem;background:#fff;" />
+                            </div>
+                        </div>
+                    </div>
+                }
 
                 <label>Simulated outcome</label><select @bind="outcome"><option value="success">Success</option><option value="failure">Failure</option></select>
                 <label>Voucher</label>
@@ -109,12 +134,16 @@
     [Parameter] public int SellerUserId { get; set; }
 
     private string outcome="success";
-    private string paymentMethod = "Cash on Meet-up";
+    private string paymentMethod = "Credit Card";
     private int selectedVoucherId;
     private List<MarketplaceVoucher> vouchers = new();
     private string message = string.Empty;
     private bool isError;
     private bool isSubmitting;
+    private string cardholderName = "";
+    private string cardNumber = "";
+    private string cardExpiry = "";
+    private string cardCvv = "";
 
     private List<MarketplaceCartItem> SellerItems =>
         Cart.Items.Where(x => x.SellerUserId == SellerUserId).ToList();
@@ -170,11 +199,44 @@
             message = "Simulated payment failed. Your cart and listings are unchanged.";
             return;
         }
+
+        if (paymentMethod == "Credit Card")
+        {
+            if (string.IsNullOrWhiteSpace(cardholderName))
+            {
+                isError = true;
+                message = "Please enter the cardholder name.";
+                return;
+            }
+            var cleanNum = cardNumber.Replace(" ", "").Replace("-", "");
+            if (string.IsNullOrWhiteSpace(cleanNum) || cleanNum.Length < 12 || !cleanNum.All(char.IsDigit))
+            {
+                isError = true;
+                message = "Please enter a valid card number (12-19 digits).";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(cardExpiry) || !cardExpiry.Contains('/') || cardExpiry.Length < 4)
+            {
+                isError = true;
+                message = "Please enter a valid card expiry date (MM/YY).";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(cardCvv) || cardCvv.Length < 3 || cardCvv.Length > 4 || !cardCvv.All(char.IsDigit))
+            {
+                isError = true;
+                message = "Please enter a valid 3 or 4 digit CVV code.";
+                return;
+            }
+        }
+
         isSubmitting = true;
         message = string.Empty;
 
         try
         {
+            // 1.5s simulated loading/processing delay for mock transaction
+            await Task.Delay(1500);
+
             var ids = SellerItems.Select(x => x.ListingId).ToList();
             var reference = Orders.CreateOrder(
                 Auth.CurrentUser.Id,

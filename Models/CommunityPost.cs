@@ -16,5 +16,6 @@ namespace Shoppet_VetClinic.Models
         public string PetName { get; set; } = string.Empty;
         public bool IsAuthorPremium { get; set; }
         public string AuthorRole { get; set; } = string.Empty;
+        public string AuthorAvatar { get; set; } = string.Empty;
     }
 }

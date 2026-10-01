@@ -121,7 +121,11 @@
                         @if (!string.IsNullOrWhiteSpace(ProfilePhotoUrl))
                         {
                             <img src="@ProfilePhotoUrl"
-                                 alt="@GetDisplayName()" />
+                                 alt="@GetDisplayName()"
+                                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                            <span style="display:none;">
+                                @GetInitials()
+                            </span>
                         }
                         else
                         {
@@ -314,7 +318,11 @@
                                     @if (!string.IsNullOrWhiteSpace(ProfilePhotoUrl))
                                     {
                                         <img src="@ProfilePhotoUrl"
-                                             alt="@GetDisplayName()" />
+                                             alt="@GetDisplayName()"
+                                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                                        <span style="display:none;">
+                                            @GetInitials()
+                                        </span>
                                     }
                                     else
                                     {

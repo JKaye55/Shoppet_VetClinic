@@ -2,6 +2,7 @@
 @implements IDisposable
 @inject FileStorageService FileStorage
 @using Shoppet_VetClinic.Services
+@inject MarketplaceCartService Cart
 
 @inject AuthService Auth
 @inject NavigationManager Nav
@@ -818,59 +819,255 @@
     }
 
 
-    @@media (max-width: 760px) {
+    .sp-hamburger {
+        display: none;
+        width: 38px;
+        height: 38px;
+        border-radius: 9px;
+        border: 1px solid var(--sp-border);
+        background: #FFFFFF;
+        color: var(--sp-sage-dark);
+        font-size: 1.25rem;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        transition: all .2s ease;
+    }
 
-        .sp-navigation-inner {
-            min-height: 70px;
+    .sp-hamburger:hover {
+        background: var(--sp-sage-light);
+    }
 
-            padding: 0 12px;
+    .sp-cart-btn {
+        position: relative;
+        width: 38px;
+        height: 38px;
+        border-radius: 9px;
+        border: 1px solid var(--sp-border);
+        background: #FFFFFF;
+        color: var(--sp-sage-dark);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 1.1rem;
+        transition: all .2s ease;
+    }
 
-            flex-wrap: wrap;
-        }
+    .sp-cart-btn:hover {
+        background: var(--sp-sage-light);
+        color: var(--sp-teal);
+    }
 
+    .sp-cart-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        min-width: 17px;
+        height: 17px;
+        padding: 0 4px;
+        border-radius: 999px;
+        background: var(--sp-teal);
+        color: #FFFFFF;
+        font-size: .62rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-        .sp-brand {
-            min-height: 70px;
-        }
+    .sp-badge-tier {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 7px;
+        border-radius: 6px;
+        font-size: .58rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        line-height: 1.1;
+        margin-left: 4px;
+    }
 
+    .sp-badge-tier.premium {
+        background: #FEF3C7;
+        color: #B45309;
+        border: 1px solid #F59E0B;
+    }
 
+    .sp-badge-tier.free {
+        background: #E5E7EB;
+        color: #4B5563;
+        border: 1px solid #D1D5DB;
+        cursor: pointer;
+    }
+
+    .sp-badge-tier.free:hover {
+        background: #D1D5DB;
+    }
+
+    /* Mobile Drawer */
+    .sp-drawer-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(17, 24, 39, 0.45);
+        backdrop-filter: blur(4px);
+        z-index: 2000;
+    }
+
+    .sp-drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: min(340px, 86vw);
+        background: #FFFFFF;
+        z-index: 2001;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -8px 0 32px rgba(0,0,0,.15);
+        overflow-y: auto;
+    }
+
+    .sp-drawer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--sp-border);
+    }
+
+    .sp-drawer-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 800;
+        color: var(--sp-sage-dark);
+        font-size: 1.05rem;
+    }
+
+    .sp-drawer-close {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid var(--sp-border);
+        background: #FAF9F6;
+        color: #4B5563;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .sp-drawer-user {
+        padding: 14px 18px;
+        background: #FAF9F6;
+        border-bottom: 1px solid var(--sp-border);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sp-drawer-promo {
+        margin: 10px 14px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+        border: 1px solid #F59E0B;
+        color: #92400E;
+        font-size: .78rem;
+        cursor: pointer;
+    }
+
+    .sp-drawer-promo strong {
+        display: block;
+        font-size: .84rem;
+        margin-bottom: 2px;
+    }
+
+    .sp-drawer-links {
+        display: flex;
+        flex-direction: column;
+        padding: 8px 10px;
+        gap: 2px;
+    }
+
+    .sp-drawer-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #374151;
+        font-size: .86rem;
+        font-weight: 600;
+        transition: all .15s ease;
+    }
+
+    .sp-drawer-link:hover, .sp-drawer-link.active {
+        background: var(--sp-sage-light);
+        color: var(--sp-sage-dark);
+    }
+
+    .sp-drawer-link i {
+        font-size: 1.1rem;
+        color: var(--sp-sage);
+        width: 22px;
+        text-align: center;
+    }
+
+    .sp-drawer-footer {
+        margin-top: auto;
+        padding: 14px 18px;
+        border-top: 1px solid var(--sp-border);
+        background: #FAF9F6;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    /* Modal for Premium Upgrade Prompt */
+    .sp-upgrade-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(4px);
+        z-index: 3000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+    }
+
+    .sp-upgrade-modal {
+        background: #FFFFFF;
+        width: min(440px, 100%);
+        border-radius: 20px;
+        padding: 28px 24px;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    @@media (max-width: 991px) {
         .sp-menu {
-            order: 3;
-
-            width: 100%;
-
-            flex-basis: 100%;
-
-            min-height: 45px;
-
-            justify-content:
-                flex-start;
-
-            overflow-x: auto;
+            display: none !important;
         }
 
-
-        .sp-menu-link {
-            height: 45px;
+        .sp-hamburger {
+            display: inline-flex;
         }
 
-
-        .sp-actions {
-            margin-left: auto;
-        }
-
-
-        .sp-user-info,
-        .sp-btn-portal,
-        .sp-btn-exit-preview {
+        .sp-user-name, .sp-user-role {
             display: none;
         }
+    }
 
-
-        .sp-user-profile {
-            padding: 4px;
+    @@media (max-width: 600px) {
+        .sp-brand-subtitle {
+            display: none;
         }
-
     }
 
 </style>
@@ -966,137 +1163,86 @@
 
             <!-- MENU -->
 
+            <!-- MENU -->
             <nav class="sp-menu">
-
                 <a href="/home"
                    title="Open ShoppetCare Home"
-                   class="sp-menu-link
-                   @(IsActive("/home")
-                       ? "active"
-                       : "")">
-
+                   class="sp-menu-link @(IsActive("/home") ? "active" : "")">
                     Home
-
                 </a>
 
-
-                @if(Auth.IsPetOwner) { <a href="/my-pets" class="sp-menu-link">My Pets</a><a href="/messages" class="sp-menu-link">Messages</a> }
                 <a href="/marketplace"
                    title="Browse the pre-loved pet Marketplace"
                    class="sp-menu-link @(IsActive("/marketplace") ? "active" : "")">
                     Marketplace
                 </a>
 
-                <a href="/marketplace/cart"
-                   title="Open your Marketplace cart"
-                   class="sp-menu-link @(IsActive("/marketplace/cart") ? "active" : "")">
-                    Cart
-                </a>
-
-
                 <a href="/community"
                    title="Open the ShoppetCare Community"
-                   class="sp-menu-link
-                   @(IsActive("/community")
-                       ? "active"
-                       : "")">
-
+                   class="sp-menu-link @(IsActive("/community") ? "active" : "")">
                     Community
-
                 </a>
-
 
                 <a href="/announcements"
                    title="View ShoppetCare announcements"
-                   class="sp-menu-link
-                   @(IsActive("/announcements")
-                       ? "active"
-                       : "")">
-
+                   class="sp-menu-link @(IsActive("/announcements") ? "active" : "")">
                     Announcements
-
                 </a>
-
-                <a href="/home/about"
-                   title="Learn about ShoppetCare"
-                   class="sp-menu-link @(IsActive("/about") ? "active" : "")">
-                    About
-                </a>
-
-                <a href="/home/help"
-                   title="Search the ShoppetCare Help Center"
-                   class="sp-menu-link @(IsActive("/help") ? "active" : "")">
-                    Help
-                </a>
-
 
                 @if (Auth.IsLoggedIn && Auth.IsPetOwner)
                 {
-                    <a href="/dashboard"
-                       class="sp-menu-link @(IsActive("/dashboard") ? "active" : "")">
-
-                        My ShoppetCare
-
-                    </a>
-
+                    <a href="/my-pets" class="sp-menu-link @(IsActive("/my-pets") ? "active" : "")">My Pets</a>
+                    <a href="/messages" class="sp-menu-link @(IsActive("/messages") ? "active" : "")">Messages</a>
                 }
-
             </nav>
 
-
-            <!-- =================================================
-                 RIGHT SIDE
-                 ================================================= -->
-
+            <!-- RIGHT ACTIONS -->
             <div class="sp-actions">
+                <a href="/marketplace/cart" class="sp-cart-btn" title="Marketplace Cart">
+                    <i class="bi bi-cart3" aria-hidden="true"></i>
+                    @if (CartCount > 0)
+                    {
+                        <span class="sp-cart-badge">@CartCount</span>
+                    }
+                </a>
 
                 @if (Auth.IsLoggedIn)
                 {
-                    <!-- =========================================
-                         REAL ACCOUNT
-                         ========================================= -->
-
                     <div class="sp-user-area">
-
                         <NotificationBell />
 
                         <a href="@GetProfileDestination()"
                            class="sp-user-profile"
                            title="Open Account & Profile">
-
-                            @if (!string.IsNullOrWhiteSpace(
-                                GetUserProfilePhotoUrl()))
+                            @if (!string.IsNullOrWhiteSpace(GetUserProfilePhotoUrl()))
                             {
                                 <span class="sp-user-avatar has-photo">
-
-                                    <img src="@GetUserProfilePhotoUrl()"
-                                         alt="@GetUserDisplayName()" />
-
+                                    <img src="@GetUserProfilePhotoUrl()" alt="@GetUserDisplayName()" />
                                 </span>
                             }
                             else
                             {
                                 <span class="sp-user-avatar">
-
                                     @GetUserInitials()
-
                                 </span>
                             }
 
-
                             <span class="sp-user-info">
-
                                 <span class="sp-user-name">
                                     @GetUserDisplayName()
                                 </span>
-
-
                                 <span class="sp-user-role">
                                     @GetUserRole()
+                                    @if (Auth.IsPremium)
+                                    {
+                                        <span class="sp-badge-tier premium" title="Premium Member">🏅 Premium</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="sp-badge-tier free" title="Click to upgrade" @onclick:preventDefault="true" @onclick:stopPropagation="true" @onclick="PromptUpgrade">Free</span>
+                                    }
                                 </span>
-
                             </span>
-
                         </a>
 
                         @if (Auth.IsAdmin)
@@ -1104,102 +1250,211 @@
                             <a href="/admin-portal"
                                class="sp-btn-portal"
                                title="Open Super Admin dashboard">
-
                                 Admin Portal
-
                             </a>
                         }
+
                         <button type="button"
                                 class="sp-btn-signout"
                                 title="Sign out of ShoppetCare"
                                 @onclick="LogoutAsync">
-
                             Sign Out
-
                         </button>
-
                     </div>
                 }
                 else if (Auth.IsGuest)
                 {
-                    <!-- =========================================
-                         GUEST MODE
-                         ========================================= -->
-
                     <div class="sp-guest-area">
-
                         <a href="/guest-dashboard"
                            class="sp-guest-pill"
                            title="Open your Guest Dashboard"
                            style="text-decoration:none;">
-
-                            <i class="bi bi-person-heart"
-                               aria-hidden="true">
-                            </i>
-
-                            Guest Dashboard
-
+                            <i class="bi bi-person-heart" aria-hidden="true"></i>
+                            Guest
                         </a>
 
-
-                        <a href="/login"
-                           class="sp-btn-login"
-                           title="Sign in to ShoppetCare">
-
+                        <a href="/login" class="sp-btn-login" title="Sign in">
                             Sign In
-
                         </a>
 
-
-                        <a href="/register"
-                           class="sp-btn-register"
-                           title="Create a free ShoppetCare account">
-
-                            Create Account
-
+                        <a href="/register" class="sp-btn-register" title="Create account">
+                            Register
                         </a>
-
 
                         <button type="button"
                                 class="sp-btn-exit-preview"
                                 title="Exit Guest Mode and return to Landing"
                                 @onclick="ExitGuestModeAsync">
-
                             Exit
-
                         </button>
-
                     </div>
                 }
                 else
                 {
-                    <!-- =========================================
-                         SIGNED OUT
-                         ========================================= -->
-
-                    <a href="/login"
-                       class="sp-btn-login"
-                       title="Sign in to ShoppetCare">
-
+                    <a href="/login" class="sp-btn-login" title="Sign in to ShoppetCare">
                         Sign In
-
                     </a>
 
-
-                    <a href="/register"
-                       class="sp-btn-register"
-                       title="Create a free ShoppetCare account">
-
+                    <a href="/register" class="sp-btn-register" title="Create a free ShoppetCare account">
                         Register
-
                     </a>
                 }
 
+                <button type="button" class="sp-hamburger" @onclick="ToggleMobileDrawer" aria-label="Toggle navigation menu">
+                    <i class="bi bi-list" aria-hidden="true"></i>
+                </button>
             </div>
 
         </div>
 
     </header>
+
+    <!-- MOBILE / TABLET RESPONSIVE DRAWER -->
+    @if (isMobileMenuOpen)
+    {
+        <div class="sp-drawer-backdrop" @onclick="CloseMobileDrawer"></div>
+        <aside class="sp-drawer">
+            <div class="sp-drawer-header">
+                <div class="sp-drawer-brand">
+                    <img src="/shoppetlogo.png" alt="ShoppetCare" style="width:28px;height:28px;object-fit:contain;" />
+                    <span>ShoppetCare</span>
+                </div>
+                <button type="button" class="sp-drawer-close" @onclick="CloseMobileDrawer" aria-label="Close menu">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            @if (Auth.IsLoggedIn)
+            {
+                <div class="sp-drawer-user">
+                    @if (!string.IsNullOrWhiteSpace(GetUserProfilePhotoUrl()))
+                    {
+                        <span class="sp-user-avatar has-photo" style="width:38px;height:38px;flex:0 0 38px;">
+                            <img src="@GetUserProfilePhotoUrl()" alt="@GetUserDisplayName()" />
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="sp-user-avatar" style="width:38px;height:38px;flex:0 0 38px;font-size:.85rem;">
+                            @GetUserInitials()
+                        </span>
+                    }
+                    <div>
+                        <strong style="display:block;font-size:.88rem;color:var(--sp-sage-dark);">@GetUserDisplayName()</strong>
+                        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+                            <span style="font-size:.7rem;color:var(--sp-muted);">@GetUserRole()</span>
+                            @if (Auth.IsPremium)
+                            {
+                                <span class="sp-badge-tier premium">🏅 Premium</span>
+                            }
+                            else
+                            {
+                                <span class="sp-badge-tier free" @onclick="PromptUpgrade">Free Plan</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                @if (!Auth.IsPremium)
+                {
+                    <div class="sp-drawer-promo" @onclick="PromptUpgrade">
+                        <strong>✨ Upgrade to Premium</strong>
+                        <span>₱150 for 2 months — Unlimited listings &amp; digital pet cards.</span>
+                    </div>
+                }
+            }
+
+            <nav class="sp-drawer-links">
+                <a href="/home" class="sp-drawer-link @(IsActive("/home") ? "active" : "")" @onclick="CloseMobileDrawer">
+                    <i class="bi bi-house-door"></i> Home
+                </a>
+                <a href="/marketplace" class="sp-drawer-link @(IsActive("/marketplace") ? "active" : "")" @onclick="CloseMobileDrawer">
+                    <i class="bi bi-shop"></i> Marketplace
+                </a>
+                <a href="/marketplace/cart" class="sp-drawer-link @(IsActive("/marketplace/cart") ? "active" : "")" @onclick="CloseMobileDrawer">
+                    <i class="bi bi-cart3"></i> Cart @(CartCount > 0 ? $"({CartCount})" : "")
+                </a>
+                <a href="/community" class="sp-drawer-link @(IsActive("/community") ? "active" : "")" @onclick="CloseMobileDrawer">
+                    <i class="bi bi-chat-square-heart"></i> Community &amp; Rankings
+                </a>
+                @if (Auth.IsLoggedIn && Auth.IsPetOwner)
+                {
+                    <a href="/my-pets" class="sp-drawer-link @(IsActive("/my-pets") ? "active" : "")" @onclick="CloseMobileDrawer">
+                        <i class="bi bi-heart-pulse"></i> My Pets
+                    </a>
+                    <a href="/messages" class="sp-drawer-link @(IsActive("/messages") ? "active" : "")" @onclick="CloseMobileDrawer">
+                        <i class="bi bi-chat-dots"></i> Messages
+                    </a>
+                    <a href="/dashboard" class="sp-drawer-link @(IsActive("/dashboard") ? "active" : "")" @onclick="CloseMobileDrawer">
+                        <i class="bi bi-speedometer2"></i> My ShoppetCare
+                    </a>
+                }
+                <a href="/announcements" class="sp-drawer-link @(IsActive("/announcements") ? "active" : "")" @onclick="CloseMobileDrawer">
+                    <i class="bi bi-megaphone"></i> Announcements
+                </a>
+                <a href="/clinics" class="sp-drawer-link @(IsActive("/clinics") ? "active" : "")" @onclick="CloseMobileDrawer">
+                    <i class="bi bi-hospital"></i> Verified Clinics
+                </a>
+                <a href="/about" class="sp-drawer-link @(IsActive("/about") ? "active" : "")" @onclick="CloseMobileDrawer">
+                    <i class="bi bi-info-circle"></i> About Us
+                </a>
+                <a href="/help" class="sp-drawer-link @(IsActive("/help") ? "active" : "")" @onclick="CloseMobileDrawer">
+                    <i class="bi bi-question-circle"></i> Help Center
+                </a>
+                @if (Auth.IsLoggedIn)
+                {
+                    <a href="@GetProfileDestination()" class="sp-drawer-link @(IsActive("/account") ? "active" : "")" @onclick="CloseMobileDrawer">
+                        <i class="bi bi-person-gear"></i> Account Settings
+                    </a>
+                }
+            </nav>
+
+            <div class="sp-drawer-footer">
+                @if (Auth.IsLoggedIn)
+                {
+                    @if (Auth.IsAdmin)
+                    {
+                        <a href="/admin-portal" class="sp-btn-portal" style="text-align:center;" @onclick="CloseMobileDrawer">Admin Portal</a>
+                    }
+                    <button type="button" class="sp-btn-signout" style="width:100%;" @onclick="LogoutAsync">Sign Out</button>
+                }
+                else if (Auth.IsGuest)
+                {
+                    <a href="/login" class="sp-btn-login" style="text-align:center;" @onclick="CloseMobileDrawer">Sign In</a>
+                    <a href="/register" class="sp-btn-register" style="text-align:center;" @onclick="CloseMobileDrawer">Create Account</a>
+                    <button type="button" class="sp-btn-exit-preview" style="width:100%;" @onclick="ExitGuestModeAsync">Exit Guest Mode</button>
+                }
+                else
+                {
+                    <a href="/login" class="sp-btn-login" style="text-align:center;" @onclick="CloseMobileDrawer">Sign In</a>
+                    <a href="/register" class="sp-btn-register" style="text-align:center;" @onclick="CloseMobileDrawer">Register</a>
+                }
+            </div>
+        </aside>
+    }
+
+    <!-- UPGRADE PROMPT MODAL -->
+    @if (showUpgradePrompt)
+    {
+        <div class="sp-upgrade-modal-backdrop" @onclick="CloseUpgradePrompt">
+            <div class="sp-upgrade-modal" @onclick:stopPropagation="true">
+                <div style="font-size:2.4rem;margin-bottom:8px;">🏅</div>
+                <h3 style="font-size:1.35rem;font-weight:800;color:var(--sp-sage-dark);margin:0 0 8px;">Upgrade to Premium</h3>
+                <p style="font-size:.85rem;color:var(--sp-muted);line-height:1.5;margin:0 0 20px;">
+                    Unlock the full power of ShoppetCare for only <strong>₱150 for 2 months</strong>.<br />
+                    Enjoy unlimited marketplace listings, full digital pet passport cards, and a recognized community rank badge.
+                </p>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <button type="button" class="sp-contact" style="width:100%;border:none;cursor:pointer;font-size:.88rem;padding:12px;" @onclick="GoToUpgrade">
+                        Upgrade Now · ₱150 / 2 Months
+                    </button>
+                    <button type="button" class="sp-btn-exit-preview" style="width:100%;padding:10px;" @onclick="CloseUpgradePrompt">
+                        Maybe Later
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
 
     <MyShoppetCareNav />
 
@@ -1232,6 +1487,9 @@
 
 
 @code {
+    private bool isMobileMenuOpen;
+    private bool showUpgradePrompt;
+    private int CartCount => Cart.Count;
 
     /* =========================================================
        START LISTENER
@@ -1241,6 +1499,20 @@
     {
         Auth.RegisterListener(
             OnAuthStateChanged);
+        Cart.Changed += OnCartChanged;
+        Nav.LocationChanged += OnLocationChanged;
+    }
+
+    private void ToggleMobileDrawer() => isMobileMenuOpen = !isMobileMenuOpen;
+    private void CloseMobileDrawer() => isMobileMenuOpen = false;
+    private void PromptUpgrade() { isMobileMenuOpen = false; showUpgradePrompt = true; }
+    private void CloseUpgradePrompt() => showUpgradePrompt = false;
+    private void GoToUpgrade() { showUpgradePrompt = false; Nav.NavigateTo("/premium"); }
+    private void OnCartChanged() => _ = InvokeAsync(StateHasChanged);
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        isMobileMenuOpen = false;
+        _ = InvokeAsync(StateHasChanged);
     }
 
 
@@ -1504,6 +1776,8 @@
     {
         Auth.UnregisterListener(
             OnAuthStateChanged);
+        Cart.Changed -= OnCartChanged;
+        Nav.LocationChanged -= OnLocationChanged;
     }
 
 }
