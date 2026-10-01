@@ -1238,7 +1238,7 @@ FROM UserAccounts",
         public bool ActivatePremiumUpgrade(
     int userId,
     string reference,
-    decimal amount = 49m)
+    decimal amount = 150m)
         {
             using var conn =
                 new SqlConnection(
@@ -1624,7 +1624,7 @@ FROM UserAccounts",
                     throw new InvalidOperationException(
                         "Free accounts support 1 pet. " +
                         "Upgrade to ShoppetCare Premium " +
-                        "(₱49 one-time) to add more pets.");
+                        "(₱150 for 2 months) to add more pets.");
                 }
             }
 
@@ -2163,7 +2163,7 @@ FROM UserAccounts",
                     throw new InvalidOperationException(
                         "Basic accounts can store up to 5 health " +
                         "records per pet. Upgrade to ShoppetCare " +
-                        "Premium (₱49 one-time) for unlimited " +
+                        "Premium (₱150 for 2 months) for unlimited " +
                         "health records.");
                 }
             }

@@ -28,9 +28,9 @@ namespace Shoppet_VetClinic.Services
                 {
                     Type = PremiumType,
                     Name = "ShoppetCare Premium",
-                    ShortDescription = "Lifetime Digital Pet ID features and expanded pet-owner benefits.",
-                    Amount = 49m,
-                    DurationMonths = 1200
+                    ShortDescription = "Digital Pet ID features, unlimited listings, and expanded pet-owner benefits.",
+                    Amount = 150m,
+                    DurationMonths = 2
                 },
                 SellerType => new SubscriptionOffering
                 {

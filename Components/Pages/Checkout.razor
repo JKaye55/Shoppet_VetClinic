@@ -54,7 +54,7 @@
                     <div><span>Method</span><strong>@receipt.PaymentMethod</strong></div>
                     <div><span>Amount</span><strong>₱@receipt.Amount.ToString("N2")</strong></div>
                     <div><span>Paid at</span><strong>@receipt.PaidAt.ToString("MMM d, yyyy h:mm tt")</strong></div>
-                    <div><span>Access</span><strong>@(PlanType == CommerceService.PremiumType ? "Lifetime" : receipt.ExpiresAt.ToString("MMM d, yyyy"))</strong></div>
+                    <div><span>Access</span><strong>@receipt.ExpiresAt.ToString("MMM d, yyyy")</strong></div>
                 </div>
 
                 <div class="receipt-actions">

@@ -2302,7 +2302,7 @@
 
         if (Auth.CurrentUser is not null && !ListingService.CanCreateListing(Auth.CurrentUser.Id, Auth.IsPremium, out int count))
         {
-            ShowError($"Free accounts can create up to {MarketplaceService.FreeListingLimit} marketplace listings ({count} active). Upgrade to Lifetime Premium (₱49) for unlimited listings.");
+            ShowError($"Free accounts can create up to {MarketplaceService.FreeListingLimit} marketplace listings ({count} active). Upgrade to Premium (₱150 for 2 months) for unlimited listings.");
             return;
         }
 

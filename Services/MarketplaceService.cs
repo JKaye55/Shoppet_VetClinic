@@ -253,7 +253,7 @@ namespace Shoppet_VetClinic.Services
             if (!isPremium && currentCount >= FreeListingLimit)
             {
                 throw new InvalidOperationException(
-                    $"Free accounts can create up to {FreeListingLimit} marketplace listings. Upgrade to Lifetime Premium (₱49) for unlimited listings.");
+                    $"Free accounts can create up to {FreeListingLimit} marketplace listings. Upgrade to Premium (₱150 for 2 months) for unlimited listings.");
             }
 
 
