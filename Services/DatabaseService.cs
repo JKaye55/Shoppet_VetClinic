@@ -902,84 +902,12 @@ FROM UserAccounts",
             }
 
 
-            PasswordVerificationResult verification;
-
-
-            try
-            {
-                verification =
-                    _passwordHasher
-                        .VerifyHashedPassword(
-                            user,
-                            storedCredential,
-                            password);
-            }
-            catch
-            {
-                // Existing database rows currently contain
-                // plain text. They are handled below.
-                verification =
-                    PasswordVerificationResult.Failed;
-            }
-
-
-            var legacyPlainTextMatch =
-                verification ==
-                    PasswordVerificationResult.Failed
-                &&
-                string.Equals(
-                    storedCredential,
-                    password,
-                    StringComparison.Ordinal);
-
-
-            if (!legacyPlainTextMatch &&
-                verification ==
-                    PasswordVerificationResult.Failed)
-            {
-                return null;
-            }
-
-
-            // Automatically migrate existing plaintext accounts
-            // to proper hashes on their next successful login.
-            if (legacyPlainTextMatch ||
-                verification ==
-                    PasswordVerificationResult.SuccessRehashNeeded)
-            {
-                var upgradedHash =
-                    _passwordHasher
-                        .HashPassword(
-                            user,
-                            password);
-
-
-                using var upgrade =
-                    new SqlCommand(@"
-                UPDATE UserAccounts
-
-                SET PasswordHash =
-                    @PasswordHash
-
-                WHERE Id =
-                    @Id;",
-                        conn);
-
-
-                upgrade.Parameters.AddWithValue(
-                    "@PasswordHash",
-                    upgradedHash);
-
-
-                upgrade.Parameters.AddWithValue(
-                    "@Id",
-                    user.Id);
-
-
-                upgrade.ExecuteNonQuery();
-            }
-
-
+            if (!CredentialMigration.Verify(password, storedCredential)) return null;
+            if (!string.Equals(user.Role,"Pet Owner",StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(user.Role,"PetOwner",StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(user.Role,"Admin",StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(user.Role,"SuperAdmin",StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(user.Role,"Super Admin",StringComparison.OrdinalIgnoreCase)) return null;
             return user;
         }
 
@@ -1141,69 +1069,11 @@ FROM UserAccounts",
         }
 
 
-        public bool ChangeUserPassword(
-            int userId,
-            string currentPassword,
-            string newPassword)
+        public bool ChangeUserPassword(int userId, string currentPassword, string newPassword)
         {
-            using var conn =
-                new SqlConnection(
-                    _connectionString);
-
-
-            conn.Open();
-
-
-            using var check =
-                new SqlCommand(@"
-            SELECT COUNT(1)
-            FROM UserAccounts
-            WHERE Id = @UserId
-              AND PasswordHash = @CurrentPassword",
-                    conn);
-
-
-            check.Parameters.AddWithValue(
-                "@UserId",
-                userId);
-
-
-            check.Parameters.AddWithValue(
-                "@CurrentPassword",
-                currentPassword);
-
-
-            var valid =
-                Convert.ToInt32(
-                    check.ExecuteScalar()) > 0;
-
-
-            if (!valid)
-            {
-                return false;
-            }
-
-
-            using var update =
-                new SqlCommand(@"
-            UPDATE UserAccounts
-            SET PasswordHash = @NewPassword
-            WHERE Id = @UserId",
-                    conn);
-
-
-            update.Parameters.AddWithValue(
-                "@NewPassword",
-                newPassword);
-
-
-            update.Parameters.AddWithValue(
-                "@UserId",
-                userId);
-
-
-            return
-                update.ExecuteNonQuery() > 0;
+            var user=GetUserById(userId);
+            return user is not null && AuthenticateUser(user.Email,currentPassword) is not null
+                && UpdateUserPassword(userId,newPassword);
         }
 
         public bool EmailExistsForOtherUser(
@@ -1358,18 +1228,14 @@ FROM UserAccounts",
                 return false;
             }
 
-            return
-                activatedAt.Value
-                    .AddMonths(3)
-                >=
-                DateTime.Now;
+            return premiumFlag;
         }
 
 
         public bool ActivatePremiumUpgrade(
     int userId,
     string reference,
-    decimal amount = 150m)
+    decimal amount = 49m)
         {
             using var conn =
                 new SqlConnection(
@@ -1393,23 +1259,8 @@ FROM UserAccounts",
 
                 WHERE
                     Id = @UserId
-                    AND Role = 'Pet Owner'
-                    AND
-                    (
-                        ISNULL(IsPremium, 0) = 0
-
-                        OR
-
-                        PremiumActivatedAt IS NULL
-
-                        OR
-
-                        DATEADD(
-                            MONTH,
-                            3,
-                            PremiumActivatedAt
-                        ) < SYSDATETIME()
-                    );",
+                    AND Role IN ('Pet Owner','PetOwner')
+                    AND ISNULL(IsPremium,0)=0;",
                         conn,
                         tx))
                 {
@@ -1442,7 +1293,7 @@ FROM UserAccounts",
                 VALUES
                 (
                     @UserId,
-                    'PremiumSubscription',
+                    'PremiumUpgrade',
                     @Amount,
                     @Ref
                 );",
@@ -1761,13 +1612,7 @@ FROM UserAccounts",
                         ? 0
                         : reader.GetInt32(2);
 
-                var premiumActive =
-                    premiumFlag
-                    &&
-                    premiumActivatedAt.HasValue
-                    &&
-                    premiumActivatedAt.Value
-                        .AddMonths(3) >= DateTime.Now;
+                var premiumActive = premiumFlag;
 
                 if (!premiumActive &&
                     petCount >= 1)
@@ -1775,7 +1620,7 @@ FROM UserAccounts",
                     throw new InvalidOperationException(
                         "Free accounts support 1 pet. " +
                         "Upgrade to ShoppetCare Premium " +
-                        "(₱150 / 3 months) to add more pets.");
+                        "(₱49 one-time) to add more pets.");
                 }
             }
 
@@ -2329,13 +2174,7 @@ FROM UserAccounts",
                         : reader.GetInt32(2);
 
 
-                var premiumActive =
-                    premiumFlag
-                    &&
-                    premiumActivatedAt.HasValue
-                    &&
-                    premiumActivatedAt.Value
-                        .AddMonths(3) >= DateTime.Now;
+                var premiumActive = premiumFlag;
 
 
                 if (!premiumActive &&
@@ -2344,7 +2183,7 @@ FROM UserAccounts",
                     throw new InvalidOperationException(
                         "Basic accounts can store up to 5 health " +
                         "records per pet. Upgrade to ShoppetCare " +
-                        "Premium (₱150 / 3 months) for unlimited " +
+                        "Premium (₱49 one-time) for unlimited " +
                         "health records.");
                 }
             }
@@ -2746,13 +2585,7 @@ FROM UserAccounts",
                         : reader.GetDateTime(1);
 
 
-                var premiumActive =
-                    premiumFlag
-                    &&
-                    premiumActivatedAt.HasValue
-                    &&
-                    premiumActivatedAt.Value
-                        .AddMonths(3) >= DateTime.Now;
+                var premiumActive = premiumFlag;
 
 
                 if (!premiumActive)

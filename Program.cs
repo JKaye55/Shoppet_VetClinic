@@ -24,6 +24,12 @@ builder.Services.AddScoped<MarketplaceOrderService>();
 builder.Services.AddScoped<CommunityService>();
 builder.Services.AddScoped<CommerceService>();
 var app = builder.Build();
+try { if(app.Configuration.GetValue("InitializeDatabase",true)) {
+ await SharedSchemaInitializer.EnsureAsync(app.Configuration);
+ await CommunitySchemaInitializer.EnsureAsync(app.Configuration);
+ await CredentialMigration.EnsureAsync(app.Configuration);
+} } catch(Exception ex) { app.Logger.LogError(ex,"Shared SQL initialization failed. Check connection and migration permissions."); }
+
 
 if (!app.Environment.IsDevelopment())
 {

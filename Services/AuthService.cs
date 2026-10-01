@@ -67,33 +67,10 @@ namespace Shoppet_VetClinic.Services
             string.Equals(
                 CurrentUser?.Role,
                 "Pet Owner",
-                StringComparison.OrdinalIgnoreCase);
+                StringComparison.OrdinalIgnoreCase) || string.Equals(CurrentUser?.Role,"PetOwner",StringComparison.OrdinalIgnoreCase);
 
 
-        public bool IsPremium
-        {
-            get
-            {
-                if (CurrentUser?.IsPremium != true)
-                {
-                    return false;
-                }
-
-                if (!CurrentUser.PremiumActivatedAt.HasValue)
-                {
-                    return false;
-                }
-
-                return
-                    CurrentUser
-                        .PremiumActivatedAt
-                        .Value
-                        .AddMonths(3)
-                    >=
-                    DateTime.Now;
-            }
-        }
-
+        public bool IsPremium => CurrentUser?.IsPremium == true;
 
         // Kept for compatibility with existing pages.
         public bool CanAddMorePets =>
@@ -668,7 +645,7 @@ namespace Shoppet_VetClinic.Services
                 "Pet Owner",
                 StringComparison.OrdinalIgnoreCase))
             {
-                return true;
+                return IsPetOwner;
             }
 
 
