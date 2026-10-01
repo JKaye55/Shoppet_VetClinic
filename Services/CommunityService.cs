@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Shoppet_VetClinic.Models;
 
 namespace Shoppet_VetClinic.Services
@@ -931,6 +931,67 @@ namespace Shoppet_VetClinic.Services
             return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
         }
 
+        public List<CommunityRankingItem> GetCommunityRankings(int limit = 10)
+        {
+            var list = new List<CommunityRankingItem>();
+            try
+            {
+                using var conn = new SqlConnection(_connectionString);
+                conn.Open();
+
+                const string sql = @"
+                    SELECT TOP (@Limit)
+                        u.Id AS UserId,
+                        ISNULL(u.FullName, 'ShoppetCare User') AS FullName,
+                        ISNULL(u.ProfilePicture, '') AS Avatar,
+                        (SELECT COUNT(*) FROM CommunityPosts p WHERE p.UserId = u.Id) AS PostCount,
+                        ISNULL((
+                            SELECT COUNT(*)
+                            FROM CommunityLikes cl
+                            INNER JOIN CommunityPosts cp ON cp.Id = cl.PostId
+                            WHERE cp.UserId = u.Id
+                        ), 0) AS LikesReceived,
+                        (SELECT COUNT(*) FROM CommunityComments cc WHERE cc.UserId = u.Id) AS CommentCount
+                    FROM UserAccounts u
+                    WHERE ISNULL(u.IsDisabled, 0) = 0
+                    ORDER BY (
+                        (SELECT COUNT(*) FROM CommunityPosts p WHERE p.UserId = u.Id) * 3 +
+                        ISNULL((
+                            SELECT COUNT(*)
+                            FROM CommunityLikes cl
+                            INNER JOIN CommunityPosts cp ON cp.Id = cl.PostId
+                            WHERE cp.UserId = u.Id
+                        ), 0) * 2 +
+                        (SELECT COUNT(*) FROM CommunityComments cc WHERE cc.UserId = u.Id)
+                    ) DESC, u.Id ASC;";
+
+                using var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@Limit", limit);
+
+                using var reader = cmd.ExecuteReader();
+                int rank = 1;
+                while (reader.Read())
+                {
+                    list.Add(new CommunityRankingItem
+                    {
+                        Rank = rank++,
+                        UserId = reader.GetInt32(0),
+                        FullName = reader.GetString(1),
+                        Avatar = reader.GetString(2),
+                        PostCount = reader.GetInt32(3),
+                        LikesReceived = reader.GetInt32(4),
+                        CommentCount = reader.GetInt32(5)
+                    });
+                }
+            }
+            catch
+            {
+                // Fallback gracefully if any column is unavailable
+            }
+
+            return list;
+        }
+
         private static CommunityPost MapPost(
             SqlDataReader reader)
         {
@@ -980,5 +1041,17 @@ namespace Shoppet_VetClinic.Services
                         : reader.GetString(9)
             };
         }
+    }
+
+    public class CommunityRankingItem
+    {
+        public int Rank { get; set; }
+        public int UserId { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Avatar { get; set; } = string.Empty;
+        public int PostCount { get; set; }
+        public int LikesReceived { get; set; }
+        public int CommentCount { get; set; }
+        public int Score => (PostCount * 3) + (LikesReceived * 2) + CommentCount;
     }
 }

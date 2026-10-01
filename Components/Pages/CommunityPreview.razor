@@ -1,4 +1,4 @@
-﻿@page "/community"
+@page "/community"
 @rendermode InteractiveServer
 @implements IDisposable
 
@@ -720,6 +720,71 @@
                      ================================================= -->
 
                 <aside class="sc-community-sidebar">
+
+                    <section class="sc-community-side-card sc-rankings-card">
+                        <span class="sc-community-kicker">
+                            COMMUNITY LEADERBOARD
+                        </span>
+                        <h3>
+                            🏆 Top Pet Champions
+                        </h3>
+                        <p style="margin-bottom: 12px;">
+                            Most active and engaging members in our pet community.
+                        </p>
+
+                        @if (rankings.Count == 0)
+                        {
+                            <div style="font-size:0.75rem; color:#788782; padding:8px 0;">
+                                Loading rankings...
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="sc-rankings-list">
+                                @foreach (var ranker in rankings)
+                                {
+                                    <div class="sc-ranking-item">
+                                        <div class="sc-ranking-badge">
+                                            @if (ranker.Rank == 1)
+                                            {
+                                                <span title="Rank 1">🥇</span>
+                                            }
+                                            else if (ranker.Rank == 2)
+                                            {
+                                                <span title="Rank 2">🥈</span>
+                                            }
+                                            else if (ranker.Rank == 3)
+                                            {
+                                                <span title="Rank 3">🥉</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="rank-num">#@ranker.Rank</span>
+                                            }
+                                        </div>
+                                        <div class="sc-ranking-avatar">
+                                            @if (!string.IsNullOrWhiteSpace(ranker.Avatar))
+                                            {
+                                                <img src="@ranker.Avatar" alt="@ranker.FullName" />
+                                            }
+                                            else
+                                            {
+                                                <div class="sc-ranking-avatar-fallback">@((ranker.FullName?.FirstOrDefault() ?? 'U').ToString().ToUpper())</div>
+                                            }
+                                        </div>
+                                        <div class="sc-ranking-info">
+                                            <strong class="sc-ranking-name">@ranker.FullName</strong>
+                                            <div class="sc-ranking-stats">
+                                                <span><i class="bi bi-file-post"></i> @ranker.PostCount posts</span>
+                                                <span><i class="bi bi-heart-fill" style="color:#E05A47;"></i> @ranker.LikesReceived likes</span>
+                                                <span><i class="bi bi-chat-dots"></i> @ranker.CommentCount cmts</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </section>
 
                     <section class="sc-community-side-card">
 
@@ -1811,6 +1876,93 @@
         background: #FFFFFF;
     }
 
+    .sc-rankings-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .sc-ranking-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: #F8FAF9;
+        border: 1px solid #E8EFEF;
+        transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+
+    .sc-ranking-item:hover {
+        background: #EEF7F5;
+        transform: translateY(-1px);
+    }
+
+    .sc-ranking-badge {
+        font-size: 1.1rem;
+        min-width: 24px;
+        text-align: center;
+        font-weight: 800;
+    }
+
+    .sc-ranking-badge .rank-num {
+        font-size: 0.75rem;
+        color: #788782;
+        font-weight: 800;
+    }
+
+    .sc-ranking-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: #236B69;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sc-ranking-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .sc-ranking-avatar-fallback {
+        color: #FFFFFF;
+        font-size: 0.85rem;
+        font-weight: 800;
+    }
+
+    .sc-ranking-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .sc-ranking-name {
+        display: block;
+        font-size: 0.82rem;
+        color: #173D3D;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sc-ranking-stats {
+        display: flex;
+        gap: 8px;
+        font-size: 0.68rem;
+        color: #788782;
+        margin-top: 2px;
+    }
+
+    .sc-ranking-stats span {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+
 
         .sc-community-side-card h3 {
             margin: 6px 0 0;
@@ -1969,6 +2121,7 @@
     private readonly Dictionary<int, string> commentDrafts = new();
 
     private List<CommunityPost> posts = new();
+    private List<CommunityRankingItem> rankings = new();
 
     private List<PetProfile> myPets = new();
 
@@ -2298,6 +2451,9 @@
             posts =
                 Community
                     .GetRecentPosts(50);
+            rankings =
+                Community
+                    .GetCommunityRankings(10);
         }
         catch (Exception ex)
         {

@@ -187,11 +187,11 @@
                         </strong>
 
                         <span class="hero-plan">
-                            ₱49 · Lifetime
+                            ₱150 · 2 Months
                         </span>
 
                         <small>
-                            Lifetime access · @PremiumEndDisplay
+                            2 Months access · @PremiumEndDisplay
                         </small>
                     }
                     else if (IsPremiumExpired)
@@ -596,11 +596,11 @@
                                 </span>
 
                                 <strong>
-                                    ₱49
+                                    ₱150
                                 </strong>
 
                                 <p>
-                                    Lifetime Premium access
+                                    2 Months Premium access
                                 </p>
 
                             </div>
@@ -615,7 +615,7 @@
                                     </span>
 
                                     <strong>
-                                        Every 3 Months
+                                        Every 2 Months
                                     </strong>
 
                                 </div>
@@ -718,7 +718,7 @@
                                     </strong>
 
                                     <p>
-                                        Lifetime Premium has no expiry.
+                                        Renew Premium for ₱150 (2 Months Access).
                                     </p>
 
                                 </div>
@@ -750,8 +750,8 @@
                                     </strong>
 
                                     <p>
-                                        Upgrade for ₱49 and receive
-                                        three months of ShoppetCare Premium.
+                                        Upgrade for ₱150 and receive
+                                        two months of ShoppetCare Premium.
                                     </p>
 
                                 </div>
@@ -831,9 +831,18 @@
                                         Current Password
                                     </label>
 
-                                    <input type="password"
-                                           autocomplete="current-password"
-                                           @bind="currentPassword" />
+                                    <div style="position:relative;display:flex;align-items:center;">
+                                        <input type="@(showCurrentPassword ? "text" : "password")"
+                                               autocomplete="current-password"
+                                               @bind="currentPassword"
+                                               style="padding-right:42px;width:100%;" />
+                                        <button type="button"
+                                                @onclick="() => showCurrentPassword = !showCurrentPassword"
+                                                style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:#7B8882;display:flex;align-items:center;justify-content:center;padding:4px;"
+                                                aria-label="Toggle password visibility">
+                                            <i class="bi @(showCurrentPassword ? "bi-eye-slash-fill" : "bi-eye-fill")" style="font-size:1.15rem;"></i>
+                                        </button>
+                                    </div>
 
                                 </div>
 
@@ -846,9 +855,18 @@
                                             New Password
                                         </label>
 
-                                        <input type="password"
-                                               autocomplete="new-password"
-                                               @bind="newPassword" />
+                                        <div style="position:relative;display:flex;align-items:center;">
+                                            <input type="@(showNewPassword ? "text" : "password")"
+                                                   autocomplete="new-password"
+                                                   @bind="newPassword"
+                                                   style="padding-right:42px;width:100%;" />
+                                            <button type="button"
+                                                    @onclick="() => showNewPassword = !showNewPassword"
+                                                    style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:#7B8882;display:flex;align-items:center;justify-content:center;padding:4px;"
+                                                    aria-label="Toggle password visibility">
+                                                <i class="bi @(showNewPassword ? "bi-eye-slash-fill" : "bi-eye-fill")" style="font-size:1.15rem;"></i>
+                                            </button>
+                                        </div>
 
                                     </div>
 
@@ -859,9 +877,18 @@
                                             Confirm New Password
                                         </label>
 
-                                        <input type="password"
-                                               autocomplete="new-password"
-                                               @bind="confirmPassword" />
+                                        <div style="position:relative;display:flex;align-items:center;">
+                                            <input type="@(showConfirmPassword ? "text" : "password")"
+                                                   autocomplete="new-password"
+                                                   @bind="confirmPassword"
+                                                   style="padding-right:42px;width:100%;" />
+                                            <button type="button"
+                                                    @onclick="() => showConfirmPassword = !showConfirmPassword"
+                                                    style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:#7B8882;display:flex;align-items:center;justify-content:center;padding:4px;"
+                                                    aria-label="Toggle password visibility">
+                                                <i class="bi @(showConfirmPassword ? "bi-eye-slash-fill" : "bi-eye-fill")" style="font-size:1.15rem;"></i>
+                                            </button>
+                                        </div>
 
                                     </div>
 
@@ -943,7 +970,7 @@
                             <p class="premium-description">
                                 Your Premium membership gives you
                                 expanded pet-management features
-                                for lifetime.
+                                for 2 months.
                             </p>
                         }
                         else
@@ -954,8 +981,8 @@
                             </h2>
 
                             <p class="premium-description">
-                                Upgrade for lifetime expanded
-                                ShoppetCare tools for ₱49.
+                                Upgrade for expanded
+                                ShoppetCare tools for ₱150 (2 Months).
                             </p>
                         }
 
@@ -963,11 +990,11 @@
                         <div class="premium-price">
 
                             <strong>
-                                ₱49
+                                ₱150
                             </strong>
 
                             <span>
-                                / Lifetime
+                                / 2 Months
                             </span>
 
                         </div>
@@ -2822,7 +2849,7 @@
 
 
     private const decimal PremiumPrice =
-        49m;
+        150m;
 
 
 
@@ -2859,6 +2886,10 @@
 
     private string confirmPassword =
         string.Empty;
+
+    private bool showCurrentPassword;
+    private bool showNewPassword;
+    private bool showConfirmPassword;
 
 
     private string message =
@@ -2957,7 +2988,7 @@
         "—";
 
 
-    private string PremiumEndDisplay => Auth.IsPremium ? "Lifetime" : "—";
+    private string PremiumEndDisplay => Auth.IsPremium ? "2 Months Access" : "—";
 
 
     private string PremiumReferenceDisplay =>

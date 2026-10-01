@@ -1,8 +1,9 @@
-﻿
+
 @page "/"
 @layout LandingLayout
 @rendermode InteractiveServer
 @inject NavigationManager Nav
+@inject AuthService Auth
 
 <PageTitle>ShoppetCare | Connected Pet Care</PageTitle>
 
@@ -568,6 +569,15 @@
 </div>
 
 @code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Auth.InitializeAsync();
+        if (Auth.IsLoggedIn && !Auth.IsGuest)
+        {
+            Nav.NavigateTo("/home");
+        }
+    }
+
     private void Login()
     {
         Nav.NavigateTo("/login");

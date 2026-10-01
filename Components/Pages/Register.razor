@@ -222,15 +222,25 @@
                             <span>*</span>
                         </label>
 
-                        <input id="register-password"
-                               type="password"
-                               maxlength="64"
-                               required
-                               aria-required="true"
-                               placeholder="Use at least 15 characters"
-                               @bind="password"
-                               autocomplete="new-password"
-                               disabled="@isRegistering" />
+                        <div style="position:relative;display:flex;align-items:center;">
+                            <input id="register-password"
+                                   type="@(showPassword ? "text" : "password")"
+                                   maxlength="64"
+                                   required
+                                   aria-required="true"
+                                   placeholder="Use at least 15 characters"
+                                   @bind="password"
+                                   autocomplete="new-password"
+                                   disabled="@isRegistering"
+                                   style="padding-right:42px;width:100%;" />
+
+                            <button type="button"
+                                    @onclick="() => showPassword = !showPassword"
+                                    style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:#7B8882;display:flex;align-items:center;justify-content:center;padding:4px;"
+                                    aria-label="Toggle password visibility">
+                                <i class="bi @(showPassword ? "bi-eye-slash-fill" : "bi-eye-fill")" style="font-size:1.15rem;"></i>
+                            </button>
+                        </div>
 
                         <small class="sc-register-password-help">
                             Use at least 15 characters. Spaces are allowed,
@@ -246,15 +256,25 @@
                             <span>*</span>
                         </label>
 
-                        <input id="register-confirm"
-                               type="password"
-                               maxlength="64"
-                               required
-                               aria-required="true"
-                               placeholder="Enter the same password again"
-                               @bind="confirmPassword"
-                               autocomplete="new-password"
-                               disabled="@isRegistering" />
+                        <div style="position:relative;display:flex;align-items:center;">
+                            <input id="register-confirm"
+                                   type="@(showConfirmPassword ? "text" : "password")"
+                                   maxlength="64"
+                                   required
+                                   aria-required="true"
+                                   placeholder="Enter the same password again"
+                                   @bind="confirmPassword"
+                                   autocomplete="new-password"
+                                   disabled="@isRegistering"
+                                   style="padding-right:42px;width:100%;" />
+
+                            <button type="button"
+                                    @onclick="() => showConfirmPassword = !showConfirmPassword"
+                                    style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:#7B8882;display:flex;align-items:center;justify-content:center;padding:4px;"
+                                    aria-label="Toggle confirm password visibility">
+                                <i class="bi @(showConfirmPassword ? "bi-eye-slash-fill" : "bi-eye-fill")" style="font-size:1.15rem;"></i>
+                            </button>
+                        </div>
                     </div>
 
 
@@ -714,6 +734,8 @@
     private string errorMessage =
         string.Empty;
 
+    private bool showPassword;
+    private bool showConfirmPassword;
     private bool isRegistering;
     private bool acceptedTerms;
 

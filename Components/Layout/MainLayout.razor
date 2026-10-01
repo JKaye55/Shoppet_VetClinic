@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @implements IDisposable
 @inject FileStorageService FileStorage
 @using Shoppet_VetClinic.Services
@@ -939,10 +939,10 @@
 
             <!-- BRAND -->
 
-            <a href="/"
+            <a href="@(Auth.IsLoggedIn ? "/home" : "/")"
                class="sp-brand"
                data-enhance-nav="false"
-               title="Return to the ShoppetCare landing page">
+               title="@(Auth.IsLoggedIn ? "ShoppetCare Home" : "ShoppetCare Landing")">
 
                 <img src="/shoppetlogo.png"
                      alt="ShoppetCare"
