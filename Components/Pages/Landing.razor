@@ -1,8 +1,580 @@
+﻿
 @page "/"
 @layout LandingLayout
 @rendermode InteractiveServer
-<PageTitle>ShoppetCare | Care, connect, and shop</PageTitle>
-<div class="owner-landing"><section class="landing-hero"><div><span class="owner-eyebrow">CARE FOR THE ONES YOU LOVE</span><h1>A happier life.<br /><em>A healthier pet.</em></h1><p>Keep every little detail of their care together. Find pre-loved essentials, share moments, and connect with fellow pet owners.</p><div class="landing-actions"><a class="owner-button" href="/my-pets">Meet your pet's care hub →</a><a href="/marketplace">Explore the marketplace</a></div><div class="landing-proof"><span>One shared account</span><span>Web + Mobile</span><span>Made for pet owners</span></div></div><div class="landing-photo"><img src="/hero.png" alt="A happy pet ready for a day of care" /><span>Little moments.<br /><strong>Lifelong companions.</strong></span></div></section><section class="landing-section"><span class="owner-eyebrow">EVERYDAY CARE, ALL TOGETHER</span><h2>Everything they need.<br />Everything you care about.</h2><div class="landing-features"><a href="/my-pets"><span class="feature-icon">♡</span><small>01 · CARE</small><h3>Your pet's story</h3><p>Health records, feeding routines, medication progress, and a shareable Digital Pet ID.</p><strong>Open My Pets →</strong></a><a href="/marketplace"><span class="feature-icon">♧</span><small>02 · SHOP</small><h3>Good finds. Second lives.</h3><p>Buy and sell pre-loved pet essentials. Every Pet Owner can create a listing.</p><strong>Find something special →</strong></a><a href="/community"><span class="feature-icon">☀</span><small>03 · CONNECT</small><h3>A community that cares</h3><p>Celebrate the small wins. Share photos, reply to stories, and message pet owners.</p><strong>Join the conversation →</strong></a></div></section><section class="landing-id"><div><span class="owner-eyebrow">A LITTLE CARD. A BIG CONNECTION.</span><h2>Their identity,<br />always within reach.</h2><p>A QR code connects your pet's ID to a public card. You decide whether to share your phone number.</p><a class="owner-button" href="/my-pets">Create their Pet ID →</a></div><div class="id-art"><span>SHOPPET CARE</span><strong>Made for<br />your best friend.</strong><small>Identity · Care · Connection</small></div></section><section class="landing-section landing-bottom"><h2>Make room for more happy moments.</h2><p>Start with one pet and five health records for free. Unlock unlimited pets and care records with ₱49 lifetime Premium.</p><a class="owner-button" href="/premium">Explore Premium →</a><small class="demo-copy">Academic project · Payments are simulated. No real payment details are collected.</small></section></div>
-<style>
-.owner-landing{background:#faf8f2;color:#204d4c}.landing-hero{max-width:1280px;margin:auto;padding:68px 36px;display:grid;grid-template-columns:1.1fr 1fr;gap:60px;align-items:center}.landing-hero h1{font-size:clamp(2.8rem,5.5vw,5.2rem);font-weight:800;letter-spacing:-.06em;line-height:1.05;margin:22px 0}.landing-hero em{font-family:Georgia,serif;font-weight:400;color:#498475}.landing-hero p{max-width:480px;color:#657c72;font-size:1.08rem;line-height:1.8}.landing-actions{display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin:26px 0}.landing-actions>a:not(.owner-button){color:#204d4c;font-size:.9rem;font-weight:700}.landing-proof{display:flex;gap:20px;font-size:.7rem;color:#7b8778;flex-wrap:wrap;margin-top:32px}.landing-proof span:before{content:'✓';color:#3e8476;margin-right:7px}.landing-photo{min-height:480px;position:relative;border-radius:44% 44% 28px 28px;background:#e6ecdb;overflow:hidden;display:flex;align-items:center}.landing-photo img{width:100%;height:440px;object-fit:contain}.landing-photo>span{position:absolute;bottom:25px;left:25px;background:#fffdf4ed;padding:16px 22px;border-radius:16px;color:#48665b;font-size:.85rem}.landing-photo strong{font-size:1.1rem}.landing-section{max-width:1200px;margin:auto;padding:64px 28px}.landing-section h2,.landing-id h2{font-size:clamp(2rem,3.5vw,3.3rem);letter-spacing:-.04em;margin:18px 0 34px;line-height:1.15}.landing-features{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}.landing-features>a{background:white;border:1px solid #e2e7db;border-radius:24px;padding:30px;text-decoration:none;color:#204d4c;transition:transform .2s}.landing-features>a:hover{transform:translateY(-5px)}.feature-icon{width:52px;height:52px;display:grid;place-items:center;background:#eef3e6;border-radius:16px;font-size:2rem;margin-bottom:25px}.landing-features small{font-size:.67rem;letter-spacing:.1em;color:#728477}.landing-features h3{font-size:1.4rem;margin:12px 0}.landing-features p{font-size:.9rem;line-height:1.8;color:#6d7f74;min-height:76px}.landing-features strong{font-size:.8rem}.landing-id{max-width:1144px;margin:28px auto;background:#e9efe2;border-radius:30px;padding:54px;display:grid;grid-template-columns:1.2fr 1fr;gap:40px;align-items:center}.landing-id p{max-width:400px;line-height:1.8;color:#687d6e}.id-art{background:#fffaf0;box-shadow:12px 20px 0 #d0dabb;border:1px solid #d4dcbf;border-radius:22px;padding:32px;transform:rotate(5deg);display:grid;gap:30px}.id-art span{letter-spacing:.18em;font-size:.7rem}.id-art strong{font-family:Georgia,serif;font-size:2.6rem;line-height:1.1}.id-art small{border-top:1px solid #dddcc5;padding-top:20px;color:#829077}.landing-bottom{text-align:center;max-width:850px}.landing-bottom p{line-height:1.9;color:#6a7a6d}.demo-copy{display:block;margin-top:26px;color:#81897b;font-size:.7rem}@@media(max-width:850px){.landing-hero{grid-template-columns:1fr;padding:40px 24px;gap:30px}.landing-photo{min-height:320px}.landing-photo img{height:320px}.landing-features{grid-template-columns:1fr}.landing-id{grid-template-columns:1fr;margin:20px;padding:30px}.id-art{margin:15px;transform:rotate(2deg)}.landing-section{padding:40px 24px}}
-</style>
+@inject NavigationManager Nav
+
+<PageTitle>ShoppetCare | Connected Pet Care</PageTitle>
+
+<div class="sc-landing">
+
+    <!-- =====================================================
+         01. HERO — FRONT DOOR
+         ===================================================== -->
+    <section class="sc-hero">
+        <div class="sc-shell-wide sc-hero-grid">
+
+            <div class="sc-hero-copy">
+                <span class="sc-eyebrow">
+                    <svg class="sp-icon sp-icon-sm" aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#heart-pulse"></use>
+                    </svg>
+                    Connected Pet Care Platform
+                </span>
+
+                <h1>
+                    Everything around your pet,
+                    <em>connected in one place.</em>
+                </h1>
+
+                <p class="sc-hero-lead">
+                    Manage your pets, create a Digital Pet ID, discover veterinary care,
+                    and browse pet-owner marketplace listings through one connected experience.
+                </p>
+
+                <div class="sc-hero-actions">
+                    <button type="button"
+                            class="sc-btn sc-btn-primary"
+                            @onclick="Register">
+                        Create Free Account
+                    </button>
+
+                    <button type="button"
+                            class="sc-btn sc-btn-secondary"
+                            @onclick="Guest">
+                        Explore as Guest
+                    </button>
+                </div>
+
+                <p class="sc-guest-note">
+                    Guest Mode is a limited preview. Account-only tools stay clearly locked.
+                </p>
+
+                <button type="button"
+                        class="sc-discovery-bar"
+                        @onclick="Guest"
+                        aria-label="Search marketplace listings in Guest Mode">
+                    <span class="sc-discovery-main">
+                        <svg class="sp-icon" aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#search"></use>
+                        </svg>
+                        <span>
+                            <strong>Browse marketplace listings</strong>
+                            <small>Preview ShoppetCare before creating an account</small>
+                        </span>
+                    </span>
+                    <span class="sc-discovery-action">Search as Guest</span>
+                </button>
+            </div>
+
+            <div class="sc-hero-visual">
+                <img src="/hero_vet_hd.jpg"
+                     alt="Pets receiving veterinary care"
+                     class="sc-hero-photo"
+                     loading="eager" />
+
+                <div class="sc-hero-note sc-hero-note-market">
+                    <img src="/foodprod.png" alt="" aria-hidden="true" />
+                    <span>
+                        <small>Marketplace</small>
+                        <strong>Browse pet-owner listings</strong>
+                    </span>
+                </div>
+
+                <div class="sc-hero-note sc-hero-note-petid">
+                    <img src="/pet_card_virtual.png" alt="" aria-hidden="true" />
+                    <span>
+                        <small>Digital Pet ID</small>
+                        <strong>Basic + Premium</strong>
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- =====================================================
+         02. START HERE — USER-INTENT DISCOVERY HUB
+         ===================================================== -->
+    <section class="sc-intent" aria-labelledby="sc-intent-title">
+        <div class="sc-shell-wide sc-intent-grid">
+
+            <div class="sc-intent-intro">
+                <span class="sc-eyebrow">
+                    <svg class="sp-icon sp-icon-sm" aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#compass"></use>
+                    </svg>
+                    Start here
+                </span>
+
+                <h2 id="sc-intent-title">
+                    What would you like
+                    <em>to do today?</em>
+                </h2>
+
+                <p>
+                    Choose a familiar starting point. You can preview care and marketplace
+                    discovery in Guest Mode before creating an account.
+                </p>
+
+                <span class="sc-intent-helper">
+                    Simple paths for first-time and returning pet owners.
+                </span>
+            </div>
+
+            <div class="sc-intent-actions" aria-label="Choose a ShoppetCare starting point">
+
+                <a href="#pet-id" class="sc-intent-item sc-intent-item-featured">
+                    <span class="sc-intent-icon">
+                        <svg class="sp-icon" aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#qr-code-scan"></use>
+                        </svg>
+                    </span>
+
+                    <span class="sc-intent-copy">
+                        <small>Digital Pet ID</small>
+                        <strong>Create an identity for my pet</strong>
+                        <span>Build a QR-enabled pet identity and public profile.</span>
+                    </span>
+                </a>
+
+                <button type="button"
+                        class="sc-intent-item"
+                        @onclick="Guest">
+                    <span class="sc-intent-icon">
+                        <svg class="sp-icon" aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#person-vcard"></use>
+                        </svg>
+                    </span>
+
+                    <span class="sc-intent-copy">
+                        <small>Pet Profiles</small>
+                        <strong>Manage my pet information</strong>
+                        <span>Keep identity and care details organized in one place.</span>
+                    </span>
+                </button>
+
+
+
+                <a href="#marketplace" class="sc-intent-item sc-intent-item-market">
+                    <span class="sc-intent-icon">
+                        <svg class="sp-icon" aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#shop"></use>
+                        </svg>
+                    </span>
+
+                    <span class="sc-intent-copy">
+                        <small>Marketplace</small>
+                        <strong>Browse pet-owner listings</strong>
+                        <span>Preview useful pet-related items from the community.</span>
+                    </span>
+                </a>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- =====================================================
+         03. DIGITAL PET ID — SIGNATURE PRODUCT STORY
+         ===================================================== -->
+    <section class="sc-petid" id="pet-id">
+        <div class="sc-shell-wide sc-petid-grid">
+
+            <div class="sc-petid-copy">
+                <span class="sc-eyebrow">
+                    <svg class="sp-icon sp-icon-sm" aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#qr-code"></use>
+                    </svg>
+                    Signature Feature · Digital Pet ID
+                </span>
+
+                <h2>
+                    An identity made for
+                    <em>life with your pet.</em>
+                </h2>
+
+                <p>
+                    Give your pet a portable QR-enabled identity connected to an
+                    owner-controlled public profile.
+                </p>
+
+                <div class="sc-petid-options" aria-label="Digital Pet ID options">
+                    <div>
+                        <strong>Basic Pet ID</strong>
+                        <span>Pet details, owner information, Card ID and QR public profile.</span>
+                    </div>
+                    <div>
+                        <strong>Premium Pet ID</strong>
+                        <span>Premium Pet ID themes, selected care summaries and supported export options.</span>
+                    </div>
+                </div>
+
+                <button type="button"
+                        class="sc-btn sc-btn-primary"
+                        @onclick="Register">
+                    Create Your Pet ID
+                </button>
+            </div>
+
+            <div class="sc-petid-visual">
+                <div class="sc-petid-halo" aria-hidden="true"></div>
+
+                <img src="/pet_card_virtual.png"
+                     alt="ShoppetCare Basic and Premium Digital Pet ID preview" />
+
+                <div class="sc-petid-scan-layer" aria-hidden="true">
+                    <span class="sc-petid-scan-line"></span>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- =====================================================
+         04. MARKETPLACE — COMMERCE FIRST
+         ===================================================== -->
+    <section class="sc-marketplace" id="marketplace">
+        <div class="sc-shell sc-market-head">
+            <div>
+                <span class="sc-eyebrow">
+                    <svg class="sp-icon sp-icon-sm" aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#shop"></use>
+                    </svg>
+                    Pet-owner marketplace
+                </span>
+
+                <h2>Find useful pet essentials from fellow pet owners.</h2>
+                <p>Preview community listings, then enter Guest Mode to explore the Marketplace.</p>
+            </div>
+
+            <button type="button"
+                    class="sc-btn sc-btn-primary"
+                    @onclick="Guest">
+                Browse Marketplace
+            </button>
+        </div>
+
+        <div class="sc-market-products">
+
+            <article class="sc-product-card">
+                <div class="sc-product-media">
+                    <img src="/foodprod.png" alt="Pet food and supplies listing preview" />
+                    <span class="sc-product-badge">Pet-owner listing</span>
+                </div>
+                <div class="sc-product-content">
+                    <span class="sc-product-type">Pet essentials</span>
+                    <h3>Pet Food &amp; Supplies</h3>
+                    <div class="sc-product-meta">
+                        <strong>Owner listing</strong>
+                        <span>Community seller</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="sc-product-card">
+                <div class="sc-product-media">
+                    <img src="/premiumft.png" alt="Featured pet essentials listing preview" />
+                    <span class="sc-product-badge">Featured listing</span>
+                </div>
+                <div class="sc-product-content">
+                    <span class="sc-product-type">Featured</span>
+                    <h3>Everyday Pet Essentials</h3>
+                    <div class="sc-product-meta">
+                        <strong>Browse listing</strong>
+                        <span>Community seller</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="sc-product-card">
+                <div class="sc-product-media">
+                    <img src="/petvitna.jpg" alt="Community pet listing preview" />
+                    <span class="sc-product-badge">Community listing</span>
+                </div>
+                <div class="sc-product-content">
+                    <span class="sc-product-type">Pet care</span>
+                    <h3>Owner-to-Owner Listing</h3>
+                    <div class="sc-product-meta">
+                        <strong>Local discovery</strong>
+                        <span>Pet-owner seller</span>
+                    </div>
+                </div>
+            </article>
+
+        </div>
+
+        <div class="sc-shell-wide">
+            <aside class="sc-seller-strip">
+                <div class="sc-seller-icon">
+                    <svg class="sp-icon" aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#bag"></use>
+                    </svg>
+                </div>
+                <div class="sc-seller-copy">
+                    <strong>Have a pet-related item to list?</strong>
+                    <span>Registered pet owners can create marketplace listings for the ShoppetCare community.</span>
+                </div>
+                <button type="button"
+                        class="sc-btn sc-btn-dark"
+                        @onclick="Register">
+                    Start Selling
+                </button>
+            </aside>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         05. VERIFIED VETERINARY CARE — EDGE-LED PHOTO SPLIT
+         ===================================================== -->
+
+
+    <!-- =====================================================
+         06. MOBILE — PRODUCT DEMONSTRATION
+         ===================================================== -->
+    <section class="sc-mobile" id="mobile">
+        <div class="sc-shell-wide sc-mobile-grid">
+
+            <div class="sc-mobile-copy">
+                <span class="sc-eyebrow sc-eyebrow-light">
+                    <svg class="sp-icon sp-icon-sm" aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#phone"></use>
+                    </svg>
+                    ShoppetCare Mobile
+                </span>
+
+                <h2>Your pet's essentials can move with you.</h2>
+
+                <p>
+                    The mobile experience connects to the same pet-management ecosystem,
+                    keeping important pet information within reach away from the desktop.
+                </p>
+
+                <div class="sc-mobile-benefits">
+                    <div>
+                        <span class="sc-mobile-benefit-icon">
+                            <svg class="sp-icon" aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#person-vcard"></use>
+                            </svg>
+                        </span>
+                        <span class="sc-mobile-benefit-copy">
+                            <strong>Same pet profiles</strong>
+                            <small>Continue managing your pets across devices.</small>
+                        </span>
+                    </div>
+                    <div>
+                        <span class="sc-mobile-benefit-icon">
+                            <svg class="sp-icon" aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#qr-code-scan"></use>
+                            </svg>
+                        </span>
+                        <span class="sc-mobile-benefit-copy">
+                            <strong>Digital Pet ID on the go</strong>
+                            <small>Keep pet identity accessible when needed.</small>
+                        </span>
+                    </div>
+                    <div>
+                        <span class="sc-mobile-benefit-icon">
+                            <svg class="sp-icon" aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#journal-medical"></use>
+                            </svg>
+                        </span>
+                        <span class="sc-mobile-benefit-copy">
+                            <strong>Health information when needed</strong>
+                            <small>Reach important pet records from mobile.</small>
+                        </span>
+                    </div>
+                </div>
+
+                <button type="button"
+                        class="sc-btn sc-btn-light"
+                        @onclick="Register">
+                    Create Your Account
+                </button>
+            </div>
+
+            <div class="sc-phone-stage" role="img" aria-label="ShoppetCare mobile app preview">
+                <div class="sc-phone-glow" aria-hidden="true"></div>
+                <div class="sc-phone">
+                    <div class="sc-phone-status">
+                        <span>9:41</span>
+                        <span class="sc-phone-island"></span>
+                        <svg class="sp-icon sp-icon-sm" aria-hidden="true">
+                            <use href="/icons/bootstrap-icons.svg#battery-full"></use>
+                        </svg>
+                    </div>
+
+                    <div class="sc-phone-brand">
+                        <div>
+                            <img src="/shoppetlogo.png" alt="" />
+                            <span>
+                                <strong>ShoppetCare</strong>
+                                <small>Hi, Pet Owner</small>
+                            </span>
+                        </div>
+                        <span class="sc-phone-bell">
+                            <svg class="sp-icon sp-icon-sm" aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#bell"></use>
+                            </svg>
+                        </span>
+                    </div>
+
+                    <div class="sc-phone-pet">
+                        <div>
+                            <small>MY PET</small>
+                            <strong>Buddy</strong>
+                            <span>Golden Retriever</span>
+                        </div>
+                        <span class="sc-phone-id">PET-A1B2C3</span>
+                    </div>
+
+                    <div class="sc-phone-actions">
+                        <span class="sc-phone-action sc-phone-action-id">
+                            <svg class="sp-icon" aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#qr-code-scan"></use>
+                            </svg>
+                            Pet ID
+                        </span>
+                        <span class="sc-phone-action sc-phone-action-care">
+                            <svg class="sp-icon" aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#hospital"></use>
+                            </svg>
+                            Records
+                        </span>
+                        <span class="sc-phone-action sc-phone-action-market">
+                            <svg class="sp-icon" aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#shop"></use>
+                            </svg>
+                            Market
+                        </span>
+                    </div>
+
+                    <div class="sc-phone-title-row">
+                        <span>
+                            <strong>Pet care today</strong>
+                            <small>Quick access</small>
+                        </span>
+                        <small>View all</small>
+                    </div>
+
+                    <div class="sc-phone-feed">
+                        <div>
+                            <span>
+                                <svg class="sp-icon" aria-hidden="true">
+                                    <use href="/icons/bootstrap-icons.svg#calendar2-check"></use>
+                                </svg>
+                            </span>
+                            <p>
+                                <strong>Vaccination record</strong>
+                                <small>Keep Buddy's records organized.</small>
+                            </p>
+                        </div>
+                        <div>
+                            <span>
+                                <svg class="sp-icon" aria-hidden="true">
+                                    <use href="/icons/bootstrap-icons.svg#patch-check"></use>
+                                </svg>
+                            </span>
+                            <p>
+                                <strong>Track pet care</strong>
+                                <small>Keep care reminders in one place.</small>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="sc-phone-nav">
+                        <span class="active">
+                            <svg class="sp-icon sp-icon-sm" aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#house"></use>
+                            </svg>
+                        </span>
+                        <span>
+                            <svg class="sp-icon sp-icon-sm" aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#person-vcard"></use>
+                            </svg>
+                        </span>
+                        <span>
+                            <svg class="sp-icon sp-icon-sm" aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#shop"></use>
+                            </svg>
+                        </span>
+                        <span>
+                            <svg class="sp-icon sp-icon-sm" aria-hidden="true">
+                                <use href="/icons/bootstrap-icons.svg#person"></use>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- =====================================================
+     07. FOR VETERINARY CLINICS — OPEN EDITORIAL SPLIT
+     ===================================================== -->
+    <section class="sc-business" id="people">
+        <div class="sc-shell-wide sc-business-grid">
+
+            <div class="sc-business-photo">
+                <img src="/vet_group.png"
+                     alt="People behind pet care" />
+
+                <div class="sc-business-credential" aria-hidden="true">
+                    <span class="sc-business-credential-check">✓</span>
+
+                    <span class="sc-business-credential-copy">
+                        <small>ShoppetCare</small>
+                        <strong>Pet Care Community</strong>
+                    </span>
+                </div>
+            </div>
+
+            <div class="sc-business-copy">
+                <span class="sc-eyebrow">
+                    <svg class="sp-icon sp-icon-sm" aria-hidden="true">
+                        <use href="/icons/bootstrap-icons.svg#building"></use>
+                    </svg>
+                    People Behind the Care
+                </span>
+
+                <h2>Better care starts with connected pet owners.</h2>
+
+                <p>
+                    Share pet stories, keep care information organized, and connect with
+                    fellow pet owners through ShoppetCare.
+                </p>
+
+                <ul class="sc-business-benefits">
+                    <li>Pet-owner community</li>
+                    <li>Connected pet profiles</li>
+                    <li>Shared care information</li>
+                </ul>
+
+                <button type="button"
+                        class="sc-btn sc-btn-primary"
+                        @onclick="Login">
+                    Join ShoppetCare
+                </button>
+            </div>
+
+        </div>
+    </section>
+</div>
+
+@code {
+    private void Login()
+    {
+        Nav.NavigateTo("/login");
+    }
+
+    private void Register()
+    {
+        Nav.NavigateTo("/register");
+    }
+
+    private void Guest()
+    {
+        Nav.NavigateTo("/home?guest=true");
+    }
+}
