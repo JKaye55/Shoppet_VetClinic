@@ -546,7 +546,7 @@
                                     {
                                         <div class="sc-community-post-image">
 
-                                            @foreach (var url in post.ImageUrl.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                            @foreach (var url in post.ImageUrl.Split(new[] { ',', '|', ';' }, StringSplitOptions.RemoveEmptyEntries))
                                             {
                                                 <img src="@url" alt="Photo shared by @post.AuthorName" loading="lazy" />
                                             }

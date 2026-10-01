@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 
 @inject AuthService Auth
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Guest Dashboard | ShoppetCare</PageTitle>
 
@@ -238,12 +239,20 @@
                                 <small><i class="bi bi-clock"></i> Temporary · browser session only</small>
                             </div>
 
-                            <button type="button"
-                                    class="gd-secondary"
-                                    onclick="window.shoppetGuestDashboard.openEditor()"
-                                    title="Edit the temporary Guest pet">
-                                <i class="bi bi-pencil"></i> Edit
-                            </button>
+                            <div class="gd-card-actions">
+                                <button type="button"
+                                        class="gd-secondary"
+                                        onclick="window.shoppetGuestDashboard.openEditor()"
+                                        title="Edit the temporary Guest pet">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                                <button type="button"
+                                        class="gd-secondary gd-delete-btn"
+                                        onclick="window.shoppetGuestDashboard.deletePet()"
+                                        title="Delete this temporary Guest pet">
+                                    <i class="bi bi-trash3"></i> Delete
+                                </button>
+                            </div>
                         </div>
 
                         <div class="gd-preview-lock">
@@ -311,9 +320,9 @@
     .gd-primary,.gd-secondary{min-height:42px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:9px;font-size:.72rem;font-weight:850;cursor:pointer}.gd-primary{border:1px solid #2F9098;background:#2F9098;color:#fff}.gd-secondary{border:1px solid #CBD9D5;background:#fff;color:#173D3D}.gd-link{text-decoration:none;margin-top:14px}
     .gd-editor{margin-top:22px;grid-template-columns:210px minmax(0,1fr);gap:22px}.gd-photo-preview{aspect-ratio:1;border:1px solid #DCE6E3;border-radius:18px;background:linear-gradient(145deg,#EFF7F5,#FAFCFB);display:grid;place-items:center;overflow:hidden}.gd-browser-photo{width:100%;height:100%;object-fit:cover}.gd-photo-placeholder{width:100%;height:100%;display:grid;place-content:center;text-align:center;padding:16px}.gd-photo-placeholder i{margin-bottom:8px;color:#2F9098;font-size:1.65rem}.gd-photo-placeholder strong,.gd-photo-placeholder span{display:block}.gd-photo-placeholder span{margin-top:4px;color:#83908B;font-size:.62rem}.gd-photo-button{width:100%;min-height:41px;margin-top:9px;display:flex;align-items:center;justify-content:center;gap:7px;border-radius:9px;background:#173D3D;color:#fff;font-size:.68rem;font-weight:850;cursor:pointer}.gd-native-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.gd-remove-photo{width:100%;margin-top:6px;border:0;background:transparent;color:#9B4A4A;font-size:.64rem;font-weight:800;cursor:pointer}.gd-photo-note{display:block;margin-top:8px;color:#8A9692;font-size:.6rem;line-height:1.45}
     .gd-step{margin:0 0 9px;display:flex;align-items:center;gap:9px}.gd-step:not(:first-child){margin-top:18px}.gd-step>span{width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:#E5F3F1;color:#267C83;font-size:.64rem;font-weight:900}.gd-step strong,.gd-step small{display:block}.gd-step strong{font-size:.72rem}.gd-step small{margin-top:1px;color:#8A9692;font-size:.59rem}.gd-field{display:grid;gap:6px}.gd-field label{color:#52635D;font-size:.64rem;font-weight:900}.gd-field input{width:100%;min-height:43px;padding:0 12px;border:1px solid #D7E2DF;border-radius:9px;background:#fff;color:#1E2D27;font-size:.72rem;outline:none}.gd-field input:focus{border-color:#2F9098;box-shadow:0 0 0 3px rgba(47,144,152,.10)}.gd-field small{color:#8A9692;font-size:.58rem}.gd-breed-grid,.gd-species-grid{display:grid;gap:7px}.gd-breed-grid{grid-template-columns:repeat(3,1fr)}.gd-species-grid{grid-template-columns:repeat(4,1fr)}.gd-choice,.gd-species{min-height:39px;padding:8px;border:1px solid #D7E2DF;border-radius:9px;background:#fff;color:#52635D;font-size:.65rem;font-weight:800;cursor:pointer}.gd-choice.active,.gd-species.active{border-color:#2F9098;background:#EAF6F4;color:#216E74;box-shadow:0 0 0 2px rgba(47,144,152,.08)}.gd-species{display:grid;place-items:center;gap:3px}.gd-form-actions{display:flex;gap:7px;margin-top:19px}.gd-message{margin-top:10px;padding:10px;border-radius:9px;background:#EEF7F2;color:#276B4D;font-size:.68rem}.gd-message.error{background:#FFF0F0;color:#994242}
-    .gd-pet-card{margin-top:22px;display:grid;grid-template-columns:88px 1fr auto;align-items:center;gap:15px;padding:17px;border:1px solid #E1EAE7;border-radius:15px;background:#FAFCFB}.gd-pet-photo{width:88px;height:88px;border-radius:17px;background:linear-gradient(145deg,#E2F2EF,#F3F8F6);display:grid;place-items:center;overflow:hidden;color:#267C83;font-size:1.4rem;font-weight:900}.gd-pet-photo>span{width:100%;height:100%;display:grid;place-items:center}.gd-pet-copy>span{color:#2F9098;font-size:.57rem;font-weight:900;letter-spacing:.08em}.gd-pet-copy h3{margin:4px 0;font-size:1.2rem}.gd-pet-copy p{font-size:.7rem}.gd-pet-copy small{display:block;margin-top:7px;color:#8A9692;font-size:.61rem}.gd-preview-lock{margin-top:12px;padding:14px;display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:11px;border:1px solid #E1E6E4;border-radius:12px;background:#F4F6F5}.gd-lock-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#E5E9E7;color:#7D8985}.gd-preview-lock strong,.gd-preview-lock span{display:block}.gd-preview-lock span{margin-top:2px;color:#7D8985;font-size:.64rem}.gd-preview-lock a{color:#267C83;text-decoration:none;font-size:.66rem;font-weight:900}
+    .gd-pet-card{margin-top:22px;display:grid;grid-template-columns:88px 1fr auto;align-items:center;gap:15px;padding:17px;border:1px solid #E1EAE7;border-radius:15px;background:#FAFCFB}.gd-pet-photo{width:88px;height:88px;border-radius:17px;background:linear-gradient(145deg,#E2F2EF,#F3F8F6);display:grid;place-items:center;overflow:hidden;color:#267C83;font-size:1.4rem;font-weight:900}.gd-pet-photo>span{width:100%;height:100%;display:grid;place-items:center}.gd-pet-copy>span{color:#2F9098;font-size:.57rem;font-weight:900;letter-spacing:.08em}.gd-pet-copy h3{margin:4px 0;font-size:1.2rem}.gd-pet-copy p{font-size:.7rem}.gd-pet-copy small{display:block;margin-top:7px;color:#8A9692;font-size:.61rem}.gd-card-actions{display:flex;gap:8px;align-items:center}.gd-delete-btn{border-color:#F5C6CB!important;color:#A92424!important;background:#FFF5F5!important}.gd-delete-btn:hover{background:#FFEAEA!important}.gd-preview-lock{margin-top:12px;padding:14px;display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:11px;border:1px solid #E1E6E4;border-radius:12px;background:#F4F6F5}.gd-lock-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#E5E9E7;color:#7D8985}.gd-preview-lock strong,.gd-preview-lock span{display:block}.gd-preview-lock span{margin-top:2px;color:#7D8985;font-size:.64rem}.gd-preview-lock a{color:#267C83;text-decoration:none;font-size:.66rem;font-weight:900}
     .gd-access-intro{font-size:.7rem}.gd-section-label{margin-top:18px;padding-bottom:7px;border-bottom:1px solid #E7ECEA;font-size:.57rem;font-weight:900;letter-spacing:.1em}.available-label{color:#2F9098}.locked-label{color:#8E9995}.gd-access-row{display:grid;grid-template-columns:24px 1fr auto;gap:8px;align-items:start;padding:11px 4px;border-bottom:1px solid #EDF1EF}.gd-access-row.available{text-decoration:none;color:#1E2D27}.gd-access-row.available:hover{padding-left:8px;background:#FAFCFB}.gd-access-row.available>i{color:#2F9098}.gd-access-row.locked{color:#89948F;background:linear-gradient(90deg,rgba(245,247,246,.8),transparent)}.gd-access-row.locked>i{color:#A5AEAA}.gd-access-row strong,.gd-access-row span{display:block}.gd-access-row strong{font-size:.7rem}.gd-access-row span{margin-top:2px;color:#83908B;font-size:.61rem;line-height:1.4}.gd-open{align-self:center!important;color:#267C83!important;font-weight:900}.gd-locked-text{align-self:center!important;padding:4px 6px;border-radius:999px;background:#ECEFEE;color:#8A9591!important;font-size:.55rem!important;font-weight:900}.gd-create,.gd-signin{display:flex;align-items:center;justify-content:center;gap:7px;min-height:43px;margin-top:14px;border-radius:9px;text-decoration:none;font-size:.7rem;font-weight:900}.gd-create{background:#2F9098;color:#fff}.gd-signin{margin-top:7px;border:1px solid #CBD9D5;color:#173D3D}.gd-centered{max-width:650px;margin:auto;text-align:center}.gd-centered p{margin:auto}.gd-large-icon{width:54px;height:54px;margin:0 auto 12px;display:grid;place-items:center;border-radius:15px;background:#EAF6F4;color:#2F9098;font-size:1.25rem}.gd-loading{text-align:center}
-    @@media(max-width:950px){.gd-grid{grid-template-columns:1fr}.gd-hero-inner{align-items:start;flex-direction:column}.gd-status{width:100%}}@@media(max-width:650px){.gd-editor{grid-template-columns:1fr}.gd-photo-column{max-width:260px}.gd-breed-grid{grid-template-columns:repeat(2,1fr)}.gd-species-grid{grid-template-columns:repeat(2,1fr)}.gd-pet-card{grid-template-columns:70px 1fr}.gd-pet-photo{width:70px;height:70px}.gd-pet-card>button{grid-column:2}.gd-preview-lock{grid-template-columns:38px 1fr}.gd-preview-lock>a{grid-column:2}.gd-mode-note{grid-template-columns:auto 1fr}.gd-mode-note>a{grid-column:2}.gd-empty-visual{align-items:flex-start;flex-direction:column}}
+    @@media(max-width:950px){.gd-grid{grid-template-columns:1fr}.gd-hero-inner{align-items:start;flex-direction:column}.gd-status{width:100%}}@@media(max-width:650px){.gd-editor{grid-template-columns:1fr}.gd-photo-column{max-width:260px}.gd-breed-grid{grid-template-columns:repeat(2,1fr)}.gd-species-grid{grid-template-columns:repeat(2,1fr)}.gd-pet-card{grid-template-columns:70px 1fr}.gd-pet-photo{width:70px;height:70px}.gd-card-actions{grid-column:2;flex-wrap:wrap}.gd-preview-lock{grid-template-columns:38px 1fr}.gd-preview-lock>a{grid-column:2}.gd-mode-note{grid-template-columns:auto 1fr}.gd-mode-note>a{grid-column:2}.gd-empty-visual{align-items:flex-start;flex-direction:column}}
 </style>
 
 @code {
@@ -334,5 +343,10 @@
         await Auth.InitializeAsync();
         ready = true;
         await InvokeAsync(StateHasChanged);
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("window.shoppetGuestDashboard.init");
+        }
+        catch { }
     }
 }

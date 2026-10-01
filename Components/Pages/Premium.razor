@@ -1,6 +1,421 @@
 @page "/premium"
 @rendermode InteractiveServer
+
 @inject AuthService Auth
 @inject DatabaseService Db
-<main class="owner-shell"><header class="owner-header"><span class="owner-eyebrow">MORE ROOM FOR THEIR STORY</span><h1>One upgrade. Two months of care.</h1><p>ShoppetCare Premium · ₱150 for 2 months</p></header><div class="owner-grid"><section class="owner-card"><h2>Free</h2><p>1 pet · 5 health records per pet · Up to 3 marketplace listings</p><p>Digital Pet ID, feeding routines, community, messaging, and pre-loved marketplace with 3 listings limit.</p></section><section class="owner-card"><h2>Premium · ₱150 / 2 Months</h2><p>Unlimited pets, unlimited health records, unlimited marketplace listings, advanced Pet ID customization, and health exports.</p><p>Premium gives you 2 months of full access.</p>@if(!ready){<p>Loading account…</p>}else if(Auth.IsPremium){<p class="owner-notice">Your Premium access is active.</p><a class="owner-button" href="/my-pets">My pets</a>}else if(Auth.IsPetOwner){<label>Demo payment outcome<select @bind="succeed"><option value="true">Simulated success</option><option value="false">Simulated failure</option></select></label><button @onclick="Activate" disabled="@busy">@(busy?"Processing…":"Activate Premium · ₱150")</button>}else{<a class="owner-button" href="/login">Sign in to upgrade</a>}</section></div>@if(message.Length>0){<p role="status" class="owner-notice">@message</p>}<p><small>Academic simulation. No real money is charged, and no payment credentials are requested.</small></p></main>
-@code {bool ready,busy;string succeed="true",message="";protected override async Task OnAfterRenderAsync(bool first){if(!first)return;await Auth.InitializeAsync();ready=true;StateHasChanged();}void Activate(){if(busy||!Auth.IsPetOwner||Auth.CurrentUser is null)return;busy=true;try{if(succeed!="true"){message="Simulated payment failed. Your account has not changed.";return;}if(Db.ActivatePremiumUpgrade(Auth.CurrentUser.Id,"PREM-"+Guid.NewGuid().ToString("N")[..12],150m)){Auth.RefreshCurrentUser();message="Premium (₱150 / 2 Months) is active on Web and Mobile.";}else{Auth.RefreshCurrentUser();message=Auth.IsPremium?"Your Premium is already active.":"Upgrade could not be completed.";}}catch(Exception){message="Could not save the upgrade. Check the database connection.";}finally{busy=false;}}}
+@inject NavigationManager Nav
+
+<PageTitle>ShoppetCare Premium — Compare & Upgrade</PageTitle>
+
+<div class="prem-page">
+    <header class="prem-hero">
+        <div class="prem-shell">
+            <span class="prem-badge"><i class="bi bi-stars"></i> SHOPPETCARE ALL-ACCESS</span>
+            <h1>One upgrade. Two full months of care.</h1>
+            <p>Unlock unlimited pets, unlimited health logs, and unrestricted marketplace capabilities for your shared account.</p>
+            <div class="prem-price-tag">
+                <span class="prem-currency">₱</span>
+                <span class="prem-amount">150</span>
+                <span class="prem-period">/ 2 months</span>
+                <span class="prem-pill">Single Account Sync</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="prem-shell prem-content">
+        @if (!ready)
+        {
+            <div class="prem-loading">
+                <i class="bi bi-arrow-repeat spin"></i>
+                <span>Loading your account access...</span>
+            </div>
+        }
+        else if (showReceipt && latestReceipt != null)
+        {
+            <!-- DEMO RECEIPT CARD -->
+            <section class="prem-receipt-panel">
+                <div class="prem-receipt-header">
+                    <div class="prem-receipt-check"><i class="bi bi-check-circle-fill"></i></div>
+                    <h2>Payment Successful</h2>
+                    <p>Your ShoppetCare Premium upgrade is active on both Web and Mobile.</p>
+                </div>
+
+                <div class="prem-receipt-card">
+                    <div class="prem-receipt-brand">
+                        <strong>ShoppetCare Premium Pass</strong>
+                        <span class="prem-status-pill success">ACTIVE</span>
+                    </div>
+
+                    <div class="prem-receipt-grid">
+                        <div>
+                            <small>Reference No.</small>
+                            <strong>@latestReceipt.Reference</strong>
+                        </div>
+                        <div>
+                            <small>Date & Time</small>
+                            <strong>@latestReceipt.Date.ToString("MMM d, yyyy h:mm tt")</strong>
+                        </div>
+                        <div>
+                            <small>Account Holder</small>
+                            <strong>@(Auth.CurrentUser?.FullName ?? "Pet Owner")</strong>
+                        </div>
+                        <div>
+                            <small>Account Email</small>
+                            <strong>@(Auth.CurrentUser?.Email ?? "owner@shoppet.local")</strong>
+                        </div>
+                        <div>
+                            <small>Payment Method</small>
+                            <strong>@selectedPaymentMethod</strong>
+                        </div>
+                        <div>
+                            <small>Valid Through</small>
+                            <strong style="color:#0D9488;">@latestReceipt.ExpiresAt.ToString("MMMM d, yyyy")</strong>
+                        </div>
+                    </div>
+
+                    <div class="prem-receipt-total">
+                        <span>Total Paid (Demo Simulation)</span>
+                        <span>₱150.00</span>
+                    </div>
+
+                    <div class="prem-receipt-note">
+                        <i class="bi bi-info-circle"></i>
+                        <span>This was processed as an academic simulation. No real money was charged. Your permissions have been updated immediately in the shared database.</span>
+                    </div>
+                </div>
+
+                <div class="prem-receipt-actions">
+                    <a href="/my-pets" class="prem-btn primary"><i class="bi bi-heart-pulse-fill"></i> Go to My Pets</a>
+                    <button type="button" class="prem-btn secondary" @onclick="() => showReceipt = false">Back to Plan Overview</button>
+                </div>
+            </section>
+        }
+        else if (Auth.IsPremium)
+        {
+            <!-- ACTIVE PREMIUM MEMBER BANNER -->
+            <section class="prem-active-card">
+                <div class="prem-active-top">
+                    <div class="prem-active-icon"><i class="bi bi-shield-fill-check"></i></div>
+                    <div>
+                        <span class="prem-active-eyebrow">YOUR PLAN IS ACTIVE</span>
+                        <h2>ShoppetCare Premium Member</h2>
+                        <p>Your account enjoys all unlocked features across Web and Mobile with shared account synchronization.</p>
+                    </div>
+                </div>
+
+                <div class="prem-perks-grid">
+                    <div class="prem-perk">
+                        <i class="bi bi-check2-circle"></i>
+                        <div><strong>Unlimited Pets</strong><span>Create and track profiles for all your pets without restrictions.</span></div>
+                    </div>
+                    <div class="prem-perk">
+                        <i class="bi bi-check2-circle"></i>
+                        <div><strong>Unlimited Health Records</strong><span>Save comprehensive vaccinations, medications, and weight logs.</span></div>
+                    </div>
+                    <div class="prem-perk">
+                        <i class="bi bi-check2-circle"></i>
+                        <div><strong>Unlimited Marketplace Listings</strong><span>Post as many pre-loved items as you need.</span></div>
+                    </div>
+                    <div class="prem-perk">
+                        <i class="bi bi-check2-circle"></i>
+                        <div><strong>Custom Pet ID Badges</strong><span>Exclusive badge styling and high-resolution QR cards.</span></div>
+                    </div>
+                </div>
+
+                <div class="prem-active-actions">
+                    <a href="/my-pets" class="prem-btn primary"><i class="bi bi-arrow-right"></i> Manage My Pets</a>
+                    <a href="/marketplace" class="prem-btn secondary">Explore Marketplace</a>
+                </div>
+            </section>
+        }
+        else
+        {
+            <!-- PLAN COMPARISON MATRIX -->
+            <div class="prem-grid">
+                <!-- Free Plan -->
+                <div class="prem-card">
+                    <div class="prem-card-head">
+                        <span class="prem-plan-label">STANDARD</span>
+                        <h3>Free Tier</h3>
+                        <div class="prem-plan-price">₱0 <span>/ forever</span></div>
+                        <p>Essential pet care essentials to get you started.</p>
+                    </div>
+
+                    <ul class="prem-feature-list">
+                        <li><i class="bi bi-check-lg ok"></i> 1 Pet Profile</li>
+                        <li><i class="bi bi-check-lg ok"></i> Up to 5 Health Records per pet</li>
+                        <li><i class="bi bi-check-lg ok"></i> Up to 3 Marketplace Listings</li>
+                        <li><i class="bi bi-check-lg ok"></i> Digital Pet ID card</li>
+                        <li><i class="bi bi-check-lg ok"></i> Public Community browsing & posting</li>
+                        <li class="disabled"><i class="bi bi-x-lg no"></i> Multi-pet health tracking</li>
+                        <li class="disabled"><i class="bi bi-x-lg no"></i> Health log export & attachments</li>
+                        <li class="disabled"><i class="bi bi-x-lg no"></i> Verified Premium badge</li>
+                    </ul>
+
+                    <div class="prem-card-foot">
+                        <div class="prem-current-status">Current Active Plan</div>
+                    </div>
+                </div>
+
+                <!-- Premium Plan -->
+                <div class="prem-card featured">
+                    <div class="prem-ribbon">POPULAR CHOICE</div>
+                    <div class="prem-card-head">
+                        <span class="prem-plan-label highlight">UNRESTRICTED</span>
+                        <h3>ShoppetCare Premium</h3>
+                        <div class="prem-plan-price">₱150 <span>/ 2 months</span></div>
+                        <p>The complete pet health & pre-loved marketplace toolkit.</p>
+                    </div>
+
+                    <ul class="prem-feature-list">
+                        <li><i class="bi bi-check-lg ok"></i> <strong>Unlimited Pet Profiles</strong></li>
+                        <li><i class="bi bi-check-lg ok"></i> <strong>Unlimited Health & Vaccine Logs</strong></li>
+                        <li><i class="bi bi-check-lg ok"></i> <strong>Unlimited Marketplace Listings</strong></li>
+                        <li><i class="bi bi-check-lg ok"></i> Premium Digital Pet ID badges</li>
+                        <li><i class="bi bi-check-lg ok"></i> Complete multi-image post attachments</li>
+                        <li><i class="bi bi-check-lg ok"></i> Mobile & Web live account sync</li>
+                        <li><i class="bi bi-check-lg ok"></i> Priority Community support & badges</li>
+                    </ul>
+
+                    <div class="prem-card-foot">
+                        @if (!Auth.IsLoggedIn)
+                        {
+                            <a href="/login?returnUrl=/premium" class="prem-btn primary full">Sign In to Upgrade</a>
+                        }
+                        else if (!Auth.IsPetOwner)
+                        {
+                            <div class="prem-notice warning">Available for Pet Owner accounts.</div>
+                        }
+                        else
+                        {
+                            <button type="button" class="prem-btn primary full" @onclick="OpenCheckoutModal">
+                                <i class="bi bi-lightning-charge-fill"></i> Upgrade Now · ₱150
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- DEMO CHECKOUT MODAL -->
+            @if (showCheckoutModal)
+            {
+                <div class="prem-modal-backdrop" @onclick="CloseCheckoutModal">
+                    <div class="prem-modal-box" @onclick:stopPropagation="true">
+                        <div class="prem-modal-header">
+                            <div>
+                                <span class="prem-badge"><i class="bi bi-shield-lock-fill"></i> DEMO CHECKOUT</span>
+                                <h3>ShoppetCare Premium (2 Months)</h3>
+                            </div>
+                            <button type="button" class="prem-modal-close" @onclick="CloseCheckoutModal">&times;</button>
+                        </div>
+
+                        <div class="prem-modal-body">
+                            <!-- Predefined Payment Method -->
+                            <label class="prem-form-label">Select Demo Payment Method</label>
+                            <div class="prem-method-grid">
+                                <div class="prem-method-card @(selectedPaymentMethod.Contains("Visa") ? "selected" : "")"
+                                     @onclick='() => SelectPaymentMethod("Demo Visa (•••• 4242)")'>
+                                    <input type="radio" name="paymethod" checked="@(selectedPaymentMethod.Contains("Visa"))" />
+                                    <div>
+                                        <strong>💳 Demo Visa</strong>
+                                        <small>•••• 4242 · Pre-approved Sandbox</small>
+                                    </div>
+                                </div>
+
+                                <div class="prem-method-card @(selectedPaymentMethod.Contains("GCash") ? "selected" : "")"
+                                     @onclick='() => SelectPaymentMethod("Demo GCash (0917-•••-1234)")'>
+                                    <input type="radio" name="paymethod" checked="@(selectedPaymentMethod.Contains("GCash"))" />
+                                    <div>
+                                        <strong>📱 Demo GCash</strong>
+                                        <small>0917-•••-1234 · Pre-approved Sandbox</small>
+                                    </div>
+                                </div>
+
+                                <div class="prem-method-card @(selectedPaymentMethod.Contains("Maya") ? "selected" : "")"
+                                     @onclick='() => SelectPaymentMethod("Demo Maya (0918-•••-5678)")'>
+                                    <input type="radio" name="paymethod" checked="@(selectedPaymentMethod.Contains("Maya"))" />
+                                    <div>
+                                        <strong>⚡ Demo Maya</strong>
+                                        <small>0918-•••-5678 · Pre-approved Sandbox</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Simulation Outcome Selector -->
+                            <label class="prem-form-label" style="margin-top:16px;">Simulation Outcome</label>
+                            <select class="prem-select" @bind="simulationOutcome">
+                                <option value="success">✅ Approved — Process simulated payment successfully</option>
+                                <option value="decline">❌ Declined — Simulate card / wallet payment failure</option>
+                            </select>
+
+                            @if (!string.IsNullOrEmpty(errorMessage))
+                            {
+                                <div class="prem-error-alert">
+                                    <i class="bi bi-exclamation-octagon-fill"></i>
+                                    <span>@errorMessage</span>
+                                </div>
+                            }
+
+                            <!-- Summary Box -->
+                            <div class="prem-summary-box">
+                                <div class="prem-summary-row">
+                                    <span>Plan Duration</span>
+                                    <strong>60 Days (2 Months)</strong>
+                                </div>
+                                <div class="prem-summary-row">
+                                    <span>Account</span>
+                                    <strong>@(Auth.CurrentUser?.Email ?? "Current Account")</strong>
+                                </div>
+                                <div class="prem-summary-row total">
+                                    <span>Total Due</span>
+                                    <span class="prem-price-text">₱150.00</span>
+                                </div>
+                            </div>
+
+                            <p class="prem-sim-note">
+                                🔒 Predefined sandbox demo. No real credit card or bank details are collected or processed.
+                            </p>
+                        </div>
+
+                        <div class="prem-modal-footer">
+                            <button type="button" class="prem-btn secondary" @onclick="CloseCheckoutModal" disabled="@isProcessing">
+                                Cancel
+                            </button>
+                            <button type="button" class="prem-btn primary" @onclick="ProcessDemoPayment" disabled="@isProcessing">
+                                @(isProcessing ? "Processing Simulation..." : "Confirm & Upgrade · ₱150")
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </main>
+</div>
+
+<style>
+    .prem-page{min-height:100vh;background:#FAF9F6;color:#1E2D27;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}.prem-page *{box-sizing:border-box}.prem-shell{width:min(1100px,calc(100% - 40px));margin:auto}
+    .prem-hero{padding:54px 0 46px;background:radial-gradient(circle at 80% 20%,rgba(47,144,152,.25),transparent 45%),linear-gradient(145deg,#173D3D,#0F2C2C);color:#fff;text-align:center}.prem-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.12);color:#8ED6D8;font-size:.65rem;font-weight:900;letter-spacing:.12em}.prem-hero h1{margin:14px 0 10px;font-size:clamp(2.2rem,4.5vw,3.4rem);font-weight:900;letter-spacing:-.04em}.prem-hero p{max-width:650px;margin:0 auto;color:rgba(255,255,255,.75);font-size:1.05rem;line-height:1.5}.prem-price-tag{display:inline-flex;align-items:baseline;gap:4px;margin-top:20px;padding:10px 22px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(255,255,255,.08)}.prem-currency{font-size:1.2rem;font-weight:900;color:#F3D27A}.prem-amount{font-size:2.2rem;font-weight:900;line-height:1;color:#fff}.prem-period{color:rgba(255,255,255,.7);font-size:.9rem;font-weight:600}.prem-pill{margin-left:8px;padding:3px 8px;border-radius:6px;background:#2F9098;color:#fff;font-size:.62rem;font-weight:800;letter-spacing:.05em}
+    .prem-content{padding:42px 0 70px}.prem-loading{text-align:center;padding:60px 0;display:flex;flex-direction:column;align-items:center;gap:12px;color:#6A7A74}.spin{animation:spin 1s infinite linear;font-size:2rem}@@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    .prem-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:stretch}.prem-card{position:relative;background:#fff;border:1px solid #DCE6E3;border-radius:20px;padding:34px;box-shadow:0 10px 30px rgba(23,61,61,.04);display:flex;flex-direction:column;justify-content:space-between}.prem-card.featured{border-color:#2F9098;box-shadow:0 18px 40px rgba(47,144,152,.12)}.prem-ribbon{position:absolute;top:-12px;right:26px;padding:5px 12px;border-radius:999px;background:#2F9098;color:#fff;font-size:.62rem;font-weight:900;letter-spacing:.08em}
+    .prem-plan-label{display:inline-block;font-size:.65rem;font-weight:900;letter-spacing:.1em;color:#6A7A74}.prem-plan-label.highlight{color:#2F9098}.prem-card h3{margin:8px 0 6px;font-size:1.6rem;font-weight:800;letter-spacing:-.03em}.prem-plan-price{font-size:2.2rem;font-weight:900;color:#173D3D;margin-bottom:8px}.prem-plan-price span{font-size:.85rem;color:#85948F;font-weight:600}.prem-card-head p{margin:0;color:#65746F;font-size:.85rem;line-height:1.4}
+    .prem-feature-list{list-style:none;margin:26px 0;padding:0;display:grid;gap:12px}.prem-feature-list li{display:flex;align-items:center;gap:10px;font-size:.85rem;color:#283832}.prem-feature-list li.disabled{color:#A2ADA9}.prem-feature-list li i.ok{color:#2F9098;font-size:1.1rem;flex-shrink:0}.prem-feature-list li i.no{color:#B8C2BF;font-size:1rem;flex-shrink:0}
+    .prem-card-foot{margin-top:auto;padding-top:20px;border-top:1px solid #EEF3F1}.prem-current-status{text-align:center;padding:12px;background:#F2F6F5;border-radius:10px;color:#52635D;font-size:.8rem;font-weight:800}
+    .prem-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;border-radius:12px;font-size:.85rem;font-weight:800;text-decoration:none;cursor:pointer;border:0;transition:transform .12s ease}.prem-btn.full{width:100%}.prem-btn.primary{background:#2F9098;color:#fff}.prem-btn.primary:hover{background:#267C83}.prem-btn.secondary{background:#fff;border:1px solid #CCD8D4;color:#173D3D}.prem-btn.secondary:hover{background:#F7FAF9}.prem-btn:disabled{opacity:.6;cursor:not-allowed}
+    .prem-notice.warning{padding:12px;background:#FFF6E5;border-radius:10px;color:#8A6318;font-size:.8rem;text-align:center}
+    /* Active Card */
+    .prem-active-card{background:#fff;border:1px solid #D0E5E0;border-radius:22px;padding:36px;box-shadow:0 14px 34px rgba(47,144,152,.08)}.prem-active-top{display:flex;gap:20px;align-items:center;padding-bottom:24px;border-bottom:1px solid #EEF3F1}.prem-active-icon{width:64px;height:64px;border-radius:18px;background:#EAF6F4;color:#2F9098;display:grid;place-items:center;font-size:2rem;flex-shrink:0}.prem-active-eyebrow{color:#2F9098;font-size:.65rem;font-weight:900;letter-spacing:.12em}.prem-active-top h2{margin:4px 0 6px;font-size:1.8rem;letter-spacing:-.03em}.prem-active-top p{margin:0;color:#667671;font-size:.9rem}
+    .prem-perks-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:28px 0}.prem-perk{display:flex;gap:12px;align-items:flex-start}.prem-perk i{color:#2F9098;font-size:1.2rem;margin-top:2px}.prem-perk strong,.prem-perk span{display:block}.prem-perk strong{font-size:.85rem;color:#173D3D}.prem-perk span{font-size:.75rem;color:#6C7B76;margin-top:2px}.prem-active-actions{display:flex;gap:12px;padding-top:10px}
+    /* Modal */
+    .prem-modal-backdrop{position:fixed;inset:0;background:rgba(18,36,32,.65);backdrop-filter:blur(3px);z-index:9999;display:grid;place-items:center;padding:20px}.prem-modal-box{background:#fff;border-radius:22px;max-width:520px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.25);overflow:hidden;animation:pop .2s ease-out}@@keyframes pop{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+    .prem-modal-header{padding:22px 24px;background:#F9FCFB;border-bottom:1px solid #E6EFEA;display:flex;justify-content:space-between;align-items:flex-start}.prem-modal-header h3{margin:6px 0 0;font-size:1.25rem;letter-spacing:-.02em}.prem-modal-close{background:transparent;border:0;font-size:1.5rem;color:#8B9994;cursor:pointer;line-height:1}.prem-modal-body{padding:24px}.prem-form-label{display:block;font-size:.72rem;font-weight:900;letter-spacing:.05em;color:#50615B;margin-bottom:8px;text-transform:uppercase}
+    .prem-method-grid{display:grid;gap:8px}.prem-method-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #D5E1DD;border-radius:12px;background:#fff;cursor:pointer;transition:border-color .15s}.prem-method-card.selected{border-color:#2F9098;background:#EEF8F6}.prem-method-card strong,.prem-method-card small{display:block}.prem-method-card strong{font-size:.8rem;color:#173D3D}.prem-method-card small{font-size:.7rem;color:#71827D;margin-top:2px}
+    .prem-select{width:100%;min-height:42px;padding:8px 12px;border:1px solid #D5E1DD;border-radius:10px;background:#fff;font-size:.82rem;color:#1E2D27;outline:none}
+    .prem-summary-box{margin-top:18px;padding:14px 16px;background:#F8FAFA;border:1px solid #E1EBE7;border-radius:12px}.prem-summary-row{display:flex;justify-content:space-between;font-size:.8rem;color:#61726C;margin-bottom:6px}.prem-summary-row.total{margin-top:10px;padding-top:10px;border-top:1px dashed #D2DED9;font-size:.95rem;font-weight:900;color:#173D3D}.prem-price-text{color:#2F9098;font-size:1.15rem}.prem-sim-note{margin:12px 0 0;font-size:.7rem;color:#85948F;line-height:1.4}.prem-error-alert{margin-top:12px;padding:10px 14px;border-radius:10px;background:#FFF0F0;border:1px solid #F5C6CB;color:#9E2828;display:flex;align-items:center;gap:8px;font-size:.78rem}
+    .prem-modal-footer{padding:18px 24px;background:#F9FCFB;border-top:1px solid #E6EFEA;display:flex;justify-content:flex-end;gap:10px}
+    /* Receipt */
+    .prem-receipt-panel{max-width:620px;margin:0 auto;text-align:center}.prem-receipt-header h2{margin:12px 0 6px;font-size:1.8rem;letter-spacing:-.03em}.prem-receipt-header p{margin:0 0 24px;color:#62736E;font-size:.9rem}.prem-receipt-check{width:68px;height:68px;border-radius:50%;background:#E6F7F3;color:#0D9488;font-size:2.4rem;display:grid;place-items:center;margin:0 auto}
+    .prem-receipt-card{background:#fff;border:1px solid #D5E3DF;border-radius:20px;padding:28px;text-align:left;box-shadow:0 12px 30px rgba(0,0,0,.05)}.prem-receipt-brand{display:flex;justify-content:space-between;align-items:center;padding-bottom:18px;border-bottom:1px solid #EDF3F0;font-size:1.05rem;color:#173D3D}.prem-status-pill{padding:4px 8px;border-radius:6px;font-size:.65rem;font-weight:900}.prem-status-pill.success{background:#DEF7EC;color:#03543F}
+    .prem-receipt-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:20px 0;border-bottom:1px solid #EDF3F0}.prem-receipt-grid small{display:block;font-size:.68rem;color:#83948F;text-transform:uppercase;font-weight:800}.prem-receipt-grid strong{display:block;font-size:.85rem;color:#1E2D27;margin-top:3px}
+    .prem-receipt-total{display:flex;justify-content:space-between;padding:16px 0;font-size:1.15rem;font-weight:900;color:#173D3D;border-bottom:1px dashed #D5E3DF}.prem-receipt-note{margin-top:14px;padding:10px 12px;background:#F5FAF8;border-radius:10px;display:flex;gap:8px;font-size:.72rem;color:#5F736D;line-height:1.45}.prem-receipt-actions{margin-top:24px;display:flex;gap:12px;justify-content:center}
+    @@media(max-width:768px){.prem-grid,.prem-perks-grid{grid-template-columns:1fr}.prem-active-top{flex-direction:column;text-align:center}.prem-active-actions{flex-direction:column}.prem-receipt-grid{grid-template-columns:1fr}}
+</style>
+
+@code {
+    private bool ready;
+    private bool isProcessing;
+    private bool showCheckoutModal;
+    private bool showReceipt;
+    private string errorMessage = string.Empty;
+    private string selectedPaymentMethod = "Demo Visa (•••• 4242)";
+    private string simulationOutcome = "success";
+    private ReceiptModel? latestReceipt;
+
+    private void SelectPaymentMethod(string method)
+    {
+        selectedPaymentMethod = method;
+    }
+
+    private class ReceiptModel
+    {
+        public string Reference { get; set; } = string.Empty;
+        public DateTime Date { get; set; }
+        public DateTime ExpiresAt { get; set; }
+        public decimal Amount { get; set; }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await Auth.InitializeAsync();
+        ready = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OpenCheckoutModal()
+    {
+        errorMessage = string.Empty;
+        simulationOutcome = "success";
+        showCheckoutModal = true;
+    }
+
+    private void CloseCheckoutModal()
+    {
+        if (isProcessing) return;
+        showCheckoutModal = false;
+        errorMessage = string.Empty;
+    }
+
+    private async Task ProcessDemoPayment()
+    {
+        if (isProcessing || !Auth.IsPetOwner || Auth.CurrentUser is null) return;
+
+        if (simulationOutcome == "decline")
+        {
+            errorMessage = "Simulated payment was declined by the card/wallet provider. Your account has not changed.";
+            return;
+        }
+
+        isProcessing = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var reference = "PREM-" + Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
+            var success = Db.ActivatePremiumUpgrade(Auth.CurrentUser.Id, reference, 150m);
+
+            if (success)
+            {
+                Auth.RefreshCurrentUser();
+                latestReceipt = new ReceiptModel
+                {
+                    Reference = reference,
+                    Date = DateTime.Now,
+                    ExpiresAt = DateTime.Now.AddDays(60),
+                    Amount = 150m
+                };
+                showCheckoutModal = false;
+                showReceipt = true;
+            }
+            else
+            {
+                Auth.RefreshCurrentUser();
+                if (Auth.IsPremium)
+                {
+                    errorMessage = "Your Premium access is already active.";
+                }
+                else
+                {
+                    errorMessage = "The upgrade could not be recorded. Check your database connection.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Upgrade failed: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+}

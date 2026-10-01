@@ -1,12 +1,14 @@
 window.shoppetGuestDashboard = (() => {
     const key = "shoppetcare.guestPet.v2";
     let photoUrl = null;
+    let isEditing = false;
+    let initialized = false;
 
     const breeds = {
-        Dog: ["Shih Tzu","Golden Retriever","Beagle","Poodle","Aspin / Mixed Breed","Other Dog Breed"],
-        Cat: ["Persian","Siamese","Domestic Shorthair","Puspin / Mixed Breed","British Shorthair","Other Cat Breed"],
-        Rabbit: ["Holland Lop","Lionhead","Mini Rex","Mixed Breed Rabbit","Netherland Dwarf","Other Rabbit Breed"],
-        Bird: ["Lovebird","Parakeet","Cockatiel","Canary","African Grey","Other Bird"]
+        Dog: ["Shih Tzu", "Golden Retriever", "Beagle", "Poodle", "Aspin / Mixed Breed", "Other Dog Breed"],
+        Cat: ["Persian", "Siamese", "Domestic Shorthair", "Puspin / Mixed Breed", "British Shorthair", "Other Cat Breed"],
+        Rabbit: ["Holland Lop", "Lionhead", "Mini Rex", "Mixed Breed Rabbit", "Netherland Dwarf", "Other Rabbit Breed"],
+        Bird: ["Lovebird", "Parakeet", "Cockatiel", "Canary", "African Grey", "Other Bird"]
     };
 
     function el(id) { return document.getElementById(id); }
@@ -20,7 +22,11 @@ window.shoppetGuestDashboard = (() => {
     }
 
     function writeState(state) {
-        sessionStorage.setItem(key, JSON.stringify(state));
+        try {
+            sessionStorage.setItem(key, JSON.stringify(state));
+        } catch (e) {
+            console.warn("Could not save to sessionStorage", e);
+        }
     }
 
     function setMessage(message, isError = false) {
@@ -67,6 +73,7 @@ window.shoppetGuestDashboard = (() => {
     }
 
     function openEditor() {
+        isEditing = true;
         const editor = el("gdEditor");
         const empty = el("gdEmpty");
         const saved = el("gdSaved");
@@ -84,6 +91,9 @@ window.shoppetGuestDashboard = (() => {
             if (breed) {
                 setTimeout(() => selectBreed(breed), 0);
             }
+            if (state.photo) {
+                photoUrl = state.photo;
+            }
         } else {
             selectSpecies("Dog");
         }
@@ -91,15 +101,39 @@ window.shoppetGuestDashboard = (() => {
     }
 
     function cancelEditor() {
+        isEditing = false;
         const state = readState();
-        if (state) showSaved(state);
-        else {
+        if (state && state.name) {
+            showSaved(state);
+        } else {
             const editor = el("gdEditor");
             const empty = el("gdEmpty");
+            const saved = el("gdSaved");
             if (editor) editor.style.display = "none";
             if (empty) empty.style.display = "block";
+            if (saved) saved.style.display = "none";
         }
         setMessage("");
+    }
+
+    function deletePet() {
+        if (!confirm("Are you sure you want to delete your temporary guest pet?")) {
+            return;
+        }
+        sessionStorage.removeItem(key);
+        removePhoto();
+        isEditing = false;
+
+        const empty = el("gdEmpty");
+        const editor = el("gdEditor");
+        const saved = el("gdSaved");
+        if (empty) empty.style.display = "block";
+        if (editor) editor.style.display = "none";
+        if (saved) saved.style.display = "none";
+
+        const nameInput = el("gdPetName");
+        if (nameInput) nameInput.value = "";
+        setMessage("Guest pet removed. You can create a new temporary pet anytime.");
     }
 
     function save() {
@@ -121,8 +155,9 @@ window.shoppetGuestDashboard = (() => {
             return;
         }
 
-        const state = { name, species, breed };
+        const state = { name, species, breed, photo: photoUrl || "" };
         writeState(state);
+        isEditing = false;
         showSaved(state);
         setMessage("");
     }
@@ -143,6 +178,9 @@ window.shoppetGuestDashboard = (() => {
         if (details) details.textContent = [state.species, state.breed].filter(Boolean).join(" · ");
         if (fallback) fallback.textContent = (state.name || "P").trim().charAt(0).toUpperCase();
 
+        if (state.photo) {
+            photoUrl = state.photo;
+        }
         applyPhotoToSaved();
     }
 
@@ -150,7 +188,7 @@ window.shoppetGuestDashboard = (() => {
         const file = input?.files?.[0];
         if (!file) return;
 
-        const allowed = ["image/jpeg","image/png","image/webp"];
+        const allowed = ["image/jpeg", "image/png", "image/webp"];
         if (!allowed.includes((file.type || "").toLowerCase())) {
             input.value = "";
             setMessage("Use a JPG, PNG or WEBP pet photo.", true);
@@ -162,20 +200,28 @@ window.shoppetGuestDashboard = (() => {
             return;
         }
 
-        if (photoUrl) URL.revokeObjectURL(photoUrl);
-        photoUrl = URL.createObjectURL(file);
-        applyPhotoToEditor();
-        applyPhotoToSaved();
-        setMessage("");
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            photoUrl = e.target.result;
+            applyPhotoToEditor();
+            applyPhotoToSaved();
+            setMessage("");
+        };
+        reader.readAsDataURL(file);
     }
 
     function removePhoto() {
-        if (photoUrl) URL.revokeObjectURL(photoUrl);
         photoUrl = null;
         const input = el("gdPhotoInput");
         if (input) input.value = "";
         applyPhotoToEditor();
         applyPhotoToSaved();
+
+        const state = readState();
+        if (state) {
+            state.photo = "";
+            writeState(state);
+        }
     }
 
     function applyPhotoToEditor() {
@@ -203,10 +249,15 @@ window.shoppetGuestDashboard = (() => {
     }
 
     function init() {
-        if (!el("guestDashboardRoot")) return;
+        const root = el("guestDashboardRoot");
+        if (!root) return;
+        // Never reset while user is actively editing
+        if (isEditing) return;
+
         const state = readState();
-        if (state?.name) showSaved(state);
-        else {
+        if (state?.name) {
+            showSaved(state);
+        } else {
             const empty = el("gdEmpty");
             const editor = el("gdEditor");
             const saved = el("gdSaved");
@@ -214,15 +265,20 @@ window.shoppetGuestDashboard = (() => {
             if (editor) editor.style.display = "none";
             if (saved) saved.style.display = "none";
         }
+        initialized = true;
     }
 
-    const observer = new MutationObserver(() => init());
-    observer.observe(document.documentElement, { childList: true, subtree: true });
-    window.addEventListener("pageshow", init);
+    // Initialize when DOM is ready or page is shown without constantly resetting on mutation
+    window.addEventListener("pageshow", () => { isEditing = false; init(); });
     document.addEventListener("DOMContentLoaded", init);
-    window.addEventListener("beforeunload", () => {
-        if (photoUrl) URL.revokeObjectURL(photoUrl);
-    });
 
-    return { init, openEditor, cancelEditor, save, selectSpecies, selectBreed, previewPhoto, removePhoto };
+    // Light check only if root appears dynamically after Blazor renders
+    const checkInterval = setInterval(() => {
+        if (el("guestDashboardRoot") && !initialized) {
+            init();
+            clearInterval(checkInterval);
+        }
+    }, 150);
+
+    return { init, openEditor, cancelEditor, save, deletePet, selectSpecies, selectBreed, previewPhoto, removePhoto };
 })();

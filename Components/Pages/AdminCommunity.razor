@@ -33,7 +33,14 @@ else
                 <article>
                     <div class="post-head"><div><strong>@post.AuthorName</strong><span>@post.PostedAt.ToString("MMM d, yyyy h:mm tt") @(string.IsNullOrWhiteSpace(post.PetName) ? "" : $" · {post.PetName}")</span></div><button @onclick="() => Remove(post)">Remove</button></div>
                     <p>@post.Caption</p>
-                    @if(!string.IsNullOrWhiteSpace(post.ImageUrl)){<img src="@post.ImageUrl" alt="Community post image" />}
+                    @if(!string.IsNullOrWhiteSpace(post.ImageUrl)){
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;">
+                            @foreach(var url in post.ImageUrl.Split(new[] { ',', '|', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                <img src="@url" alt="Community post image" style="max-width:200px;max-height:160px;border-radius:8px;object-fit:cover;" />
+                            }
+                        </div>
+                    }
                     <div class="likes"><i class="bi bi-heart-fill"></i> @post.LikeCount like@(post.LikeCount == 1 ? "" : "s")</div>
                 </article>
             }
