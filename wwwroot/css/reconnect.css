@@ -1,0 +1,167 @@
+.components-reconnect-first-attempt-visible,
+.components-reconnect-repeated-attempt-visible,
+.components-reconnect-failed-visible,
+.components-pause-visible,
+.components-resume-failed-visible,
+.components-rejoining-animation {
+    display: none;
+}
+
+#components-reconnect-modal.components-reconnect-show .components-reconnect-first-attempt-visible,
+#components-reconnect-modal.components-reconnect-show .components-rejoining-animation,
+#components-reconnect-modal.components-reconnect-paused .components-pause-visible,
+#components-reconnect-modal.components-reconnect-resume-failed .components-resume-failed-visible,
+#components-reconnect-modal.components-reconnect-retrying,
+#components-reconnect-modal.components-reconnect-retrying .components-reconnect-repeated-attempt-visible,
+#components-reconnect-modal.components-reconnect-retrying .components-rejoining-animation,
+#components-reconnect-modal.components-reconnect-failed,
+#components-reconnect-modal.components-reconnect-failed .components-reconnect-failed-visible {
+    display: block;
+}
+
+#components-reconnect-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: none;
+    place-items: center;
+    padding: 16px;
+    background: rgba(12, 22, 18, .55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+#components-reconnect-modal.components-reconnect-show,
+#components-reconnect-modal.components-reconnect-retrying,
+#components-reconnect-modal.components-reconnect-failed,
+#components-reconnect-modal.components-reconnect-paused,
+#components-reconnect-modal.components-reconnect-resume-failed {
+    display: grid;
+}
+
+.sc-reconnect-card {
+    padding: 34px;
+    background: #FFFFFF;
+    border-radius: 24px;
+    box-shadow: 0 25px 70px rgba(20, 35, 29, .24);
+    text-align: center;
+    color: #1E2D27;
+}
+
+    .sc-reconnect-card h3 {
+        margin: 18px 0 10px;
+        font-size: 1.35rem;
+        font-weight: 800;
+    }
+
+.sc-reconnect-message {
+    margin: 0 auto 20px;
+    max-width: 330px;
+    color: #66736D;
+    font-size: .92rem;
+    line-height: 1.6;
+}
+
+.sc-reconnect-spinner {
+    width: 54px;
+    height: 54px;
+    margin: auto;
+    border-radius: 50%;
+    border: 4px solid #EEF4F1;
+    border-top-color: #5C766D;
+    animation: scReconnectSpin .8s linear infinite;
+}
+
+.sc-reconnect-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 10px 0 4px;
+    color: #5C766D;
+    font-size: .82rem;
+}
+
+.sc-reconnect-wait {
+    margin: 0 0 22px;
+    color: #7B8882;
+    font-size: .8rem;
+}
+
+.sc-reconnect-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.sc-reconnect-primary,
+.sc-reconnect-secondary {
+    min-height: 42px;
+    padding: 0 20px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font: inherit;
+    font-size: .82rem;
+    font-weight: 750;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform .2s ease, background .2s ease;
+}
+
+.sc-reconnect-primary {
+    border: 0;
+    background: #1E2D27;
+    color: white;
+}
+
+.sc-reconnect-secondary {
+    border: 1px solid #DDE4E0;
+    background: white;
+    color: #1E2D27;
+}
+
+    .sc-reconnect-primary:hover,
+    .sc-reconnect-secondary:hover {
+        transform: translateY(-1px);
+    }
+
+.sc-reconnect-primary:hover {
+    background: #5C766D;
+}
+
+.sc-reconnect-secondary:hover {
+    background: #EEF4F1;
+}
+
+.sc-reconnect-note {
+    display: block;
+    margin-top: 20px;
+    color: #909A95;
+    font-size: .72rem;
+    line-height: 1.5;
+}
+
+@keyframes scReconnectSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 520px) {
+
+    .sc-reconnect-card {
+        padding: 28px 22px;
+    }
+
+    .sc-reconnect-actions {
+        flex-direction: column;
+    }
+
+    .sc-reconnect-primary,
+    .sc-reconnect-secondary {
+        width: 100%;
+    }
+}

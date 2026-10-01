@@ -662,20 +662,6 @@
                 string.Empty;
 
 
-            if (string.Equals(
-                role,
-                "Clinic Staff",
-                StringComparison.OrdinalIgnoreCase)
-                &&
-                !user.ClinicId.HasValue)
-            {
-                errorMessage =
-                    "This clinic staff account has not been assigned to a clinic yet.";
-
-                return;
-            }
-
-
             await Auth.LoginAsync(
                 user);
 
@@ -692,8 +678,6 @@
                     "Super Admin" =>
                         "/admin-portal",
 
-                    "Clinic Staff" =>
-                        "/clinic-portal",
 
                     _ =>
                         "/dashboard"
