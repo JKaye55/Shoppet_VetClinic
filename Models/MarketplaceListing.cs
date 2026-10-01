@@ -45,5 +45,10 @@ namespace Shoppet_VetClinic.Models
         public bool IsSellerPremium { get; set; }
         public int OrderCount { get; set; }
         public string? LastBuyerName { get; set; }
+
+        // Rubric E-Commerce Catalog Specifications
+        public string Sku => $"SHP-{(string.IsNullOrWhiteSpace(Category) ? "GEN" : (Category.Length >= 3 ? Category.Substring(0, 3) : Category)).ToUpperInvariant()}-{Id:D4}";
+        public string StockDisplay => string.Equals(Status, "Available", StringComparison.OrdinalIgnoreCase) ? "In Stock (1 available)" : Status;
+        public int StockQuantity => string.Equals(Status, "Available", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
     }
 }

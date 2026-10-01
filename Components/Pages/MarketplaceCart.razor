@@ -61,7 +61,15 @@
                             </div>
                             <div class="item-copy">
                                 <h3>@item.Title</h3>
-                                <span>Quantity 1 · Pre-loved item</span>
+                                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
+                                    <span style="background:#FAF5FF;color:#7E22CE;padding:1px 6px;border-radius:4px;font-size:.65rem;font-weight:700;border:1px solid #E9D5FF;">
+                                        SKU: SHP-MKT-@item.ListingId.ToString("D4")
+                                    </span>
+                                    <span style="background:#ECFDF5;color:#047857;padding:1px 6px;border-radius:4px;font-size:.65rem;font-weight:700;">
+                                        In Stock (Qty 1)
+                                    </span>
+                                    <span style="color:#85928E;font-size:.7rem;">· Pre-loved item</span>
+                                </div>
                             </div>
                             <strong>₱@item.Price.ToString("N2")</strong>
                             <button type="button" @onclick="() => Remove(item.ListingId)">Remove</button>

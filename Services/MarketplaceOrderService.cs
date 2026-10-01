@@ -475,6 +475,62 @@ namespace Shoppet_VetClinic.Services
             return result;
         }
 
+        public MarketplaceVoucher ClaimPromoCode(int userId, string promoCode, decimal amount = 50.00m)
+        {
+            var code = (promoCode ?? string.Empty).Trim().ToUpperInvariant();
+            var expiresAt = DateTime.Now.AddDays(14);
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+
+            // Check if user already has an active voucher with this code
+            using var check = new SqlCommand(@"
+                SELECT Id, UserId, Code, Amount, Status, CreatedAt, ExpiresAt, UsedAt, UsedOrderId
+                FROM MarketplaceVouchers
+                WHERE UserId = @UserId AND Code = @Code AND Status = 'Active' AND UsedAt IS NULL AND ExpiresAt >= SYSDATETIME();", conn);
+            check.Parameters.AddWithValue("@UserId", userId);
+            check.Parameters.AddWithValue("@Code", code);
+            using var r = check.ExecuteReader();
+            if (r.Read())
+            {
+                return new MarketplaceVoucher
+                {
+                    Id = r.GetInt32(0),
+                    UserId = r.GetInt32(1),
+                    Code = r.GetString(2),
+                    Amount = r.GetDecimal(3),
+                    Status = r.GetString(4),
+                    CreatedAt = r.GetDateTime(5),
+                    ExpiresAt = r.GetDateTime(6)
+                };
+            }
+            r.Close();
+
+            using var cmd = new SqlCommand(@"
+                INSERT INTO MarketplaceVouchers (UserId, Code, Amount, Status, CreatedAt, ExpiresAt)
+                OUTPUT INSERTED.Id, INSERTED.UserId, INSERTED.Code, INSERTED.Amount, INSERTED.Status, INSERTED.CreatedAt, INSERTED.ExpiresAt
+                VALUES (@UserId, @Code, @Amount, 'Active', SYSDATETIME(), @ExpiresAt);", conn);
+            cmd.Parameters.AddWithValue("@UserId", userId);
+            cmd.Parameters.AddWithValue("@Code", code);
+            AddMoney(cmd, "@Amount", amount);
+            cmd.Parameters.AddWithValue("@ExpiresAt", expiresAt);
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return new MarketplaceVoucher
+                {
+                    Id = reader.GetInt32(0),
+                    UserId = reader.GetInt32(1),
+                    Code = reader.GetString(2),
+                    Amount = reader.GetDecimal(3),
+                    Status = reader.GetString(4),
+                    CreatedAt = reader.GetDateTime(5),
+                    ExpiresAt = reader.GetDateTime(6)
+                };
+            }
+            throw new InvalidOperationException("Unable to create promo code voucher.");
+        }
+
         public ReviewRewardResult AddReview(int orderItemId, int buyerUserId, int rating, string comment)
         {
             if (rating < 1 || rating > 5)

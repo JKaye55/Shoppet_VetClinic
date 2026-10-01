@@ -2,6 +2,227 @@
 @rendermode InteractiveServer
 @inject AuthService Auth
 @inject MarketplaceOrderService Orders
-<PageTitle>Order confirmation | ShoppetCare</PageTitle>
-<main class="owner-shell"><section class="owner-card">@if(!ready){<p>Loading your order…</p>}else if(order is null){<h1>Order unavailable.</h1><p>Sign in with the purchasing account to see its order confirmation.</p><a class="owner-button" href="/marketplace/orders">My orders</a>}else{<span class="owner-eyebrow">SIMULATED MARKETPLACE TRANSACTION</span><h1>Your order is completed.</h1><p>Your pre-loved finds have been marked sold. The order and mock payment are saved across Web and Mobile.</p><p><strong>@order.Reference</strong> · ₱@order.Total.ToString("N2")</p><p>Message the seller to arrange the exchange. You can leave a verified review from your order history.</p><p><small>No real funds were transferred by ShoppetCare.</small></p><div class="owner-actions"><a class="owner-button" href="/marketplace/orders">View orders</a><a class="owner-button" href="@($"/messages?contactId={order.SellerUserId}")">Message seller</a></div>}</section></main>
-@code{[Parameter]public string Reference{get;set;}="";bool ready;Shoppet_VetClinic.Models.MarketplaceOrder? order;protected override async Task OnAfterRenderAsync(bool first){if(!first)return;await Auth.InitializeAsync();if(Auth.IsPetOwner&&Auth.CurrentUser is not null)try{order=Orders.GetBuyerOrders(Auth.CurrentUser.Id).FirstOrDefault(o=>o.Reference==Reference);}catch(Exception){}ready=true;StateHasChanged();}}
+@inject NavigationManager Nav
+
+<PageTitle>Order Confirmation & Receipt | ShoppetCare</PageTitle>
+
+<div class="receipt-page">
+    <section class="receipt-hero">
+        <div class="receipt-shell">
+            <span class="receipt-eyebrow">ORDER CONFIRMATION &amp; RECEIPT</span>
+            <h1>Payment &amp; Order Complete!</h1>
+            <p>Your pre-loved order has been confirmed, items are marked sold, and the mock transaction is saved across Web and Mobile.</p>
+        </div>
+    </section>
+
+    <main class="receipt-shell receipt-main">
+        @if (!ready)
+        {
+            <div class="receipt-card loading-state">
+                <div class="spinner-border text-teal" role="status"></div>
+                <p>Retrieving your order confirmation and receipt...</p>
+            </div>
+        }
+        else if (order is null)
+        {
+            <div class="receipt-card not-found-state">
+                <i class="bi bi-exclamation-circle text-warning" style="font-size:2.5rem;"></i>
+                <h2>Order unavailable</h2>
+                <p>We couldn't find the requested order for your current account session.</p>
+                <div class="receipt-actions">
+                    <a class="btn-primary" href="/marketplace/orders">View My Orders</a>
+                    <a class="btn-secondary" href="/marketplace">Return to Marketplace</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="receipt-card">
+                <!-- Receipt Header -->
+                <div class="receipt-header">
+                    <div class="receipt-status-badge">
+                        <i class="bi bi-check-circle-fill text-success" aria-hidden="true"></i>
+                        <span>Transaction Successful (Demo Sandbox)</span>
+                    </div>
+                    <div class="receipt-ref">
+                        <span class="ref-label">Order Reference</span>
+                        <strong class="ref-number">@order.Reference</strong>
+                    </div>
+                </div>
+
+                <div class="receipt-meta-grid">
+                    <div class="meta-item">
+                        <small>DATE &amp; TIME</small>
+                        <strong>@order.CreatedAt.ToString("MMM d, yyyy · h:mm tt")</strong>
+                    </div>
+                    <div class="meta-item">
+                        <small>PAYMENT METHOD</small>
+                        <strong><i class="bi bi-credit-card-2-front"></i> @order.PaymentMethod</strong>
+                    </div>
+                    <div class="meta-item">
+                        <small>SELLER</small>
+                        <strong>@order.SellerName</strong>
+                    </div>
+                    <div class="meta-item">
+                        <small>STATUS</small>
+                        <strong class="text-success"><i class="bi bi-shield-check"></i> Confirmed &amp; Paid</strong>
+                    </div>
+                </div>
+
+                <!-- Itemized Purchase List -->
+                <div class="receipt-items-section">
+                    <h3>Itemized Order Summary</h3>
+                    <div class="receipt-items-list">
+                        @foreach (var item in order.Items)
+                        {
+                            <div class="receipt-item-row">
+                                <div class="item-img-wrap">
+                                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                    {
+                                        <img src="@item.ImageUrl" alt="@item.ListingTitle" />
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-box-seam"></i>
+                                    }
+                                </div>
+                                <div class="item-details">
+                                    <h4>@item.ListingTitle</h4>
+                                    <div class="item-specs">
+                                        <span class="badge-sku">SKU: SHP-MKT-@item.ListingId.ToString("D4")</span>
+                                        <span>Qty: 1</span>
+                                        <span class="badge-stock">Status: Sold to You</span>
+                                    </div>
+                                </div>
+                                <div class="item-price">
+                                    ₱@item.Price.ToString("N2")
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Financial Breakdown -->
+                <div class="receipt-totals-section">
+                    <div class="total-row">
+                        <span>Subtotal</span>
+                        <strong>₱@order.Subtotal.ToString("N2")</strong>
+                    </div>
+                    @if (order.VoucherDiscount > 0)
+                    {
+                        <div class="total-row discount">
+                            <span>Voucher / Promo Discount</span>
+                            <strong>-₱@order.VoucherDiscount.ToString("N2")</strong>
+                        </div>
+                    }
+                    <div class="total-row grand-total">
+                        <span>Total Paid</span>
+                        <strong>₱@order.Total.ToString("N2")</strong>
+                    </div>
+                </div>
+
+                <!-- Academic Simulation Disclaimer -->
+                <div class="receipt-disclaimer">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <div>
+                        <strong>Academic Project Sandbox Simulation</strong>
+                        <p>No real financial funds or credit card balances were charged. All listings are synchronized across Web and Mobile.</p>
+                    </div>
+                </div>
+
+                <!-- Next Steps / Actions -->
+                <div class="receipt-actions">
+                    <a class="btn-primary" href="@($"/messages?contactId={order.SellerUserId}")">
+                        <i class="bi bi-chat-dots-fill"></i> Message Seller (@order.SellerName)
+                    </a>
+                    <a class="btn-secondary" href="/marketplace/orders">
+                        <i class="bi bi-receipt"></i> View in Order History
+                    </a>
+                    <a class="btn-outline" href="/marketplace">
+                        <i class="bi bi-shop"></i> Continue Shopping
+                    </a>
+                </div>
+            </div>
+        }
+    </main>
+</div>
+
+<style>
+    .receipt-page { min-height: 100vh; background: #FAF9F6; color: #173D3D; }
+    .receipt-shell { width: min(840px, calc(100% - 32px)); margin: auto; }
+    .receipt-hero { padding: 48px 0 36px; background: #173D3D; color: #fff; text-align: center; }
+    .receipt-eyebrow { font-size: .68rem; font-weight: 900; letter-spacing: .12em; color: #F3D27A; text-transform: uppercase; }
+    .receipt-hero h1 { margin: 8px 0 6px; font-size: clamp(2rem, 3.5vw, 2.8rem); letter-spacing: -.03em; }
+    .receipt-hero p { margin: 0 auto; max-width: 620px; color: #D6E4E0; font-size: .95rem; }
+    
+    .receipt-main { padding: 32px 0 70px; }
+    .receipt-card { background: #fff; border: 1px solid #DDE7E4; border-radius: 20px; padding: 32px; box-shadow: 0 12px 36px rgba(23,61,61,.06); }
+    
+    .receipt-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; padding-bottom: 20px; border-bottom: 2px dashed #E2E8F0; }
+    .receipt-status-badge { display: inline-flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 800; color: #065F46; background: #ECFDF5; padding: 6px 14px; border-radius: 999px; border: 1px solid #A7F3D0; }
+    .receipt-ref { text-align: right; }
+    .ref-label { display: block; font-size: .68rem; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: .05em; }
+    .ref-number { font-size: 1.15rem; color: #173D3D; font-family: monospace; font-weight: 800; }
+
+    .receipt-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; padding: 22px 0; border-bottom: 1px solid #EDF1EF; }
+    .meta-item small { display: block; font-size: .68rem; font-weight: 800; color: #82928D; letter-spacing: .05em; }
+    .meta-item strong { display: block; margin-top: 4px; font-size: .9rem; color: #173D3D; }
+
+    .receipt-items-section { padding: 24px 0; border-bottom: 1px solid #EDF1EF; }
+    .receipt-items-section h3 { font-size: 1.05rem; font-weight: 800; margin: 0 0 16px; color: #173D3D; }
+    .receipt-items-list { display: flex; flex-direction: column; gap: 12px; }
+    .receipt-item-row { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 16px; padding: 10px 14px; background: #FAF9F6; border-radius: 12px; border: 1px solid #EEF2F0; }
+    .item-img-wrap { width: 56px; height: 56px; border-radius: 8px; overflow: hidden; background: #EEF4F1; display: grid; place-items: center; }
+    .item-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .item-details h4 { margin: 0 0 4px; font-size: .95rem; font-weight: 800; color: #173D3D; }
+    .item-specs { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: .75rem; color: #64748B; }
+    .badge-sku { background: #F5F3FF; color: #7C3AED; padding: 2px 7px; border-radius: 6px; font-weight: 700; border: 1px solid #DDD6FE; }
+    .badge-stock { background: #ECFDF5; color: #047857; padding: 2px 7px; border-radius: 6px; font-weight: 700; }
+    .item-price { font-size: 1.05rem; font-weight: 800; color: #173D3D; }
+
+    .receipt-totals-section { padding: 20px 0; border-bottom: 1px solid #EDF1EF; }
+    .total-row { display: flex; justify-content: space-between; font-size: .9rem; padding: 6px 0; color: #4B5563; }
+    .total-row.discount { color: #059669; font-weight: 700; }
+    .total-row.grand-total { font-size: 1.3rem; font-weight: 900; color: #173D3D; border-top: 2px solid #173D3D; margin-top: 10px; padding-top: 12px; }
+
+    .receipt-disclaimer { display: flex; gap: 12px; margin: 24px 0; padding: 14px 18px; border-radius: 12px; background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; }
+    .receipt-disclaimer i { font-size: 1.25rem; margin-top: 2px; }
+    .receipt-disclaimer strong { display: block; font-size: .85rem; }
+    .receipt-disclaimer p { margin: 3px 0 0; font-size: .75rem; color: #3B82F6; }
+
+    .receipt-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+    .btn-primary, .btn-secondary, .btn-outline { display: inline-flex; align-items: center; gap: 6px; padding: 12px 20px; border-radius: 10px; font-weight: 800; font-size: .88rem; text-decoration: none; cursor: pointer; transition: all .15s ease; }
+    .btn-primary { background: #2F9098; color: #fff; border: 0; }
+    .btn-primary:hover { background: #267C83; }
+    .btn-secondary { background: #173D3D; color: #fff; border: 0; }
+    .btn-secondary:hover { background: #0E2828; }
+    .btn-outline { background: transparent; color: #173D3D; border: 1px solid #CBD9D5; }
+    .btn-outline:hover { background: #EEF4F1; }
+
+    .loading-state, .not-found-state { text-align: center; padding: 60px 20px; }
+    .not-found-state h2 { margin: 16px 0 8px; }
+    .not-found-state p { color: #64748B; margin-bottom: 24px; }
+</style>
+
+@code {
+    [Parameter] public string Reference { get; set; } = string.Empty;
+    private bool ready;
+    private Shoppet_VetClinic.Models.MarketplaceOrder? order;
+
+    protected override async Task OnAfterRenderAsync(bool first)
+    {
+        if (!first) return;
+        await Auth.InitializeAsync();
+        if (Auth.IsPetOwner && Auth.CurrentUser is not null)
+        {
+            try
+            {
+                order = Orders.GetBuyerOrders(Auth.CurrentUser.Id)
+                              .FirstOrDefault(o => o.Reference == Reference);
+            }
+            catch { }
+        }
+        ready = true;
+        StateHasChanged();
+    }
+}

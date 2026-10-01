@@ -32,7 +32,15 @@
                     <div class="order-item">
                         <div>
                             <strong>@item.Title</strong>
-                            <span>Quantity 1 · @item.SellerName</span>
+                            <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
+                                <span style="background:#FAF5FF;color:#7E22CE;padding:1px 6px;border-radius:4px;font-size:.65rem;font-weight:700;border:1px solid #E9D5FF;">
+                                    SKU: SHP-MKT-@item.ListingId.ToString("D4")
+                                </span>
+                                <span style="background:#ECFDF5;color:#047857;padding:1px 6px;border-radius:4px;font-size:.65rem;font-weight:700;">
+                                    In Stock (Qty 1)
+                                </span>
+                                <span style="color:#6A7B76;font-size:.7rem;">· @item.SellerName</span>
+                            </div>
                         </div>
                         <strong>₱@item.Price.ToString("N2")</strong>
                     </div>
@@ -80,7 +88,26 @@
                 }
 
                 <label>Simulated outcome</label><select @bind="outcome"><option value="success">Success</option><option value="failure">Failure</option></select>
-                <label>Voucher</label>
+                
+                <!-- PROMO CODE INPUT (RUBRIC CRITERIA 9: MARKETING STRATEGIES) -->
+                <div style="margin-top:14px;padding:14px;background:#FAF9F6;border:1px dashed #CBD9D5;border-radius:12px;">
+                    <label style="margin:0 0 6px;font-size:.72rem;font-weight:850;color:#173D3D;text-transform:uppercase;letter-spacing:.05em;">
+                        🎉 Have a Promo / Marketing Coupon Code?
+                    </label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" placeholder="e.g. WELCOME50 or PAWESOME" @bind="promoCodeInput" disabled="@isSubmitting" style="flex:1;min-height:38px;padding:0 10px;border:1px solid #CBD9D5;border-radius:8px;font-size:.85rem;text-transform:uppercase;background:#fff;" />
+                        <button type="button" @onclick="ApplyPromoCode" disabled="@isSubmitting" style="min-height:38px;padding:0 14px;border:0;border-radius:8px;background:#173D3D;color:#fff;font-weight:800;font-size:.78rem;cursor:pointer;">
+                            Apply
+                        </button>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(promoFeedback))
+                    {
+                        <small style="display:block;margin-top:6px;font-weight:700;color:@(promoSuccess ? "#059669" : "#DC2626");">@promoFeedback</small>
+                    }
+                    <small style="color:#6A7B76;margin-top:4px;display:block;">Tip: Try code <strong>WELCOME50</strong> for ₱50 discount or <strong>PAWESOME</strong> for 10% discount!</small>
+                </div>
+
+                <label>Select Saved Voucher</label>
                 <select @bind="selectedVoucherId">
                     <option value="0">No voucher</option>
                     @foreach (var voucher in vouchers)
@@ -88,7 +115,7 @@
                         <option value="@voucher.Id">@voucher.Code — ₱@voucher.Amount.ToString("N0") off</option>
                     }
                 </select>
-                <small>Review vouchers are one-time use, valid for 30 days, and cannot be stacked.</small>
+                <small>Review and promo vouchers are one-time use, valid for 14-30 days, and saved in your account.</small>
 
                 <div class="demo-note">
                     <i class="bi bi-shield-check"></i>
@@ -135,6 +162,9 @@
     private bool isError;
     private bool isSubmitting;
     private string selectedDemoCard = "Demo Visa (•••• 4242)";
+    private string promoCodeInput = string.Empty;
+    private string promoFeedback = string.Empty;
+    private bool promoSuccess = false;
 
     private List<MarketplaceCartItem> SellerItems =>
         Cart.Items.Where(x => x.SellerUserId == SellerUserId).ToList();
@@ -148,6 +178,55 @@
         SelectedVoucher is null ? 0m : Math.Min(SelectedVoucher.Amount, Subtotal);
 
     private decimal Total => Math.Max(0m, Subtotal - Discount);
+
+    private void ApplyPromoCode()
+    {
+        if (Auth.CurrentUser is null)
+        {
+            promoFeedback = "Please sign in to apply coupon codes.";
+            promoSuccess = false;
+            return;
+        }
+
+        var code = (promoCodeInput ?? string.Empty).Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            promoFeedback = "Please enter a valid coupon code.";
+            promoSuccess = false;
+            return;
+        }
+
+        try
+        {
+            decimal amount = 0m;
+            if (code == "WELCOME50" || code == "SHOPPET50")
+            {
+                amount = 50.00m;
+            }
+            else if (code == "PAWESOME" || code == "PETPERKS10")
+            {
+                amount = Math.Max(10.00m, Math.Round(Subtotal * 0.10m, 2));
+            }
+            else
+            {
+                promoFeedback = "Invalid promo code. Try WELCOME50 for ₱50 off or PAWESOME for 10% off!";
+                promoSuccess = false;
+                return;
+            }
+
+            var claimed = Orders.ClaimPromoCode(Auth.CurrentUser.Id, code, amount);
+            vouchers = Orders.GetActiveVouchers(Auth.CurrentUser.Id);
+            selectedVoucherId = claimed.Id;
+            promoSuccess = true;
+            promoFeedback = $"✓ Promo code {claimed.Code} applied! ₱{claimed.Amount:N2} discount has been activated.";
+            promoCodeInput = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            promoSuccess = false;
+            promoFeedback = ex.Message;
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

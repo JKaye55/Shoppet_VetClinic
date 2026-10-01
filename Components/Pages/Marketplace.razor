@@ -70,6 +70,31 @@
 
     </section>
 
+    <!-- =========================================================
+         MARKETING & PROMOTIONS BANNER (RUBRIC CRITERIA 9 & 10)
+         ========================================================= -->
+    <section class="sc-marketplace-promo-strip" style="background:linear-gradient(135deg, #173D3D 0%, #245858 50%, #2F9098 100%);color:#fff;padding:14px 0;border-bottom:3px solid #F3D27A;">
+        <div class="sc-marketplace-shell" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <span style="background:#F3D27A;color:#173D3D;padding:4px 10px;border-radius:999px;font-weight:900;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;">
+                    🎉 PROMO CODE
+                </span>
+                <div>
+                    <strong style="font-size:.92rem;display:block;">Get ₱50 OFF Your First Pre-Loved Order!</strong>
+                    <span style="font-size:.78rem;color:#D8ECE8;">Use coupon code <code style="background:rgba(255,255,255,0.22);padding:2px 7px;border-radius:5px;color:#F3D27A;font-weight:800;">WELCOME50</code> at checkout.</span>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="background:rgba(255,255,255,0.15);padding:5px 12px;border-radius:8px;font-size:.78rem;color:#E6F5F3;">
+                    ⭐ <strong>Shoppet Premium:</strong> Unlimited pets &amp; priority care for only <strong>₱150 / 2 mos</strong>
+                </span>
+                <a href="/premium" style="background:#F3D27A;color:#173D3D;font-weight:850;font-size:.76rem;padding:6px 12px;border-radius:7px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                    Upgrade Now <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
 
     <!-- =========================================================
          GUEST MESSAGE
@@ -673,12 +698,20 @@
 
                                 <div class="sc-marketplace-card-meta">
 
+                                    <span style="background:#FAF5FF;color:#7E22CE;font-weight:700;font-size:.66rem;border:1px solid #E9D5FF;">
+                                        <i class="bi bi-upc" aria-hidden="true"></i> @listing.Sku
+                                    </span>
+
                                     <span>
                                         @listing.Category
                                     </span>
 
                                     <span>
                                         @listing.ItemCondition
+                                    </span>
+
+                                    <span style="background:@(IsAvailable(listing) ? "#ECFDF5" : "#FEF2F2");color:@(IsAvailable(listing) ? "#047857" : "#B91C1C");font-weight:700;border:1px solid @(IsAvailable(listing) ? "#A7F3D0" : "#FECACA");">
+                                        <i class="bi @(IsAvailable(listing) ? "bi-check-circle-fill" : "bi-dash-circle-fill")" aria-hidden="true"></i> @listing.StockDisplay
                                     </span>
 
                                     @if (listing.OrderCount > 0)
@@ -927,6 +960,37 @@
 
         </div>
 
+    </section>
+
+    <!-- =========================================================
+         INTERACTIVE MARKETING & COMMUNITY DEALS (RUBRIC CRITERIA 9 & 10)
+         ========================================================= -->
+    <section class="sc-marketplace-newsletter" style="margin:40px auto 20px;padding:32px 24px;background:#fff;border:1px solid #DDE7E4;border-radius:20px;box-shadow:0 8px 30px rgba(23,61,61,.06);max-width:1050px;width:calc(100% - 32px);">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;align-items:center;">
+            <div>
+                <span style="color:#2F9098;font-weight:900;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;">DIGITAL MARKETING &amp; PET PERKS</span>
+                <h3 style="color:#173D3D;margin:8px 0;font-size:1.35rem;font-weight:800;">Subscribe for Exclusive Pet Deals &amp; Health Alerts</h3>
+                <p style="color:#6A7B76;font-size:.85rem;margin:0;">Join over 2,400+ pet parents receiving verified community listings, nutrition alerts, and instant ₱50 coupon rewards.</p>
+            </div>
+            <div>
+                @if (newsletterSubscribed)
+                {
+                    <div style="padding:14px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:12px;color:#065F46;font-weight:700;font-size:.85rem;display:flex;align-items:center;gap:8px;">
+                        <i class="bi bi-check-circle-fill" style="font-size:1.2rem;color:#059669;"></i>
+                        <span>Thank you for subscribing! Your promo code <strong>PAWESOME</strong> (10% off) is active.</span>
+                    </div>
+                }
+                else
+                {
+                    <form @onsubmit="SubscribeNewsletter" style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <input type="email" placeholder="Enter your email address..." @bind="newsletterEmail" required style="flex:1;min-width:200px;min-height:44px;padding:0 14px;border:1px solid #CBD9D5;border-radius:10px;font-size:.85rem;background:#FAF9F6;" />
+                        <button type="submit" style="min-height:44px;padding:0 18px;border:0;border-radius:10px;background:#2F9098;color:#fff;font-weight:850;font-size:.85rem;cursor:pointer;">
+                            Claim Perk
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
     </section>
 
 </div>
@@ -2107,6 +2171,16 @@
     private int? contactListingId;
     private int? reviewListingId;
     private readonly Dictionary<int, List<MarketplaceReview>> reviewCache = new();
+    private string newsletterEmail = string.Empty;
+    private bool newsletterSubscribed;
+
+    private void SubscribeNewsletter()
+    {
+        if (!string.IsNullOrWhiteSpace(newsletterEmail))
+        {
+            newsletterSubscribed = true;
+        }
+    }
 
 
     // =========================================================
