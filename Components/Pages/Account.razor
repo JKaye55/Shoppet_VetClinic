@@ -139,9 +139,17 @@
                             ACCOUNT &amp; MEMBERSHIP
                         </span>
 
-                        <h1>
-                            @GetDisplayName()
-                        </h1>
+                        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                            <h1 style="margin:0;">
+                                @GetDisplayName()
+                            </h1>
+                            @if (Auth.IsPremium)
+                            {
+                                <span style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg, #FFE399, #FFD066);color:#734B00;font-size:.85rem;font-weight:900;padding:4px 12px;border-radius:999px;box-shadow:0 2px 6px rgba(0,0,0,0.12);" title="Verified Premium Member">
+                                    🏅 Premium Pet Owner
+                                </span>
+                            }
+                        </div>
 
                         <p>
                             Manage the identity, privacy,

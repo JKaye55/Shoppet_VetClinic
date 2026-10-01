@@ -79,7 +79,9 @@ namespace Shoppet_VetClinic.Services
                             INNER JOIN UserAccounts u_b ON u_b.Id = o_b.BuyerUserId
                             WHERE oi_b.ListingId = m.Id
                             ORDER BY o_b.CreatedAt DESC
-                        ) AS LastBuyerName
+                        ) AS LastBuyerName,
+
+                        ISNULL(u.IsPremium, 0) AS IsSellerPremium
 
                     FROM MarketplaceListings m
 
@@ -162,7 +164,9 @@ namespace Shoppet_VetClinic.Services
                             INNER JOIN UserAccounts u_b ON u_b.Id = o_b.BuyerUserId
                             WHERE oi_b.ListingId = m.Id
                             ORDER BY o_b.CreatedAt DESC
-                        ) AS LastBuyerName
+                        ) AS LastBuyerName,
+
+                        ISNULL(u.IsPremium, 0) AS IsSellerPremium
 
                     FROM MarketplaceListings m
 
@@ -197,7 +201,7 @@ namespace Shoppet_VetClinic.Services
         // CREATE LISTING
         // =========================================================
 
-        public const int FreeListingLimit = 3;
+        public const int FreeListingLimit = 5;
 
         public int GetActiveListingCount(int sellerUserId)
         {
@@ -727,7 +731,12 @@ namespace Shoppet_VetClinic.Services
                 LastBuyerName =
                     reader.FieldCount > 15 && !reader.IsDBNull(15)
                         ? reader.GetString(15)
-                        : null
+                        : null,
+
+                IsSellerPremium =
+                    reader.FieldCount > 16
+                    && !reader.IsDBNull(16)
+                    && reader.GetBoolean(16)
             };
         }
     }

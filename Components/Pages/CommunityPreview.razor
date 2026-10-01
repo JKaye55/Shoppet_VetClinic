@@ -447,9 +447,17 @@
 
                                         <div class="sc-community-post-author">
 
-                                            <strong>
-                                                @post.AuthorName
-                                            </strong>
+                                            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                                                <strong>
+                                                    @post.AuthorName
+                                                </strong>
+                                                @if (post.IsAuthorPremium)
+                                                {
+                                                    <span style="display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg, #FFF4D4, #FFE399);color:#8F6000;font-size:.68rem;font-weight:800;padding:2px 7px;border-radius:12px;border:1px solid #FFD066;" title="Verified Premium Member">
+                                                        🏅 Premium Pet Owner
+                                                    </span>
+                                                }
+                                            </div>
 
                                             <span>
 
@@ -603,7 +611,15 @@
 
                                                     <div class="sc-community-comment-body">
                                                         <div class="sc-community-comment-meta">
-                                                            <strong>@comment.AuthorName</strong>
+                                                            <div style="display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;">
+                                                                <strong>@comment.AuthorName</strong>
+                                                                @if (comment.IsAuthorPremium)
+                                                                {
+                                                                    <span style="display:inline-flex;align-items:center;gap:2px;background:#FFF4D4;color:#8F6000;font-size:.63rem;font-weight:800;padding:1px 5px;border-radius:10px;border:1px solid #FFD066;" title="Verified Premium Member">
+                                                                        🏅 Premium
+                                                                    </span>
+                                                                }
+                                                            </div>
                                                             @if (comment.IsGuest)
                                                             {
                                                                 <span class="sc-community-guest-tag">Guest</span>
@@ -725,9 +741,15 @@
                         <span class="sc-community-kicker">
                             COMMUNITY LEADERBOARD
                         </span>
-                        <h3>
-                            🏆 Top Pet Champions
-                        </h3>
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 6px;">
+                            <h3 style="margin:0;">
+                                🏆 Top Pet Champions
+                            </h3>
+                            <span style="font-size:0.7rem;font-weight:800;background:#E8F5F3;color:#175C59;padding:2px 8px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;border:1px solid #C4E2DE;" title="Live activity score">
+                                <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#10B981;"></span>
+                                @(rankings.Sum(r => r.Score)) pts Live
+                            </span>
+                        </div>
                         <p style="margin-bottom: 12px;">
                             Most active and engaging members in our pet community.
                         </p>
@@ -2282,6 +2304,8 @@
             LoadPosts();
 
             LoadLikeState();
+
+            rankings = Community.GetCommunityRankings(10);
         }
         catch (Exception ex)
         {
@@ -2428,6 +2452,7 @@
                 commentDrafts[postId] = string.Empty;
                 replyParents.Remove(postId);
                 commentsByPost[postId] = Community.GetComments(postId);
+                rankings = Community.GetCommunityRankings(10);
                 statusMessage = "Comment posted.";
                 isError = false;
             }

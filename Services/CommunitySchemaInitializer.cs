@@ -350,6 +350,48 @@ public static class CommunitySchemaInitializer
                 CREATE UNIQUE INDEX UX_CommunityCommentLikes_Comment_User
                 ON dbo.CommunityCommentLikes(CommentId, UserId);
             END;
+
+            IF OBJECT_ID(N'dbo.MarketplaceListings', N'U') IS NOT NULL
+               AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_MarketplaceListings_Status_Category_CreatedAt' AND object_id = OBJECT_ID('dbo.MarketplaceListings'))
+            BEGIN
+                CREATE NONCLUSTERED INDEX IX_MarketplaceListings_Status_Category_CreatedAt 
+                ON dbo.MarketplaceListings(Status, Category, CreatedAt DESC);
+            END;
+
+            IF OBJECT_ID(N'dbo.MarketplaceListings', N'U') IS NOT NULL
+               AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_MarketplaceListings_SellerUserId' AND object_id = OBJECT_ID('dbo.MarketplaceListings'))
+            BEGIN
+                CREATE NONCLUSTERED INDEX IX_MarketplaceListings_SellerUserId 
+                ON dbo.MarketplaceListings(SellerUserId, Status);
+            END;
+
+            IF OBJECT_ID(N'dbo.CommunityPosts', N'U') IS NOT NULL
+               AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_CommunityPosts_PostedAt' AND object_id = OBJECT_ID('dbo.CommunityPosts'))
+            BEGIN
+                CREATE NONCLUSTERED INDEX IX_CommunityPosts_PostedAt 
+                ON dbo.CommunityPosts(PostedAt DESC);
+            END;
+
+            IF OBJECT_ID(N'dbo.CommunityPosts', N'U') IS NOT NULL
+               AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_CommunityPosts_UserId' AND object_id = OBJECT_ID('dbo.CommunityPosts'))
+            BEGIN
+                CREATE NONCLUSTERED INDEX IX_CommunityPosts_UserId 
+                ON dbo.CommunityPosts(UserId);
+            END;
+
+            IF OBJECT_ID(N'dbo.CommunityComments', N'U') IS NOT NULL
+               AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_CommunityComments_PostId' AND object_id = OBJECT_ID('dbo.CommunityComments'))
+            BEGIN
+                CREATE NONCLUSTERED INDEX IX_CommunityComments_PostId 
+                ON dbo.CommunityComments(PostId);
+            END;
+
+            IF OBJECT_ID(N'dbo.CommunityLikes', N'U') IS NOT NULL
+               AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_CommunityLikes_PostId_UserId' AND object_id = OBJECT_ID('dbo.CommunityLikes'))
+            BEGIN
+                CREATE NONCLUSTERED INDEX IX_CommunityLikes_PostId_UserId 
+                ON dbo.CommunityLikes(PostId, UserId);
+            END;
             """;
 
         await using var connection = new SqlConnection(connectionString);

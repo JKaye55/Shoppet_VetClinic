@@ -1,4 +1,4 @@
-﻿namespace Shoppet_VetClinic.Models
+namespace Shoppet_VetClinic.Models
 {
     public class CommunityPost
     {
@@ -14,5 +14,7 @@
         // For display (populated when joined with UserAccounts/PetProfiles)
         public string AuthorName { get; set; } = string.Empty;
         public string PetName { get; set; } = string.Empty;
+        public bool IsAuthorPremium { get; set; }
+        public string AuthorRole { get; set; } = string.Empty;
     }
 }

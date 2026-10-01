@@ -609,6 +609,19 @@
     private bool showPassword;
     private bool isSigningIn;
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Auth.InitializeAsync();
+            if (Auth.IsLoggedIn && !Auth.IsGuest)
+            {
+                var destination = Auth.IsAdmin ? "/admin-portal" : "/dashboard";
+                Nav.NavigateTo(destination);
+            }
+        }
+    }
+
 
     private async Task HandleLoginAsync()
     {

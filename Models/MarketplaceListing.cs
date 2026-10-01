@@ -42,6 +42,7 @@ namespace Shoppet_VetClinic.Models
             = string.Empty;
 
         public bool IsVerifiedSeller { get; set; }
+        public bool IsSellerPremium { get; set; }
         public int OrderCount { get; set; }
         public string? LastBuyerName { get; set; }
     }

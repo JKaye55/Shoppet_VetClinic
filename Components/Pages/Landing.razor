@@ -578,6 +578,18 @@
         }
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Auth.InitializeAsync();
+            if (Auth.IsLoggedIn && !Auth.IsGuest)
+            {
+                Nav.NavigateTo("/home");
+            }
+        }
+    }
+
     private void Login()
     {
         Nav.NavigateTo("/login");

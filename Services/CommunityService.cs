@@ -60,7 +60,10 @@ namespace Shoppet_VetClinic.Services
                         ISNULL(
                             p.PetName,
                             ''
-                        ) AS PetName
+                        ) AS PetName,
+
+                        ISNULL(u.IsPremium, 0) AS IsAuthorPremium,
+                        ISNULL(u.Role, '') AS AuthorRole
 
                     FROM CommunityPosts c
 
@@ -358,7 +361,7 @@ namespace Shoppet_VetClinic.Services
             EnsureCommentsSchema(conn);
 
             using var cmd = new SqlCommand(@"
-                SELECT cc.Id,cc.PostId,cc.UserId,COALESCE(u.FullName,cc.AuthorName,'Pet Owner'),COALESCE(cc.Content,cc.Body,''),cc.IsGuest,cc.CreatedAt,cc.ParentCommentId,(SELECT COUNT(*) FROM CommunityCommentLikes WHERE CommentId=cc.Id)
+                SELECT cc.Id,cc.PostId,cc.UserId,COALESCE(u.FullName,cc.AuthorName,'Pet Owner'),COALESCE(cc.Content,cc.Body,''),cc.IsGuest,cc.CreatedAt,cc.ParentCommentId,(SELECT COUNT(*) FROM CommunityCommentLikes WHERE CommentId=cc.Id),ISNULL(u.IsPremium,0),ISNULL(u.Role,'')
                 FROM CommunityComments cc LEFT JOIN UserAccounts u ON u.Id=cc.UserId
                 WHERE cc.PostId=@PostId ORDER BY cc.CreatedAt,cc.Id;", conn);
 
@@ -376,7 +379,10 @@ namespace Shoppet_VetClinic.Services
                     Body = reader.GetString(4),
                     IsGuest = reader.GetBoolean(5),
                     CreatedAt = reader.GetDateTime(6),
-                    ParentCommentId=reader.IsDBNull(7)?null:reader.GetInt32(7),LikeCount=reader.GetInt32(8)
+                    ParentCommentId = reader.IsDBNull(7) ? null : reader.GetInt32(7),
+                    LikeCount = reader.GetInt32(8),
+                    IsAuthorPremium = reader.FieldCount > 9 && !reader.IsDBNull(9) && reader.GetBoolean(9),
+                    AuthorRole = reader.FieldCount > 10 && !reader.IsDBNull(10) ? reader.GetString(10) : string.Empty
                 });
             }
 
@@ -1038,7 +1044,18 @@ namespace Shoppet_VetClinic.Services
                 PetName =
                     reader.IsDBNull(9)
                         ? string.Empty
-                        : reader.GetString(9)
+                        : reader.GetString(9),
+
+                IsAuthorPremium =
+                    reader.FieldCount > 10
+                    && !reader.IsDBNull(10)
+                    && reader.GetBoolean(10),
+
+                AuthorRole =
+                    reader.FieldCount > 11
+                    && !reader.IsDBNull(11)
+                        ? reader.GetString(11)
+                        : string.Empty
             };
         }
     }

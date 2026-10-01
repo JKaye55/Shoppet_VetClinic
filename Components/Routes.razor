@@ -1,9 +1,13 @@
-﻿<Router AppAssembly="@typeof(Program).Assembly">
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Authorization
+@using Shoppet_VetClinic.Components.Layout
+
+<Router AppAssembly="@typeof(Program).Assembly">
 
     <Found Context="routeData">
 
-        <RouteView RouteData="@routeData"
-                   DefaultLayout="@typeof(MainLayout)" />
+        <AuthorizeRouteView RouteData="@routeData"
+                            DefaultLayout="@typeof(MainLayout)" />
 
         <FocusOnNavigate RouteData="@routeData"
                          Selector="h1" />

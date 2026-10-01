@@ -554,7 +554,7 @@
                                 @if (myItems.Count >= MarketplaceService.FreeListingLimit)
                                 {
                                     <a href="/checkout" style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;background:#2B6E6A;color:#fff;font-size:.72rem;font-weight:800;text-decoration:none;">
-                                        Upgrade to Premium (₱49) to list more
+                                        Upgrade to Premium (₱150 for 2 months) to list more
                                     </a>
                                 }
                             }
@@ -742,7 +742,13 @@
 
                                         <strong>
                                             @listing.SellerName
-                                        @if (listing.IsVerifiedSeller)
+                                        @if (listing.IsSellerPremium)
+                                        {
+                                            <span style="display:inline-flex;margin-left:6px;padding:3px 8px;border-radius:999px;background:linear-gradient(135deg, #FFF4D4, #FFE399);color:#8F6000;font-size:.62rem;font-weight:900;vertical-align:middle;border:1px solid #FFD066;" title="Verified Premium Seller">
+                                                🏅 Premium Seller
+                                            </span>
+                                        }
+                                        else if (listing.IsVerifiedSeller)
                                         {
                                             <span style="display:inline-flex;margin-left:6px;padding:3px 7px;border-radius:999px;background:#EAF5F5;color:#267C83;font-size:.58rem;font-weight:900;vertical-align:middle;">
                                                 Verified Pet Owner

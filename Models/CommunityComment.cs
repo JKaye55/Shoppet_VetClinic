@@ -11,5 +11,7 @@ namespace Shoppet_VetClinic.Models
         public string Body { get; set; } = string.Empty;
         public bool IsGuest { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool IsAuthorPremium { get; set; }
+        public string AuthorRole { get; set; } = string.Empty;
     }
 }
