@@ -37,37 +37,23 @@ namespace Shoppet_VetClinic.Services
 
 
         public bool IsAdmin =>
-            string.Equals(
-                CurrentUser?.Role,
-                "Admin",
-                StringComparison.OrdinalIgnoreCase)
-            ||
-            string.Equals(
-                CurrentUser?.Role,
-                "SuperAdmin",
-                StringComparison.OrdinalIgnoreCase)
-            ||
-            string.Equals(
-                CurrentUser?.Role,
-                "Super Admin",
-                StringComparison.OrdinalIgnoreCase);
+            IsRole("Admin")
+            || IsRole("SuperAdmin")
+            || IsRole("Super Admin");
 
 
         public bool IsClinicStaff =>
-            string.Equals(CurrentUser?.Role, "Clinic Staff", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(CurrentUser?.Role, "Clinic Owner", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(CurrentUser?.Role, "Clinic Representative", StringComparison.OrdinalIgnoreCase);
+            IsRole("Clinic Staff")
+            || IsRole("Clinic Owner")
+            || IsRole("Clinic Representative");
 
         public bool IsClinicOwner =>
-            string.Equals(CurrentUser?.Role, "Clinic Owner", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(CurrentUser?.Role, "Clinic Representative", StringComparison.OrdinalIgnoreCase);
+            IsRole("Clinic Owner")
+            || IsRole("Clinic Representative");
 
 
         public bool IsPetOwner =>
-            string.Equals(
-                CurrentUser?.Role,
-                "Pet Owner",
-                StringComparison.OrdinalIgnoreCase) || string.Equals(CurrentUser?.Role,"PetOwner",StringComparison.OrdinalIgnoreCase);
+            IsRole("Pet Owner") || IsRole("PetOwner");
 
 
         public bool IsPremium => CurrentUser?.IsPremium == true;
@@ -76,6 +62,12 @@ namespace Shoppet_VetClinic.Services
         public bool CanAddMorePets =>
             !IsPetOwner ||
             IsPremium;
+
+        private bool IsRole(string role) =>
+            string.Equals(
+                CurrentUser?.Role?.Trim(),
+                role,
+                StringComparison.OrdinalIgnoreCase);
 
 
         public AuthService(
@@ -257,7 +249,9 @@ namespace Shoppet_VetClinic.Services
                             storedUser.Value);
 
 
-                    if (user is not null && new[]{"Pet Owner","PetOwner","Admin","SuperAdmin","Super Admin"}.Contains(user.Role,StringComparer.OrdinalIgnoreCase))
+                    if (user is not null &&
+                        new[] { "Pet Owner", "PetOwner", "Admin", "SuperAdmin", "Super Admin" }
+                            .Contains(user.Role?.Trim(), StringComparer.OrdinalIgnoreCase))
                     {
                         CurrentUser =
                             user;

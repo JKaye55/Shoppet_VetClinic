@@ -168,8 +168,12 @@ namespace Shoppet_VetClinic.Services
         // =========================================================
 
         public int CreateListing(
-            MarketplaceListing listing)
+            MarketplaceListing listing,
+            int actorUserId)
         {
+            if (actorUserId <= 0 || actorUserId != listing.SellerUserId || !IsVerifiedSeller(actorUserId))
+                throw new UnauthorizedAccessException("An active Verified Seller account is required.");
+
             using var conn =
                 new SqlConnection(
                     _connectionString);
@@ -278,8 +282,12 @@ namespace Shoppet_VetClinic.Services
         // =========================================================
 
         public bool UpdateListing(
-            MarketplaceListing listing)
+            MarketplaceListing listing,
+            int actorUserId)
         {
+            if (actorUserId <= 0 || actorUserId != listing.SellerUserId || !IsVerifiedSeller(actorUserId))
+                return false;
+
             using var conn =
                 new SqlConnection(
                     _connectionString);
@@ -369,8 +377,12 @@ namespace Shoppet_VetClinic.Services
         public bool UpdateListingImage(
             int listingId,
             int sellerUserId,
-            string imageUrl)
+            string imageUrl,
+            int actorUserId)
         {
+            if (actorUserId <= 0 || actorUserId != sellerUserId || !IsVerifiedSeller(actorUserId))
+                return false;
+
             using var conn =
                 new SqlConnection(
                     _connectionString);
@@ -417,8 +429,12 @@ namespace Shoppet_VetClinic.Services
         public bool UpdateListingStatus(
             int listingId,
             int sellerUserId,
-            string status)
+            string status,
+            int actorUserId)
         {
+            if (actorUserId <= 0 || actorUserId != sellerUserId || !IsVerifiedSeller(actorUserId))
+                return false;
+
             var allowedStatuses =
                 new[]
                 {
@@ -481,8 +497,12 @@ namespace Shoppet_VetClinic.Services
 
         public bool DeleteListing(
             int listingId,
-            int sellerUserId)
+            int sellerUserId,
+            int actorUserId)
         {
+            if (actorUserId <= 0 || actorUserId != sellerUserId || !IsVerifiedSeller(actorUserId))
+                return false;
+
             using var conn =
                 new SqlConnection(
                     _connectionString);
@@ -531,6 +551,31 @@ namespace Shoppet_VetClinic.Services
             cmd.Parameters.AddWithValue("@Id", listingId);
 
             return cmd.ExecuteNonQuery() > 0;
+        }
+
+        private bool IsVerifiedSeller(int userId)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+
+            using var cmd = new SqlCommand(@"
+                SELECT COUNT(1)
+                FROM UserAccounts u
+                WHERE u.Id = @UserId
+                  AND LOWER(LTRIM(RTRIM(u.Role))) IN ('pet owner', 'petowner')
+                  AND EXISTS
+                  (
+                      SELECT 1
+                      FROM Subscriptions s
+                      WHERE s.UserId = u.Id
+                        AND s.SubscriptionType = 'SellerSubscription'
+                        AND s.Status = 'Active'
+                        AND s.StartsAt <= SYSDATETIME()
+                        AND s.ExpiresAt >= SYSDATETIME()
+                  );", conn);
+
+            cmd.Parameters.AddWithValue("@UserId", userId);
+            return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
         }
 
 

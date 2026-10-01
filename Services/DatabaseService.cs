@@ -903,11 +903,15 @@ FROM UserAccounts",
 
 
             if (!CredentialMigration.Verify(password, storedCredential)) return null;
-            if (!string.Equals(user.Role,"Pet Owner",StringComparison.OrdinalIgnoreCase)
-                && !string.Equals(user.Role,"PetOwner",StringComparison.OrdinalIgnoreCase)
-                && !string.Equals(user.Role,"Admin",StringComparison.OrdinalIgnoreCase)
-                && !string.Equals(user.Role,"SuperAdmin",StringComparison.OrdinalIgnoreCase)
-                && !string.Equals(user.Role,"Super Admin",StringComparison.OrdinalIgnoreCase)) return null;
+
+            var role = user.Role?.Trim();
+            if (!string.Equals(role, "Pet Owner", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(role, "PetOwner", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(role, "SuperAdmin", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(role, "Super Admin", StringComparison.OrdinalIgnoreCase)) return null;
+
+            user.Role = role ?? string.Empty;
             return user;
         }
 

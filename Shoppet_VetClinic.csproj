@@ -19,4 +19,8 @@
   </ItemGroup>
 
 <ItemGroup><Content Include="Database/SharedIntegration.sql" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+
+<ItemGroup>
+  <None Include=".github\copilot-instructions.md" />
+</ItemGroup>
 </Project>

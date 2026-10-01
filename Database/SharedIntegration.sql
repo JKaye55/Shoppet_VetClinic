@@ -1,4 +1,46 @@
 SET XACT_ABORT ON;
+
+IF OBJECT_ID('dbo.MarketplaceCart', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.MarketplaceCart
+    (
+        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        UserId INT NOT NULL UNIQUE,
+        CONSTRAINT FK_MarketplaceCart_User FOREIGN KEY (UserId) REFERENCES dbo.UserAccounts(Id)
+    );
+END;
+GO
+
+IF OBJECT_ID('dbo.MarketplaceCartItems', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.MarketplaceCartItems
+    (
+        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        CartId INT NOT NULL,
+        MarketplaceListingId INT NOT NULL,
+        Quantity INT NOT NULL DEFAULT (1),
+        CONSTRAINT FK_MarketplaceCartItems_Cart FOREIGN KEY (CartId) REFERENCES dbo.MarketplaceCart(Id),
+        CONSTRAINT FK_MarketplaceCartItems_Listing FOREIGN KEY (MarketplaceListingId) REFERENCES dbo.MarketplaceListings(Id),
+        CONSTRAINT UQ_MarketplaceCartItems_Cart_Listing UNIQUE (CartId, MarketplaceListingId)
+    );
+END;
+GO
+
+IF OBJECT_ID('dbo.MarketplaceCartItems', 'U') IS NOT NULL
+   AND COL_LENGTH('dbo.MarketplaceCartItems', 'CartId') IS NULL
+    ALTER TABLE dbo.MarketplaceCartItems ADD CartId INT NULL;
+GO
+
+IF NOT EXISTS
+(
+    SELECT 1 FROM sys.foreign_keys
+    WHERE parent_object_id=OBJECT_ID('dbo.MarketplaceCartItems')
+      AND name='FK_MarketplaceCartItems_Cart'
+)
+    ALTER TABLE dbo.MarketplaceCartItems
+    ADD CONSTRAINT FK_MarketplaceCartItems_Cart
+        FOREIGN KEY (CartId) REFERENCES dbo.MarketplaceCart(Id);
+GO
 -- Check columns individually: existing databases have several order formats.
 IF OBJECT_ID('dbo.MarketplaceOrders','U') IS NOT NULL
 BEGIN
@@ -212,4 +254,80 @@ GO
 IF OBJECT_ID('dbo.MarketplaceCart','U') IS NOT NULL
    AND COL_LENGTH('dbo.MarketplaceCart','UpdatedAt') IS NULL
     ALTER TABLE dbo.MarketplaceCart ADD UpdatedAt DATETIME2 NOT NULL DEFAULT(SYSDATETIME());
+GO
+
+-- Marketplace cart compatibility for databases created before CartId was added.
+IF OBJECT_ID('dbo.MarketplaceCart', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.MarketplaceCart
+    (
+        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_MarketplaceCart PRIMARY KEY,
+        UserId INT NOT NULL,
+        CONSTRAINT UQ_MarketplaceCart_User UNIQUE (UserId),
+        CONSTRAINT FK_MarketplaceCart_User
+            FOREIGN KEY (UserId) REFERENCES dbo.UserAccounts(Id)
+    );
+END;
+GO
+
+IF OBJECT_ID('dbo.MarketplaceCartItems', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.MarketplaceCartItems
+    (
+        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_MarketplaceCartItems PRIMARY KEY,
+        CartId INT NOT NULL,
+        MarketplaceListingId INT NOT NULL,
+        Quantity INT NOT NULL CONSTRAINT DF_MarketplaceCartItems_Quantity DEFAULT (1),
+        CONSTRAINT FK_MarketplaceCartItems_Cart
+            FOREIGN KEY (CartId) REFERENCES dbo.MarketplaceCart(Id),
+        CONSTRAINT FK_MarketplaceCartItems_Listing
+            FOREIGN KEY (MarketplaceListingId) REFERENCES dbo.MarketplaceListings(Id),
+        CONSTRAINT UQ_MarketplaceCartItems_Cart_Listing
+            UNIQUE (CartId, MarketplaceListingId)
+    );
+END;
+GO
+
+IF OBJECT_ID('dbo.MarketplaceCartItems', 'U') IS NOT NULL
+   AND COL_LENGTH('dbo.MarketplaceCartItems', 'CartId') IS NULL
+    ALTER TABLE dbo.MarketplaceCartItems ADD CartId INT NULL;
+GO
+
+-- Preserve legacy rows when the old cart-item table stored the owner directly.
+IF COL_LENGTH('dbo.MarketplaceCartItems', 'UserId') IS NOT NULL
+BEGIN
+    EXEC sys.sp_executesql N'
+        INSERT INTO dbo.MarketplaceCart(UserId)
+        SELECT DISTINCT i.UserId
+        FROM dbo.MarketplaceCartItems i
+        WHERE i.UserId IS NOT NULL
+          AND NOT EXISTS
+              (SELECT 1 FROM dbo.MarketplaceCart c WHERE c.UserId=i.UserId);
+
+        UPDATE i
+           SET CartId=c.Id
+        FROM dbo.MarketplaceCartItems i
+        JOIN dbo.MarketplaceCart c ON c.UserId=i.UserId
+        WHERE i.CartId IS NULL;';
+END;
+GO
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.foreign_keys
+    WHERE parent_object_id=OBJECT_ID('dbo.MarketplaceCartItems')
+      AND name='FK_MarketplaceCartItems_Cart'
+)
+AND NOT EXISTS
+(
+    SELECT 1
+    FROM dbo.MarketplaceCartItems i
+    WHERE i.CartId IS NOT NULL
+      AND NOT EXISTS
+          (SELECT 1 FROM dbo.MarketplaceCart c WHERE c.Id=i.CartId)
+)
+    ALTER TABLE dbo.MarketplaceCartItems
+    ADD CONSTRAINT FK_MarketplaceCartItems_Cart
+        FOREIGN KEY (CartId) REFERENCES dbo.MarketplaceCart(Id);
 GO

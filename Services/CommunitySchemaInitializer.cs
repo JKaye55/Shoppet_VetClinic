@@ -262,9 +262,12 @@ public static class CommunitySchemaInitializer
                 (
                     Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
                     PostId INT NOT NULL,
-                    UserId INT NOT NULL,
+                    UserId INT NULL,
                     ParentCommentId INT NULL,
                     Content NVARCHAR(1000) NOT NULL,
+                    AuthorName NVARCHAR(150) NULL,
+                    Body NVARCHAR(1000) NULL,
+                    IsGuest BIT NOT NULL CONSTRAINT DF_CommunityComments_IsGuest_Initial DEFAULT(0),
                     CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_CommunityComments_CreatedAt DEFAULT(SYSDATETIME())
                 );
             END;
@@ -275,6 +278,16 @@ public static class CommunitySchemaInitializer
                 IF COL_LENGTH('dbo.CommunityComments', 'IsGuest') IS NULL ALTER TABLE dbo.CommunityComments ADD IsGuest BIT NOT NULL DEFAULT(0);
                 IF COL_LENGTH('dbo.CommunityComments', 'UserId') IS NULL
                     ALTER TABLE dbo.CommunityComments ADD UserId INT NULL;
+
+                IF EXISTS
+                (
+                    SELECT 1
+                    FROM sys.columns
+                    WHERE object_id = OBJECT_ID('dbo.CommunityComments')
+                      AND name = 'UserId'
+                      AND is_nullable = 0
+                )
+                    ALTER TABLE dbo.CommunityComments ALTER COLUMN UserId INT NULL;
 
                 IF COL_LENGTH('dbo.CommunityComments', 'ParentCommentId') IS NULL
                     ALTER TABLE dbo.CommunityComments ADD ParentCommentId INT NULL;

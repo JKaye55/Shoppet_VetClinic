@@ -2510,7 +2510,8 @@
                 var updated =
                     ListingService
                         .UpdateListing(
-                            listing);
+                            listing,
+                            Auth.CurrentUser.Id);
 
 
                 if (!updated)
@@ -2541,7 +2542,8 @@
                         .UpdateListingImage(
                             listing.Id,
                             Auth.CurrentUser.Id,
-                            imageUrl);
+                            imageUrl,
+                            Auth.CurrentUser.Id);
                 }
 
 
@@ -2587,7 +2589,8 @@
                 var listingId =
                     ListingService
                         .CreateListing(
-                            listing);
+                            listing,
+                            Auth.CurrentUser.Id);
 
 
                 // ---------------------------------------------
@@ -2608,7 +2611,8 @@
                         .UpdateListingImage(
                             listingId,
                             Auth.CurrentUser.Id,
-                            imageUrl);
+                            imageUrl,
+                            Auth.CurrentUser.Id);
                 }
 
 
@@ -2681,7 +2685,8 @@
                     .UpdateListingStatus(
                         listing.Id,
                         Auth.CurrentUser.Id,
-                        status);
+                        status,
+                        Auth.CurrentUser.Id);
 
 
             if (!updated)
@@ -2763,6 +2768,7 @@
                 ListingService
                     .DeleteListing(
                         listing.Id,
+                        Auth.CurrentUser.Id,
                         Auth.CurrentUser.Id);
 
 

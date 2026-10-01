@@ -27,6 +27,7 @@ namespace Shoppet_VetClinic.Services
         public List<CommunityPost> GetRecentPosts(
             int count = 50)
         {
+            count = Math.Clamp(count, 1, 100);
             var posts =
                 new List<CommunityPost>();
 
@@ -143,6 +144,9 @@ namespace Shoppet_VetClinic.Services
             int postId,
             int userId)
         {
+            if (!IsPetOwner(userId))
+                return false;
+
             using var conn =
                 new SqlConnection(
                     _connectionString);
@@ -381,14 +385,18 @@ namespace Shoppet_VetClinic.Services
 
         public bool AddComment(int postId, int? userId, string authorName, string body, bool isGuest,int? parentId=null)
         {
-            if(isGuest||!userId.HasValue)return false;
-            // Guest identity is intentionally fixed. A guest has no
-            // authenticated profile and must never be able to impersonate
-            // a named ShoppetCare member.
             if (isGuest)
             {
                 userId = null;
                 authorName = "Guest";
+            }
+            else if (!userId.HasValue || userId.Value <= 0)
+            {
+                return false;
+            }
+            else if (!IsPetOwner(userId.Value))
+            {
+                return false;
             }
             else
             {
@@ -412,9 +420,21 @@ namespace Shoppet_VetClinic.Services
             using var cmd = new SqlCommand(@"
                 INSERT INTO CommunityComments
                 (PostId, UserId, AuthorName, Body, IsGuest, CreatedAt,Content,ParentCommentId)
-                SELECT @PostId,@UserId,@AuthorName,@Body,0,SYSDATETIME(),@Body,@Parent
+                SELECT @PostId,@UserId,@AuthorName,@Body,@IsGuest,SYSDATETIME(),@Body,@Parent
                 WHERE EXISTS(SELECT 1 FROM CommunityPosts WHERE Id=@PostId)
-                  AND (@Parent IS NULL OR EXISTS(SELECT 1 FROM CommunityComments WHERE Id=@Parent AND PostId=@PostId));", conn);
+                  AND (@IsGuest = 1 OR EXISTS
+                  (
+                      SELECT 1
+                      FROM UserAccounts
+                      WHERE Id = @UserId
+                        AND LOWER(LTRIM(RTRIM(Role))) IN ('pet owner', 'petowner')
+                  ))
+                  AND (@Parent IS NULL OR EXISTS
+                  (
+                      SELECT 1
+                      FROM CommunityComments
+                      WHERE Id = @Parent AND PostId = @PostId
+                  ));", conn);
 
             cmd.Parameters.AddWithValue("@PostId", postId);
             cmd.Parameters.AddWithValue("@UserId", userId.HasValue ? userId.Value : DBNull.Value);
@@ -429,9 +449,42 @@ namespace Shoppet_VetClinic.Services
         // =========================================================
         public void ToggleCommentLike(int id,int user)
         {
-            using var c=new SqlConnection(_connectionString);c.Open();using var tx=c.BeginTransaction(System.Data.IsolationLevel.Serializable);
-            using var q=new SqlCommand("IF EXISTS(SELECT 1 FROM CommunityCommentLikes WITH(UPDLOCK,HOLDLOCK) WHERE CommentId=@Id AND UserId=@U) DELETE FROM CommunityCommentLikes WHERE CommentId=@Id AND UserId=@U; ELSE INSERT INTO CommunityCommentLikes(CommentId,UserId) SELECT @Id,@U WHERE EXISTS(SELECT 1 FROM CommunityComments WHERE Id=@Id);",c,tx);
-            q.Parameters.AddWithValue("@Id",id);q.Parameters.AddWithValue("@U",user);q.ExecuteNonQuery();tx.Commit();
+            if (id <= 0 || user <= 0)
+                return;
+
+            using var c = new SqlConnection(_connectionString);
+            c.Open();
+            using var tx = c.BeginTransaction(System.Data.IsolationLevel.Serializable);
+
+            try
+            {
+                using var q = new SqlCommand(@"
+                    IF EXISTS
+                    (
+                        SELECT 1
+                        FROM CommunityCommentLikes WITH (UPDLOCK, HOLDLOCK)
+                        WHERE CommentId = @Id AND UserId = @U
+                    )
+                        DELETE FROM CommunityCommentLikes
+                        WHERE CommentId = @Id AND UserId = @U;
+                    ELSE
+                        INSERT INTO CommunityCommentLikes (CommentId, UserId)
+                        SELECT @Id, @U
+                        WHERE EXISTS
+                        (
+                            SELECT 1 FROM CommunityComments WHERE Id = @Id
+                        );", c, tx);
+
+                q.Parameters.AddWithValue("@Id", id);
+                q.Parameters.AddWithValue("@U", user);
+                q.ExecuteNonQuery();
+                tx.Commit();
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
         }
         public void DeleteComment(int id,int user,bool admin)
         {
@@ -453,6 +506,9 @@ namespace Shoppet_VetClinic.Services
             int? petId,
             string caption)
         {
+            if (!IsPetOwner(userId))
+                throw new UnauthorizedAccessException("A Pet Owner account is required.");
+
             petId =
                 ValidateOwnedPet(
                     userId,
@@ -523,6 +579,9 @@ namespace Shoppet_VetClinic.Services
             int? petId,
             string caption)
         {
+            if (!IsPetOwner(userId))
+                return false;
+
             petId =
                 ValidateOwnedPet(
                     userId,
@@ -588,6 +647,9 @@ namespace Shoppet_VetClinic.Services
             int userId,
             string imageUrl)
         {
+            if (!IsPetOwner(userId))
+                return false;
+
             using var conn =
                 new SqlConnection(
                     _connectionString);
@@ -632,6 +694,9 @@ namespace Shoppet_VetClinic.Services
             int postId,
             int userId)
         {
+            if (!IsPetOwner(userId))
+                return false;
+
             using var conn =
                 new SqlConnection(
                     _connectionString);
@@ -675,6 +740,9 @@ namespace Shoppet_VetClinic.Services
             int postId,
             int userId)
         {
+            if (!IsPetOwner(userId))
+                return false;
+
             using var conn = new SqlConnection(_connectionString);
             conn.Open();
             EnsureCommentsSchema(conn);
@@ -843,6 +911,25 @@ namespace Shoppet_VetClinic.Services
         // =========================================================
         // MAP
         // =========================================================
+
+        private bool IsPetOwner(int userId)
+        {
+            if (userId <= 0)
+                return false;
+
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+
+            using var cmd = new SqlCommand(@"
+                SELECT COUNT(1)
+                FROM UserAccounts
+                WHERE Id = @UserId
+                  AND ISNULL(IsDisabled, 0) = 0
+                  AND LOWER(LTRIM(RTRIM(Role))) IN ('pet owner', 'petowner');", conn);
+
+            cmd.Parameters.AddWithValue("@UserId", userId);
+            return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+        }
 
         private static CommunityPost MapPost(
             SqlDataReader reader)

@@ -5,12 +5,16 @@ public class MarketplaceCartService(IConfiguration configuration,AuthService aut
 {
     private string ConnectionString=>configuration.GetConnectionString("ShoppetDb")!;
     private int Actor=>auth.IsPetOwner?auth.CurrentUser?.Id??0:0;
+    private readonly List<MarketplaceCartItem> _guestItems = new();
     public event Action? Changed;
     public IReadOnlyList<MarketplaceCartItem> Items
     {
         get
         {
-            var list=new List<MarketplaceCartItem>();if(Actor==0)return list;
+            if (Actor == 0)
+                return _guestItems.ToList();
+
+            var list=new List<MarketplaceCartItem>();
             using var c=new SqlConnection(ConnectionString);c.Open();
             using var q=new SqlCommand(@"SELECT m.Id,m.SellerUserId,u.FullName,m.Title,m.Price,ISNULL(m.ImageUrl,''),m.Status
             FROM MarketplaceCartItems i JOIN MarketplaceCart cart ON cart.Id=i.CartId
@@ -26,7 +30,30 @@ public class MarketplaceCartService(IConfiguration configuration,AuthService aut
     public bool Contains(int id)=>Items.Any(x=>x.ListingId==id);
     public bool Add(MarketplaceListing listing)
     {
-        if(Actor==0 || listing.SellerUserId==Actor)return false;
+        if (string.Equals(listing.Status, "Deleted", StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(listing.Status, "Available", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (Actor == 0)
+        {
+            if (_guestItems.Any(item => item.ListingId == listing.Id))
+                return false;
+
+            _guestItems.Add(new MarketplaceCartItem
+            {
+                ListingId = listing.Id,
+                SellerUserId = listing.SellerUserId,
+                SellerName = listing.SellerName,
+                Title = listing.Title,
+                Price = listing.Price,
+                ImageUrl = listing.ImageUrl,
+                Status = listing.Status
+            });
+            Changed?.Invoke();
+            return true;
+        }
+
+        if(listing.SellerUserId==Actor)return false;
         using var c=new SqlConnection(ConnectionString);c.Open();using var tx=c.BeginTransaction(System.Data.IsolationLevel.Serializable);
         using var q=new SqlCommand(@"IF NOT EXISTS(SELECT 1 FROM MarketplaceCart WITH(UPDLOCK,HOLDLOCK) WHERE UserId=@User) INSERT INTO MarketplaceCart(UserId) VALUES(@User);
             DECLARE @Cart INT=(SELECT Id FROM MarketplaceCart WHERE UserId=@User);
@@ -35,8 +62,31 @@ public class MarketplaceCartService(IConfiguration configuration,AuthService aut
                 INSERT INTO MarketplaceCartItems(CartId,MarketplaceListingId,Quantity) VALUES(@Cart,@Listing,1);",c,tx);
         q.Parameters.AddWithValue("@User",Actor);q.Parameters.AddWithValue("@Listing",listing.Id);var changed=q.ExecuteNonQuery()>0;tx.Commit();Changed?.Invoke();return changed;
     }
-    public void Remove(int id)=>Mutate("DELETE i FROM MarketplaceCartItems i JOIN MarketplaceCart c ON c.Id=i.CartId WHERE c.UserId=@User AND i.MarketplaceListingId=@Id",id);
+    public void Remove(int id)
+    {
+        if (Actor == 0)
+        {
+            if (_guestItems.RemoveAll(item => item.ListingId == id) > 0)
+                Changed?.Invoke();
+            return;
+        }
+
+        Mutate("DELETE i FROM MarketplaceCartItems i JOIN MarketplaceCart c ON c.Id=i.CartId WHERE c.UserId=@User AND i.MarketplaceListingId=@Id",id);
+    }
     public void RemoveMany(IEnumerable<int> ids){foreach(var id in ids)Remove(id);}
-    public void Clear()=>Mutate("DELETE i FROM MarketplaceCartItems i JOIN MarketplaceCart c ON c.Id=i.CartId WHERE c.UserId=@User",0);
+    public void Clear()
+    {
+        if (Actor == 0)
+        {
+            if (_guestItems.Count == 0)
+                return;
+
+            _guestItems.Clear();
+            Changed?.Invoke();
+            return;
+        }
+
+        Mutate("DELETE i FROM MarketplaceCartItems i JOIN MarketplaceCart c ON c.Id=i.CartId WHERE c.UserId=@User",0);
+    }
     private void Mutate(string sql,int id){if(Actor==0)return;using var c=new SqlConnection(ConnectionString);c.Open();using var q=new SqlCommand(sql,c);q.Parameters.AddWithValue("@User",Actor);q.Parameters.AddWithValue("@Id",id);q.ExecuteNonQuery();Changed?.Invoke();}
 }

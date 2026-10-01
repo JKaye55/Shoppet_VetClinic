@@ -1,4 +1,5 @@
 using Shoppet_VetClinic.Components;
+using Shoppet_VetClinic.Api;
 using Shoppet_VetClinic.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +27,7 @@ builder.Services.AddScoped<OwnerCareService>();
 builder.Services.AddScoped<AdminAccountService>();
 builder.Services.AddScoped<PetCareService>();
 builder.Services.AddScoped<CommerceService>();
+builder.Services.AddScoped<MobileTokenService>();
 var app = builder.Build();
 try { if(app.Configuration.GetValue("InitializeDatabase",true)) {
  await SharedSchemaInitializer.EnsureAsync(app.Configuration);
@@ -64,5 +66,7 @@ app.MapGet("/health/ready", async (IConfiguration config) =>
     }
     catch { return Results.StatusCode(503); }
 });
+
+app.MapMobileApi();
 
 app.Run();

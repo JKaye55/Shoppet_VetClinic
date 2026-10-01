@@ -88,9 +88,8 @@
                         </strong>
 
                         <span>
-                            You can read posts as a guest. Sign in to join the conversation.
-                            Guest identity is fixed for clarity. Create an account
-                            to publish stories, like posts, and build your profile.
+                            You can read posts and leave up to 10 comments as a guest.
+                            Sign in to join the conversation, like posts, and build your profile.
                         </span>
 
                     </div>
@@ -131,8 +130,8 @@
                     @if (!string.IsNullOrWhiteSpace(statusMessage))
                     {
                         <div class="@(isError
-                                                        ? "sc-community-alert error"
-                                                        : "sc-community-alert success")">
+                                                                                    ? "sc-community-alert error"
+                                                                                    : "sc-community-alert success")">
 
                             @statusMessage
 
@@ -517,7 +516,10 @@
                                     {
                                         <div class="sc-community-post-image">
 
-                                            @foreach(var url in post.ImageUrl.Split(',',StringSplitOptions.RemoveEmptyEntries)){<img src="@url" alt="Photo shared by @post.AuthorName" loading="lazy" />}
+                                            @foreach (var url in post.ImageUrl.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                            {
+                                                <img src="@url" alt="Photo shared by @post.AuthorName" loading="lazy" />
+                                            }
 
                                         </div>
                                     }
@@ -531,13 +533,13 @@
                                         {
                                             <button type="button"
                                                     class="@(likedPostIds.Contains(post.Id)
-                                                                ? "sc-community-like liked"
-                                                                : "sc-community-like")"
+                                                                                                                ? "sc-community-like liked"
+                                                                                                                : "sc-community-like")"
                                                     @onclick="() => ToggleLike(post)">
 
                                                 <i class="@(likedPostIds.Contains(post.Id)
-                                                               ? "bi bi-heart-fill"
-                                                               : "bi bi-heart")"
+                                                                                                                  ? "bi bi-heart-fill"
+                                                                                                                  : "bi bi-heart")"
                                                    aria-hidden="true">
                                                 </i>
 
@@ -584,50 +586,122 @@
                                         var postComments = GetComments(post.Id);
                                     }
 
+                                    <!-- UPDATED COMMENT SECTION -->
                                     <section class="sc-community-comments">
                                         <div class="sc-community-comments-head">
                                             <strong>Comments</strong>
                                             <span>@postComments.Count</span>
                                         </div>
 
-                                        @foreach (var comment in postComments)
-                                        {
-                                            <div class="sc-community-comment">
-                                                <div>
-                                                    <strong>@comment.AuthorName</strong>
-                                                    @if (comment.IsGuest)
-                                                    {
-                                                        <span class="sc-community-guest-tag">Guest</span>
-                                                    }
-                                                    <small>@Relative(comment.CreatedAt)</small>
+                                        <div class="sc-community-comment-list">
+                                            @foreach (var comment in postComments)
+                                            {
+                                                <div class="sc-community-comment">
+                                                    <div class="sc-community-comment-avatar">
+                                                        @GetInitials(comment.AuthorName)
+                                                    </div>
+
+                                                    <div class="sc-community-comment-body">
+                                                        <div class="sc-community-comment-meta">
+                                                            <strong>@comment.AuthorName</strong>
+                                                            @if (comment.IsGuest)
+                                                            {
+                                                                <span class="sc-community-guest-tag">Guest</span>
+                                                            }
+                                                            <small>@Relative(comment.CreatedAt)</small>
+                                                        </div>
+
+                                                        @if (comment.ParentCommentId.HasValue)
+                                                        {
+                                                            <div class="sc-community-comment-reply-indicator">
+                                                                <i class="bi bi-arrow-return-right"></i> Replying to #@comment.ParentCommentId
+                                                            </div>
+                                                        }
+
+                                                        <p class="sc-community-comment-text">@comment.Body</p>
+
+                                                        <div class="sc-community-comment-actions">
+                                                            <span class="sc-community-comment-likes">
+                                                                <i class="bi bi-heart"></i> @comment.LikeCount
+                                                            </span>
+
+                                                            @if (Auth.IsPetOwner && Auth.CurrentUser is not null)
+                                                            {
+                                                                <button type="button" class="sc-community-action-link" @onclick="() => LikeComment(post.Id, comment.Id)">
+                                                                    Like / unlike
+                                                                </button>
+                                                            }
+
+                                                            @if (Auth.IsPetOwner && Auth.CurrentUser is not null)
+                                                            {
+                                                                <button type="button" class="sc-community-action-link" @onclick="() => Reply(post.Id, comment.Id)">
+                                                                    Reply
+                                                                </button>
+                                                            }
+
+                                                            @if (Auth.CurrentUser is not null && (comment.UserId == Auth.CurrentUser.Id || Auth.IsAdmin))
+                                                            {
+                                                                <button type="button" class="sc-community-action-link danger" @onclick="() => DeleteComment(post.Id, comment.Id)">
+                                                                    Delete
+                                                                </button>
+                                                            }
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                @if(comment.ParentCommentId.HasValue){<small>Reply to comment #@comment.ParentCommentId</small>}
-                                                <p>@comment.Body</p>
-                                                <small>@comment.LikeCount likes</small>
-                                                @if(Auth.IsPetOwner&&Auth.CurrentUser is not null){<button type="button" class="secondary-link" @onclick="()=>LikeComment(post.Id,comment.Id)">Like / unlike</button><button type="button" class="secondary-link" @onclick="()=>Reply(post.Id,comment.Id)">Reply</button>}
-                                                @if(Auth.CurrentUser is not null&&(comment.UserId==Auth.CurrentUser.Id||Auth.IsAdmin)){<button type="button" class="secondary-link" @onclick="()=>DeleteComment(post.Id,comment.Id)">Delete</button>}
-                                            </div>
-                                        }
+                                            }
+                                        </div>
 
                                         <div class="sc-community-comment-form">
+                                            @if (replyParents.TryGetValue(post.Id, out var replyParentId))
+                                            {
+                                                var replyTarget = GetComments(post.Id)
+                                                    .FirstOrDefault(comment => comment.Id == replyParentId);
+
+                                                <div class="sc-community-reply-context">
+                                                    <span>
+                                                        Replying to @(replyTarget?.AuthorName ?? "this comment")
+                                                    </span>
+                                                    <button type="button"
+                                                            class="sc-community-action-link"
+                                                            @onclick="() => CancelReply(post.Id)">
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            }
+
                                             @if (Auth.IsGuest)
                                             {
                                                 <div class="sc-community-comment-identity">
                                                     <span class="sc-community-guest-avatar">G</span>
                                                     <span>
                                                         <strong>Commenting as Guest</strong>
-                                                        <small>Your guest name cannot be changed.</small>
+                                                        <small>
+                                                            @if (GetGuestCommentCount(post.Id) >= 10)
+                                                            {
+                                                                <span style="color:#A04343; font-weight:bold;">Comment limit reached (10/10). Please sign in to comment more.</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span>@GetGuestCommentCount(post.Id)/10 comments used. Sign in for unlimited comments.</span>
+                                                            }
+                                                        </small>
                                                     </span>
                                                 </div>
                                             }
 
-                                            <div>
+                                            <div class="sc-community-comment-input-wrapper">
                                                 <input type="text"
                                                        maxlength="300"
                                                        value="@GetCommentDraft(post.Id)"
                                                        @oninput="e => SetCommentDraft(post.Id, e.Value?.ToString() ?? string.Empty)"
-                                                       placeholder="Write a helpful comment..." />
-                                                <button type="button" @onclick="() => SubmitComment(post.Id)">Comment</button>
+                                                       placeholder="@(Auth.IsGuest && GetGuestCommentCount(post.Id) >= 10 ? "Sign in to comment..." : "Write a helpful comment...")"
+                                                       disabled="@(Auth.IsGuest && GetGuestCommentCount(post.Id) >= 10)" />
+
+                                                <button type="button"
+                                                        @onclick="() => SubmitComment(post.Id)"
+                                                        disabled="@(Auth.IsGuest && GetGuestCommentCount(post.Id) >= 10)">
+                                                    <i class="bi bi-send"></i> Post
+                                                </button>
                                             </div>
                                         </div>
                                     </section>
@@ -763,8 +837,8 @@
 
 
     /* =========================================================
-           HERO
-           ========================================================= */
+               HERO
+               ========================================================= */
 
     .sc-community-hero {
         padding: 65px 0 56px;
@@ -864,8 +938,8 @@
 
 
     /* =========================================================
-           GUEST
-           ========================================================= */
+               GUEST
+               ========================================================= */
 
     .sc-community-guest {
         padding-top: 20px;
@@ -924,8 +998,8 @@
 
 
     /* =========================================================
-           CONTENT
-           ========================================================= */
+               CONTENT
+               ========================================================= */
 
     .sc-community-content {
         padding: 30px 0 80px;
@@ -946,8 +1020,8 @@
 
 
     /* =========================================================
-           ALERT
-           ========================================================= */
+               ALERT
+               ========================================================= */
 
     .sc-community-alert {
         margin-bottom: 13px;
@@ -972,8 +1046,8 @@
 
 
     /* =========================================================
-           COMPOSER
-           ========================================================= */
+               COMPOSER
+               ========================================================= */
 
     .sc-community-composer {
         padding: 20px;
@@ -1228,8 +1302,8 @@
 
 
     /* =========================================================
-           SIGN IN CARD
-           ========================================================= */
+               SIGN IN CARD
+               ========================================================= */
 
     .sc-community-signin-card {
         padding: 20px;
@@ -1265,8 +1339,8 @@
 
 
     /* =========================================================
-           FEED HEADER
-           ========================================================= */
+               FEED HEADER
+               ========================================================= */
 
     .sc-community-feed-head {
         margin: 30px 0 14px;
@@ -1312,52 +1386,82 @@
 
 
     /* =========================================================
-           COMMENTS
-           ========================================================= */
+               COMMENTS (UPDATED FOR MODERN UI)
+               ========================================================= */
 
     .sc-community-comments {
-        margin-top: 12px;
-        padding-top: 12px;
+        margin-top: 16px;
+        padding: 16px 18px 18px;
         border-top: 1px solid #E9EFED;
+        background: #FAFBFA;
     }
 
     .sc-community-comments-head {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
+        margin-bottom: 14px;
         color: #53645E;
-        font-size: .68rem;
+        font-size: .72rem;
+        font-weight: 700;
     }
 
-    .sc-community-comments-head span {
-        color: #8A9793;
+        .sc-community-comments-head span {
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: #EEF1F0;
+            color: #8A9793;
+            font-size: .6rem;
+        }
+
+    .sc-community-comment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     }
 
     .sc-community-comment {
-        margin-top: 8px;
-        padding: 9px 10px;
-        border-radius: 9px;
-        background: #F7FAF9;
+        display: flex;
+        gap: 10px;
     }
 
-    .sc-community-comment > div {
+    .sc-community-comment-avatar {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #E6EFEC;
+        color: #667772;
+        font-size: .6rem;
+        font-weight: 900;
+    }
+
+    .sc-community-comment-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .sc-community-comment-meta {
         display: flex;
         align-items: center;
         gap: 6px;
+        margin-bottom: 4px;
     }
 
-    .sc-community-comment strong {
-        color: #42544E;
-        font-size: .66rem;
-    }
+        .sc-community-comment-meta strong {
+            color: #42544E;
+            font-size: .68rem;
+        }
 
-    .sc-community-comment small {
-        color: #98A39F;
-        font-size: .58rem;
-    }
+        .sc-community-comment-meta small {
+            color: #98A39F;
+            font-size: .58rem;
+        }
 
     .sc-community-guest-tag {
-        padding: 2px 5px;
+        padding: 1px 6px;
         border-radius: 999px;
         background: #EEF1F0;
         color: #72807C;
@@ -1365,26 +1469,75 @@
         font-weight: 850;
     }
 
-    .sc-community-comment p {
-        margin: 4px 0 0;
-        color: #5D6D67;
-        font-size: .68rem;
-        line-height: 1.45;
+    .sc-community-comment-reply-indicator {
+        margin-bottom: 4px;
+        color: #8A9793;
+        font-size: .6rem;
+        font-style: italic;
     }
 
+    .sc-community-comment-text {
+        margin: 0 0 6px;
+        color: #5D6D67;
+        font-size: .7rem;
+        line-height: 1.5;
+        white-space: pre-wrap;
+    }
+
+    .sc-community-comment-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sc-community-comment-likes {
+        color: #98A39F;
+        font-size: .6rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .sc-community-action-link {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #2F9098;
+        font-size: .62rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+        .sc-community-action-link:hover {
+            color: #173D3D;
+            text-decoration: underline;
+        }
+
+        .sc-community-action-link.danger {
+            color: #A04343;
+        }
+
+            .sc-community-action-link.danger:hover {
+                color: #7A2E2E;
+            }
+
+    /* Comment Form */
     .sc-community-comment-form {
-        margin-top: 9px;
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px dashed #D5E0DD;
     }
 
     .sc-community-comment-identity {
-        margin-bottom: 7px;
-        padding: 8px 10px;
+        margin-bottom: 10px;
+        padding: 8px 12px;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         border: 1px solid #E0E8E5;
-        border-radius: 9px;
-        background: #F7F9F8;
+        border-radius: 10px;
+        background: #FFFFFF;
     }
 
     .sc-community-guest-avatar {
@@ -1415,38 +1568,69 @@
         font-size: .56rem;
     }
 
-    .sc-community-comment-form > div:last-child {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 6px;
+    .sc-community-comment-input-wrapper {
+        display: flex;
+        gap: 8px;
+        align-items: center;
     }
 
-    .sc-community-comment-form input {
-        min-height: 37px;
-        padding: 0 10px;
-        border: 1px solid #D5E0DD;
-        border-radius: 8px;
-        background: #FFFFFF;
-        color: #42544E;
-        font-size: .66rem;
-    }
+        .sc-community-comment-input-wrapper input {
+            flex: 1;
+            min-height: 42px;
+            padding: 0 14px;
+            border: 1px solid #D5E0DD;
+            border-radius: 12px;
+            background: #FFFFFF;
+            color: #42544E;
+            font-size: .7rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
 
-    .sc-community-comment-form button {
-        min-height: 37px;
-        padding: 0 11px;
-        border: 0;
-        border-radius: 8px;
-        background: #2F9098;
-        color: #FFFFFF;
-        font-size: .64rem;
-        font-weight: 850;
-        cursor: pointer;
-    }
+            .sc-community-comment-input-wrapper input:focus {
+                border-color: #2F9098;
+                box-shadow: 0 0 0 3px rgba(47,144,152,.08);
+            }
+
+            .sc-community-comment-input-wrapper input:disabled {
+                background: #F0F2F1;
+                cursor: not-allowed;
+            }
+
+        .sc-community-comment-input-wrapper button {
+            min-height: 42px;
+            padding: 0 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #2F9098;
+            border-radius: 12px;
+            background: #2F9098;
+            color: #FFFFFF;
+            font-size: .68rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+            .sc-community-comment-input-wrapper button:hover:not(:disabled) {
+                background: #267C83;
+            }
+
+            .sc-community-comment-input-wrapper button:active:not(:disabled) {
+                transform: scale(0.97);
+            }
+
+            .sc-community-comment-input-wrapper button:disabled {
+                background: #A9BDB9;
+                border-color: #A9BDB9;
+                cursor: not-allowed;
+            }
 
 
     /* =========================================================
-           POSTS
-           ========================================================= */
+               POSTS
+               ========================================================= */
 
     .sc-community-feed {
         display: grid;
@@ -1569,8 +1753,8 @@
 
 
     /* =========================================================
-           EMPTY
-           ========================================================= */
+               EMPTY
+               ========================================================= */
 
     .sc-community-empty {
         padding: 60px 24px;
@@ -1609,8 +1793,8 @@
 
 
     /* =========================================================
-           SIDEBAR
-           ========================================================= */
+               SIDEBAR
+               ========================================================= */
 
     .sc-community-sidebar {
         display: grid;
@@ -1693,8 +1877,8 @@
 
 
     /* =========================================================
-           RESPONSIVE
-           ========================================================= */
+               RESPONSIVE
+               ========================================================= */
 
     @@media (max-width: 900px) {
 
@@ -1781,7 +1965,7 @@
     // =========================================================
 
     private readonly Dictionary<int, List<CommunityComment>> commentsByPost = new();
-    private readonly Dictionary<int,int> replyParents=new();
+    private readonly Dictionary<int, int> replyParents = new();
     private readonly Dictionary<int, string> commentDrafts = new();
 
     private List<CommunityPost> posts = new();
@@ -1999,12 +2183,73 @@
     private void SetCommentDraft(int postId, string value) =>
         commentDrafts[postId] = value;
 
-    private void Reply(int post,int comment){replyParents[post]=comment;statusMessage=$"Replying to comment #{comment}. Write your reply below.";}
-    private void LikeComment(int post,int id){if(!Auth.IsPetOwner||Auth.CurrentUser is null)return;try{Community.ToggleCommentLike(id,Auth.CurrentUser.Id);commentsByPost[post]=Community.GetComments(post);}catch{ShowError("Could not update this like.");}}
-    private void DeleteComment(int post,int id){if(Auth.CurrentUser is null)return;try{Community.DeleteComment(id,Auth.CurrentUser.Id,Auth.IsAdmin);commentsByPost[post]=Community.GetComments(post);}catch{ShowError("Could not delete this comment.");}}
+    // Helper to count how many comments a guest has made on a specific post
+    private int GetGuestCommentCount(int postId)
+    {
+        if (!Auth.IsGuest && Auth.IsLoggedIn) return 0; // Only applies to guests
+
+        var comments = GetComments(postId);
+        // Since guests don't have a UserId, we count comments by name "Guest"
+        return comments.Count(c => c.IsGuest && c.AuthorName == "Guest");
+    }
+
+    private void Reply(int post, int comment)
+    {
+        if (!Auth.IsPetOwner || Auth.CurrentUser is null)
+            return;
+
+        if (!GetComments(post).Any(existing => existing.Id == comment))
+            return;
+
+        replyParents[post] = comment;
+        statusMessage = "Reply selected. Write your response below.";
+        isError = false;
+    }
+
+    private void CancelReply(int post)
+    {
+        replyParents.Remove(post);
+        statusMessage = string.Empty;
+        isError = false;
+    }
+
+    private void LikeComment(int post, int id)
+    {
+        if (!Auth.IsPetOwner || Auth.CurrentUser is null)
+            return;
+
+        try
+        {
+            Community.ToggleCommentLike(id, Auth.CurrentUser.Id);
+
+            // Refresh the comments for this post to show the new like count
+            commentsByPost[post] = Community.GetComments(post);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Community Comment Like] {ex}");
+            ShowError("Could not update this like.");
+        }
+    }
+
+    private void DeleteComment(int post, int id) { if (Auth.CurrentUser is null) return; try { Community.DeleteComment(id, Auth.CurrentUser.Id, Auth.IsAdmin); commentsByPost[post] = Community.GetComments(post); } catch { ShowError("Could not delete this comment."); } }
+
     private void SubmitComment(int postId)
     {
-        if(!Auth.IsPetOwner){ShowError("Sign in with a Pet Owner account to comment.");return;}
+        // Allow guests to submit, but check their limit
+        if (!Auth.IsPetOwner && !Auth.IsGuest)
+        {
+            ShowError("Sign in with a Pet Owner account to comment.");
+            return;
+        }
+
+        // Enforce the 10-comment limit for guests
+        if (Auth.IsGuest && GetGuestCommentCount(postId) >= 10)
+        {
+            ShowError("You have reached the guest comment limit (10). Please sign in to continue commenting.");
+            return;
+        }
+
         var body = GetCommentDraft(postId).Trim();
 
         if (string.IsNullOrWhiteSpace(body))
@@ -2014,19 +2259,28 @@
         }
 
         var isGuest = Auth.IsGuest || !Auth.IsLoggedIn;
-        var userId = Auth.CurrentUser?.Id;
+
+        // FIXED: Pass 0 if guest (null ID), otherwise pass real ID.
+        // This resolves the CS1503 error since the service requires an 'int'.
+        int userId = Auth.CurrentUser?.Id ?? 0;
+
         var authorName = isGuest
-            ? "Guest"
-            : Auth.CurrentUser?.FullName ?? "Pet Owner";
+                    ? "Guest"
+                    : Auth.CurrentUser?.FullName ?? "Pet Owner";
 
         try
         {
-            if (Community.AddComment(postId, userId, authorName, body, isGuest,replyParents.TryGetValue(postId,out var parent)?parent:null))
+            if (Community.AddComment(postId, userId, authorName, body, isGuest, replyParents.TryGetValue(postId, out var parent) ? parent : null))
             {
-                commentDrafts[postId] = string.Empty;replyParents.Remove(postId);
+                commentDrafts[postId] = string.Empty;
+                replyParents.Remove(postId);
                 commentsByPost[postId] = Community.GetComments(postId);
                 statusMessage = "Comment posted.";
                 isError = false;
+            }
+            else
+            {
+                ShowError("The comment was not saved. Please try again.");
             }
         }
         catch (Exception ex)
