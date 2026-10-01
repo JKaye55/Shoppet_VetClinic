@@ -1,4 +1,7 @@
 @page "/help"
+@page "/home/help"
+@layout InformationLayout
+@inject NavigationManager Nav
 
 <PageTitle>Help Center | ShoppetCare</PageTitle>
 
@@ -153,7 +156,7 @@
                 </p>
             </div>
             <div class="help-support-actions">
-                <a href="/about">About ShoppetCare</a>
+                <a href="@InformationLink("about")">About ShoppetCare</a>
                 <a href="/my-pets" class="secondary">Manage My Pets</a>
             </div>
         </section>
@@ -171,3 +174,7 @@
     .help-support{margin-top:24px;padding:25px;border-radius:18px;background:#173D3D;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:24px}.help-support h2{margin:6px 0}.help-support p{max-width:720px;margin:0;color:rgba(255,255,255,.67);font-size:.76rem;line-height:1.6}.help-support-actions{display:flex;gap:8px;flex-wrap:wrap}.help-support-actions a{min-height:42px;padding:0 14px;border-radius:9px;background:#2F9098;color:#fff;text-decoration:none;display:inline-flex;align-items:center;font-size:.7rem;font-weight:900}.help-support-actions a.secondary{border:1px solid rgba(255,255,255,.16);background:transparent}
     @@media(max-width:900px){.help-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.help-support{align-items:flex-start;flex-direction:column}}@@media(max-width:600px){.help-grid{grid-template-columns:1fr}.help-head{align-items:flex-start;flex-direction:column}.help-search-wrap{grid-template-columns:auto 1fr}.help-search-wrap button{grid-column:2}}
 </style>
+
+@code {
+    private string InformationLink(string page) => Nav.ToBaseRelativePath(Nav.Uri).StartsWith("home/", StringComparison.OrdinalIgnoreCase) ? $"/home/{page}" : $"/{page}";
+}

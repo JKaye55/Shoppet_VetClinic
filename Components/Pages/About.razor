@@ -1,4 +1,7 @@
 @page "/about"
+@page "/home/about"
+@layout InformationLayout
+@inject NavigationManager Nav
 
 <PageTitle>About ShoppetCare</PageTitle>
 
@@ -145,7 +148,7 @@
             </div>
             <div>
                 <a href="/home?guest=true">Explore as Guest</a>
-                <a href="/help" class="secondary">Open Help Center</a>
+                <a href="@InformationLink("help")" class="secondary">Open Help Center</a>
             </div>
         </section>
     </main>
@@ -160,3 +163,7 @@
     .about-cta{margin-top:22px;padding:25px;display:flex;align-items:center;justify-content:space-between;gap:25px;border-radius:18px;background:#173D3D;color:#fff}.about-cta h2{margin:5px 0 0}.about-cta>div:last-child{display:flex;gap:8px;flex-wrap:wrap}.about-cta a{min-height:42px;padding:0 14px;display:inline-flex;align-items:center;border-radius:9px;background:#2F9098;color:#fff;text-decoration:none;font-size:.7rem;font-weight:900}.about-cta a.secondary{border:1px solid rgba(255,255,255,.15);background:transparent}
     @@media(max-width:850px){.about-grid{grid-template-columns:1fr 1fr}.about-card.feature{grid-column:1/-1}.role-grid{grid-template-columns:1fr 1fr}.team-grid{grid-template-columns:1fr}.about-cta{align-items:flex-start;flex-direction:column}}@@media(max-width:560px){.about-grid,.role-grid{grid-template-columns:1fr}.team-card{grid-template-columns:50px 1fr}.team-avatar{width:50px;height:50px}}
 </style>
+
+@code {
+    private string InformationLink(string page) => Nav.ToBaseRelativePath(Nav.Uri).StartsWith("home/", StringComparison.OrdinalIgnoreCase) ? $"/home/{page}" : $"/{page}";
+}

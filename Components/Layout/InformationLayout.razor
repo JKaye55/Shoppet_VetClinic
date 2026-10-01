@@ -1,0 +1,12 @@
+@inherits LayoutComponentBase
+@inject NavigationManager Nav
+
+<LayoutView Layout="@PageLayout">
+    @Body
+</LayoutView>
+
+@code {
+    private Type PageLayout => Nav.ToBaseRelativePath(Nav.Uri).StartsWith("home/", StringComparison.OrdinalIgnoreCase)
+        ? typeof(MainLayout)
+        : typeof(LandingLayout);
+}
