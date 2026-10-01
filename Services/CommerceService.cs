@@ -28,9 +28,9 @@ namespace Shoppet_VetClinic.Services
                 {
                     Type = PremiumType,
                     Name = "ShoppetCare Premium",
-                    ShortDescription = "Premium Digital Pet ID features and expanded pet-owner benefits.",
-                    Amount = 150m,
-                    DurationMonths = 3
+                    ShortDescription = "Lifetime Digital Pet ID features and expanded pet-owner benefits.",
+                    Amount = 49m,
+                    DurationMonths = 1200
                 },
                 SellerType => new SubscriptionOffering
                 {
@@ -106,6 +106,8 @@ namespace Shoppet_VetClinic.Services
 
         public bool IsPremiumActive(int userId)
         {
+            if (userId <= 0) return false;
+
             var active =
                 GetActiveSubscription(PremiumType, userId: userId);
 
@@ -119,9 +121,7 @@ namespace Shoppet_VetClinic.Services
                 SELECT COUNT(1)
                 FROM UserAccounts
                 WHERE Id = @UserId
-                  AND ISNULL(IsPremium, 0) = 1
-                  AND PremiumActivatedAt IS NOT NULL
-                  AND DATEADD(MONTH, 3, PremiumActivatedAt) >= SYSDATETIME();",
+                  AND ISNULL(IsPremium, 0) = 1;",
                 conn);
 
             cmd.Parameters.AddWithValue("@UserId", userId);

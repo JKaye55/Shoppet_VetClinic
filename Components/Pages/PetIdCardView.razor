@@ -1,4 +1,4 @@
-﻿@using Shoppet_VetClinic.Models
+@using Shoppet_VetClinic.Models
 
 @if (Pet is not null)
 {
@@ -268,13 +268,26 @@
 
                 @if (PublicMode)
                 {
-                    <strong class="sc-id-primary-value">
-                        Protected
-                    </strong>
+                    @if (!string.IsNullOrWhiteSpace(OwnerPhone))
+                    {
+                        <strong class="sc-id-primary-value sc-id-phone">
+                            @FormattedOwnerPhone
+                        </strong>
 
-                    <small>
-                        Private owner information
-                    </small>
+                        <small>
+                            Owner opted in to share
+                        </small>
+                    }
+                    else
+                    {
+                        <strong class="sc-id-primary-value">
+                            Protected
+                        </strong>
+
+                        <small>
+                            Private owner information
+                        </small>
+                    }
                 }
                 else if (IsPremium)
                 {

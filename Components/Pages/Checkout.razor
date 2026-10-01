@@ -1,3 +1,5 @@
+@page "/checkout"
+@page "/checkout/{PlanType}"
 @rendermode InteractiveServer
 
 @using Shoppet_VetClinic.Models
@@ -52,7 +54,7 @@
                     <div><span>Method</span><strong>@receipt.PaymentMethod</strong></div>
                     <div><span>Amount</span><strong>₱@receipt.Amount.ToString("N2")</strong></div>
                     <div><span>Paid at</span><strong>@receipt.PaidAt.ToString("MMM d, yyyy h:mm tt")</strong></div>
-                    <div><span>Access until</span><strong>@receipt.ExpiresAt.ToString("MMM d, yyyy")</strong></div>
+                    <div><span>Access</span><strong>@(PlanType == CommerceService.PremiumType ? "Lifetime" : receipt.ExpiresAt.ToString("MMM d, yyyy"))</strong></div>
                 </div>
 
                 <div class="receipt-actions">
@@ -232,7 +234,7 @@
         {
             CommerceService.SellerType => "/marketplace",
             CommerceService.ClinicType => "/clinic-portal",
-            _ => "/dashboard"
+            _ => "/my-pets"
         };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -241,6 +243,11 @@
             return;
 
         await Auth.InitializeAsync();
+
+        if (string.IsNullOrWhiteSpace(PlanType))
+        {
+            PlanType = CommerceService.PremiumType;
+        }
 
         offering = Commerce.GetOffering(PlanType);
 
@@ -341,9 +348,9 @@
     }
 
     private string GetDurationLabel() =>
-        offering?.DurationMonths == 1
-            ? "1 month"
-            : $"{offering?.DurationMonths ?? 0} months";
+        PlanType == CommerceService.PremiumType
+            ? "Lifetime access"
+            : (offering?.DurationMonths == 1 ? "1 month" : $"{offering?.DurationMonths ?? 0} months");
 
     private static string GetMethodMark(string method) =>
         method switch

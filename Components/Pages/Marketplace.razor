@@ -1,4 +1,4 @@
-﻿@page "/marketplace"
+@page "/marketplace"
 @rendermode InteractiveServer
 @implements IDisposable
 
@@ -52,15 +52,6 @@
                             @onclick="StartCreating">
                         <i class="bi bi-plus-lg" aria-hidden="true"></i>
                         Sell an Item
-                    </button>
-                }
-                else if (Auth.IsLoggedIn && Auth.IsPetOwner)
-                {
-                    <button type="button"
-                            class="sc-marketplace-sell"
-                            @onclick="GoToSellerCheckout">
-                        <i class="bi bi-patch-check-fill" aria-hidden="true"></i>
-                        Become a Verified Seller
                     </button>
                 }
                 else
@@ -172,6 +163,23 @@
                                 Add the important details another pet
                                 owner should know about your item.
                             </p>
+
+                            @if (!editingId.HasValue && Auth.IsLoggedIn)
+                            {
+                                if (Auth.IsPremium)
+                                {
+                                    <div style="margin-top:6px;display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:#FFF4D4;color:#8F6000;font-size:.68rem;font-weight:800;">
+                                        <i class="bi bi-star-fill"></i> Lifetime Premium · Unlimited listings
+                                    </div>
+                                }
+                                else
+                                {
+                                    var usedCount = listings.Count(x => x.SellerUserId == Auth.CurrentUser?.Id && x.Status != "Deleted");
+                                    <div style="margin-top:6px;display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:#EBF3F1;color:#2B6E6A;font-size:.68rem;font-weight:800;">
+                                        Free tier: @usedCount / @MarketplaceService.FreeListingLimit listings used · <a href="/checkout" style="color:#2B6E6A;font-weight:900;margin-left:3px;">Upgrade for Unlimited</a>
+                                    </div>
+                                }
+                            }
 
                         </div>
 
@@ -527,6 +535,35 @@
                             : "Find something useful for your pet")
                     </h2>
 
+                    @if (showMyListings && Auth.IsLoggedIn && Auth.IsPetOwner)
+                    {
+                        var myItems = listings.Where(x => x.SellerUserId == Auth.CurrentUser?.Id && x.Status != "Deleted").ToList();
+                        var totalOrders = myItems.Sum(x => x.OrderCount);
+                        <div class="sc-my-listings-stats" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px;">
+                            @if (Auth.IsPremium)
+                            {
+                                <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:#FFF4D4;color:#8F6000;font-size:.72rem;font-weight:800;">
+                                    <i class="bi bi-star-fill"></i> Lifetime Premium · Unlimited Listings
+                                </span>
+                            }
+                            else
+                            {
+                                <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:#EBF3F1;color:#2B6E6A;font-size:.72rem;font-weight:800;">
+                                    Free Tier: @myItems.Count / @MarketplaceService.FreeListingLimit listings used
+                                </span>
+                                @if (myItems.Count >= MarketplaceService.FreeListingLimit)
+                                {
+                                    <a href="/checkout" style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;background:#2B6E6A;color:#fff;font-size:.72rem;font-weight:800;text-decoration:none;">
+                                        Upgrade to Premium (₱49) to list more
+                                    </a>
+                                }
+                            }
+                            <span style="font-size:.74rem;color:#6C7A74;font-weight:700;">
+                                <i class="bi bi-cart-check"></i> @totalOrders total order@(totalOrders == 1 ? "" : "s") received across your items
+                            </span>
+                        </div>
+                    }
+
                 </div>
 
                 <span class="sc-marketplace-count">
@@ -644,6 +681,13 @@
                                         @listing.ItemCondition
                                     </span>
 
+                                    @if (listing.OrderCount > 0)
+                                    {
+                                        <span style="background:#ECFDF5;color:#047857;font-weight:700;">
+                                            <i class="bi bi-bag-check" aria-hidden="true"></i> @listing.OrderCount @(listing.OrderCount == 1 ? "order" : "orders")
+                                        </span>
+                                    }
+
                                 </div>
 
 
@@ -701,7 +745,7 @@
                                         @if (listing.IsVerifiedSeller)
                                         {
                                             <span style="display:inline-flex;margin-left:6px;padding:3px 7px;border-radius:999px;background:#EAF5F5;color:#267C83;font-size:.58rem;font-weight:900;vertical-align:middle;">
-                                                Verified Seller
+                                                Verified Pet Owner
                                             </span>
                                         }
                                         </strong>
@@ -716,12 +760,22 @@
                                      ================================= -->
                                 @if (IsOwnListing(listing))
                                 {
-                                    <div class="sc-marketplace-owner-label">
+                                    <div class="sc-marketplace-owner-label" style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
 
-                                        <i class="bi bi-person-check-fill"
-                                           aria-hidden="true"></i>
-
-                                        Your listing
+                                        <span><i class="bi bi-person-check-fill" aria-hidden="true"></i> Your listing</span>
+                                        @if (listing.OrderCount > 0)
+                                        {
+                                            <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:#e0f2fe;color:#0369a1;font-size:0.68rem;font-weight:700;">
+                                                <i class="bi bi-bag-check-fill" aria-hidden="true"></i>
+                                                Ordered: @listing.OrderCount @(string.IsNullOrWhiteSpace(listing.LastBuyerName) ? "" : $"by {listing.LastBuyerName}")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:#f3f4f6;color:#6b7280;font-size:0.68rem;font-weight:600;">
+                                                0 orders yet
+                                            </span>
+                                        }
 
                                     </div>
 
@@ -2242,12 +2296,17 @@
 
         if (!sellerActive)
         {
-            GoToSellerCheckout();
+            GoToLogin();
+            return;
+        }
+
+        if (Auth.CurrentUser is not null && !ListingService.CanCreateListing(Auth.CurrentUser.Id, Auth.IsPremium, out int count))
+        {
+            ShowError($"Free accounts can create up to {MarketplaceService.FreeListingLimit} marketplace listings ({count} active). Upgrade to Lifetime Premium (₱49) for unlimited listings.");
             return;
         }
 
         ResetForm();
-
 
         showForm = true;
 
@@ -2271,7 +2330,7 @@
 
         if (!sellerActive)
         {
-            ShowError("Your Verified Seller subscription is inactive. Renew it to manage listings.");
+            ShowError("A Pet Owner account is required to manage listings.");
             return;
         }
 
@@ -2382,7 +2441,7 @@
         if (!sellerActive)
         {
             ShowError(
-                "An active Verified Seller subscription is required to create or update listings.");
+                "A Pet Owner account is required to create or update listings.");
 
             return;
         }
@@ -2645,7 +2704,7 @@
 
 
             ShowError(
-                "The listing could not be saved. Please try again.");
+                string.IsNullOrWhiteSpace(ex.Message) ? "The listing could not be saved. Please try again." : ex.Message);
         }
         finally
         {
@@ -2673,7 +2732,7 @@
 
         if (!sellerActive)
         {
-            ShowError("Renew Verified Seller to manage listing status.");
+            ShowError("A Pet Owner account is required to manage listing status.");
             return;
         }
 
@@ -2886,18 +2945,6 @@
         }
 
         sellerActive = true;
-    }
-
-
-    private void GoToSellerCheckout()
-    {
-        if (!Auth.IsLoggedIn)
-        {
-            GoToLogin();
-            return;
-        }
-
-        Nav.NavigateTo("/marketplace");
     }
 
 

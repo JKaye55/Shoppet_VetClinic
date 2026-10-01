@@ -1,4 +1,5 @@
-﻿@page "/pet/card/{CardId}"
+@page "/pet/card/{CardId}"
+@page "/card/{CardId}"
 
 @inject OwnerCareService Care
 @inject DatabaseService Db
@@ -57,6 +58,7 @@
 
             <PetIdCardView Pet="@pet"
                            OwnerName=""
+                           OwnerPhone="@publicPhone"
                            PhotoUrl="@photoUrl"
                            QrDataUri="@qrDataUri"
                            IsPremium="@isPremium"
@@ -255,6 +257,9 @@
     private string qrDataUri =
         string.Empty;
 
+    private string publicPhone =
+        string.Empty;
+
 
     protected override void OnParametersSet()
     {
@@ -272,6 +277,12 @@
         isPremium =
             Db.IsUserPremium(
                 pet.UserId);
+
+        publicPhone =
+            Care.PublicPhone(
+                pet.UserId)
+            ??
+            string.Empty;
 
 
         photoUrl =

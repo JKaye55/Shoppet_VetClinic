@@ -1,3 +1,4 @@
+@page "/marketplace/checkout"
 @page "/marketplace/checkout/{SellerUserId:int}"
 @rendermode InteractiveServer
 @inject MarketplaceCartService Cart
@@ -140,6 +141,20 @@
             return;
         }
 
+        if (SellerUserId <= 0)
+        {
+            var firstItem = Cart.Items.FirstOrDefault();
+            if (firstItem is not null)
+            {
+                SellerUserId = firstItem.SellerUserId;
+            }
+            else
+            {
+                Nav.NavigateTo("/marketplace/cart");
+                return;
+            }
+        }
+
         vouchers = Orders.GetActiveVouchers(Auth.CurrentUser.Id);
         await InvokeAsync(StateHasChanged);
     }
@@ -148,7 +163,13 @@
     {
         if (Auth.CurrentUser is null || SellerItems.Count == 0) return;
 
-        if(outcome=="failure"){message="Simulated payment failed. Your cart and listings are unchanged.";return;}
+        isError = false;
+        if (outcome == "failure")
+        {
+            isError = true;
+            message = "Simulated payment failed. Your cart and listings are unchanged.";
+            return;
+        }
         isSubmitting = true;
         message = string.Empty;
 

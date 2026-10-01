@@ -1,4 +1,4 @@
-﻿@page "/my-pets"
+@page "/my-pets"
 @rendermode InteractiveServer
 @namespace Shoppet_VetClinic.Components.Pages
 
@@ -613,7 +613,7 @@
 
 
                                 <h3>
-                                    @pet.PetName
+                                    <a href="/pet/@pet.Id" style="color:inherit;text-decoration:none;">@pet.PetName</a>
                                 </h3>
 
 
@@ -715,6 +715,11 @@
 
 
                                 <div class="pet-actions">
+
+                                    <a href="/pet/@pet.Id"
+                                       title="View Pet Overview">
+                                        Overview
+                                    </a>
 
                                     <a href="/pet/@pet.Id/card"
                                        class="primary">

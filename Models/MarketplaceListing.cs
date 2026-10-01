@@ -1,4 +1,4 @@
-﻿namespace Shoppet_VetClinic.Models
+namespace Shoppet_VetClinic.Models
 {
     public class MarketplaceListing
     {
@@ -42,5 +42,7 @@
             = string.Empty;
 
         public bool IsVerifiedSeller { get; set; }
+        public int OrderCount { get; set; }
+        public string? LastBuyerName { get; set; }
     }
 }

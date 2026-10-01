@@ -1,4 +1,5 @@
 @page "/marketplace/orders"
+@page "/orders"
 @rendermode InteractiveServer
 @inject MarketplaceOrderService Orders
 @inject AuthService Auth
@@ -29,6 +30,47 @@
             }
         </div>
 
+        <div class="orders-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px;">
+            @if (sellerView)
+            {
+                <div class="kpi-card" style="background:#fff;border:1px solid #DDE7E4;border-radius:14px;padding:14px 18px;box-shadow:0 4px 14px rgba(23,61,61,.04);">
+                    <span style="font-size:0.68rem;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;display:block;">Orders Received</span>
+                    <strong style="font-size:1.5rem;color:#173D3D;display:block;margin-top:2px;">@sales.Count</strong>
+                </div>
+                <div class="kpi-card" style="background:#fff;border:1px solid #DDE7E4;border-radius:14px;padding:14px 18px;box-shadow:0 4px 14px rgba(23,61,61,.04);">
+                    <span style="font-size:0.68rem;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;display:block;">Unique Buyers</span>
+                    <strong style="font-size:1.5rem;color:#2F9098;display:block;margin-top:2px;">@sales.Select(x => x.BuyerUserId).Distinct().Count()</strong>
+                </div>
+                <div class="kpi-card" style="background:#fff;border:1px solid #DDE7E4;border-radius:14px;padding:14px 18px;box-shadow:0 4px 14px rgba(23,61,61,.04);">
+                    <span style="font-size:0.68rem;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;display:block;">Total Sales</span>
+                    <strong style="font-size:1.5rem;color:#173D3D;display:block;margin-top:2px;">₱@sales.Sum(x => x.Total).ToString("N2")</strong>
+                </div>
+                <div class="kpi-card" style="background:#fff;border:1px solid #DDE7E4;border-radius:14px;padding:14px 18px;box-shadow:0 4px 14px rgba(23,61,61,.04);">
+                    <span style="font-size:0.68rem;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;display:block;">Pending Handoff</span>
+                    <strong style="font-size:1.5rem;color:#D97706;display:block;margin-top:2px;">@sales.Count(x => string.Equals(x.Status, "Purchase Requested", StringComparison.OrdinalIgnoreCase))</strong>
+                </div>
+            }
+            else
+            {
+                <div class="kpi-card" style="background:#fff;border:1px solid #DDE7E4;border-radius:14px;padding:14px 18px;box-shadow:0 4px 14px rgba(23,61,61,.04);">
+                    <span style="font-size:0.68rem;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;display:block;">Purchases Placed</span>
+                    <strong style="font-size:1.5rem;color:#173D3D;display:block;margin-top:2px;">@purchases.Count</strong>
+                </div>
+                <div class="kpi-card" style="background:#fff;border:1px solid #DDE7E4;border-radius:14px;padding:14px 18px;box-shadow:0 4px 14px rgba(23,61,61,.04);">
+                    <span style="font-size:0.68rem;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;display:block;">Sellers Dealt With</span>
+                    <strong style="font-size:1.5rem;color:#2F9098;display:block;margin-top:2px;">@purchases.Select(x => x.SellerUserId).Distinct().Count()</strong>
+                </div>
+                <div class="kpi-card" style="background:#fff;border:1px solid #DDE7E4;border-radius:14px;padding:14px 18px;box-shadow:0 4px 14px rgba(23,61,61,.04);">
+                    <span style="font-size:0.68rem;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;display:block;">Total Purchases</span>
+                    <strong style="font-size:1.5rem;color:#173D3D;display:block;margin-top:2px;">₱@purchases.Sum(x => x.Total).ToString("N2")</strong>
+                </div>
+                <div class="kpi-card" style="background:#fff;border:1px solid #DDE7E4;border-radius:14px;padding:14px 18px;box-shadow:0 4px 14px rgba(23,61,61,.04);">
+                    <span style="font-size:0.68rem;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;display:block;">Active Vouchers</span>
+                    <strong style="font-size:1.5rem;color:#059669;display:block;margin-top:2px;">@vouchers.Count</strong>
+                </div>
+            }
+        </div>
+
         @if (VisibleOrders.Count == 0)
         {
             <section class="empty">
@@ -52,9 +94,24 @@
                         <div class="status">@order.Status</div>
                     </header>
 
-                    <div class="party">
-                        <span>@(sellerView ? "Buyer" : "Seller")</span>
-                        <strong>@(sellerView ? order.BuyerName : order.SellerName)</strong>
+                    <div class="party" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                        <div>
+                            <span>@(sellerView ? "Buyer" : "Seller")</span>
+                            <strong>@(sellerView ? order.BuyerName : order.SellerName)</strong>
+                        </div>
+                        @if (sellerView && (!string.IsNullOrWhiteSpace(order.BuyerEmail) || !string.IsNullOrWhiteSpace(order.BuyerPhone)))
+                        {
+                            <div style="font-size:0.75rem;color:#4B5563;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                                @if (!string.IsNullOrWhiteSpace(order.BuyerEmail))
+                                {
+                                    <span><i class="bi bi-envelope"></i> @order.BuyerEmail</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(order.BuyerPhone))
+                                {
+                                    <span><i class="bi bi-telephone"></i> @order.BuyerPhone</span>
+                                }
+                            </div>
+                        }
                     </div>
 
                     @foreach (var item in order.Items)

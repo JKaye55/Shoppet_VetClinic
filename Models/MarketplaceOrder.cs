@@ -6,6 +6,8 @@ namespace Shoppet_VetClinic.Models
         public int BuyerUserId { get; set; }
         public int SellerUserId { get; set; }
         public string BuyerName { get; set; } = string.Empty;
+        public string BuyerEmail { get; set; } = string.Empty;
+        public string BuyerPhone { get; set; } = string.Empty;
         public string SellerName { get; set; } = string.Empty;
         public string Reference { get; set; } = string.Empty;
         public string PaymentMethod { get; set; } = string.Empty;

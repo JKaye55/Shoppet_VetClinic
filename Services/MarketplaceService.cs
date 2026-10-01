@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Shoppet_VetClinic.Models;
 using System.Data;
 
@@ -64,7 +64,22 @@ namespace Shoppet_VetClinic.Services
                             ''
                         ) AS SellerEmail,
 
-                        CAST(0 AS bit) AS IsVerifiedSeller
+                        CAST(CASE WHEN ISNULL(u.IsDisabled, 0) = 0 THEN 1 ELSE 0 END AS bit) AS IsVerifiedSeller,
+
+                        ISNULL((
+                            SELECT COUNT(1)
+                            FROM MarketplaceOrderItems oi
+                            WHERE oi.ListingId = m.Id
+                        ), 0) AS OrderCount,
+
+                        (
+                            SELECT TOP 1 ISNULL(u_b.FullName, 'Buyer')
+                            FROM MarketplaceOrderItems oi_b
+                            INNER JOIN MarketplaceOrders o_b ON o_b.Id = oi_b.OrderId
+                            INNER JOIN UserAccounts u_b ON u_b.Id = o_b.BuyerUserId
+                            WHERE oi_b.ListingId = m.Id
+                            ORDER BY o_b.CreatedAt DESC
+                        ) AS LastBuyerName
 
                     FROM MarketplaceListings m
 
@@ -132,7 +147,22 @@ namespace Shoppet_VetClinic.Services
                             ''
                         ) AS SellerEmail,
 
-                        CAST(0 AS bit) AS IsVerifiedSeller
+                        CAST(CASE WHEN ISNULL(u.IsDisabled, 0) = 0 THEN 1 ELSE 0 END AS bit) AS IsVerifiedSeller,
+
+                        ISNULL((
+                            SELECT COUNT(1)
+                            FROM MarketplaceOrderItems oi
+                            WHERE oi.ListingId = m.Id
+                        ), 0) AS OrderCount,
+
+                        (
+                            SELECT TOP 1 ISNULL(u_b.FullName, 'Buyer')
+                            FROM MarketplaceOrderItems oi_b
+                            INNER JOIN MarketplaceOrders o_b ON o_b.Id = oi_b.OrderId
+                            INNER JOIN UserAccounts u_b ON u_b.Id = o_b.BuyerUserId
+                            WHERE oi_b.ListingId = m.Id
+                            ORDER BY o_b.CreatedAt DESC
+                        ) AS LastBuyerName
 
                     FROM MarketplaceListings m
 
@@ -167,18 +197,64 @@ namespace Shoppet_VetClinic.Services
         // CREATE LISTING
         // =========================================================
 
+        public const int FreeListingLimit = 3;
+
+        public int GetActiveListingCount(int sellerUserId)
+        {
+            if (sellerUserId <= 0) return 0;
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+            return GetActiveListingCountInternal(conn, sellerUserId);
+        }
+
+        private static int GetActiveListingCountInternal(SqlConnection conn, int sellerUserId)
+        {
+            using var cmd = new SqlCommand(@"
+                SELECT COUNT(1)
+                FROM MarketplaceListings
+                WHERE SellerUserId = @SellerUserId
+                  AND Status <> 'Deleted';", conn);
+            cmd.Parameters.AddWithValue("@SellerUserId", sellerUserId);
+            return Convert.ToInt32(cmd.ExecuteScalar());
+        }
+
+        private static bool IsUserPremium(SqlConnection conn, int userId)
+        {
+            using var cmd = new SqlCommand(@"
+                SELECT CAST(ISNULL(IsPremium, 0) AS bit)
+                FROM UserAccounts
+                WHERE Id = @UserId;", conn);
+            cmd.Parameters.AddWithValue("@UserId", userId);
+            var result = cmd.ExecuteScalar();
+            return result is not null && Convert.ToBoolean(result);
+        }
+
+        public bool CanCreateListing(int sellerUserId, bool isPremium, out int currentCount)
+        {
+            currentCount = GetActiveListingCount(sellerUserId);
+            return isPremium || currentCount < FreeListingLimit;
+        }
+
         public int CreateListing(
             MarketplaceListing listing,
             int actorUserId)
         {
             if (actorUserId <= 0 || actorUserId != listing.SellerUserId || !IsVerifiedSeller(actorUserId))
-                throw new UnauthorizedAccessException("An active Verified Seller account is required.");
+                throw new UnauthorizedAccessException("A valid Pet Owner account is required to list pre-loved items.");
 
             using var conn =
                 new SqlConnection(
                     _connectionString);
 
             conn.Open();
+
+            bool isPremium = IsUserPremium(conn, actorUserId);
+            int currentCount = GetActiveListingCountInternal(conn, actorUserId);
+            if (!isPremium && currentCount >= FreeListingLimit)
+            {
+                throw new InvalidOperationException(
+                    $"Free accounts can create up to {FreeListingLimit} marketplace listings. Upgrade to Lifetime Premium (₱49) for unlimited listings.");
+            }
 
 
             using var cmd =
@@ -555,6 +631,8 @@ namespace Shoppet_VetClinic.Services
 
         private bool IsVerifiedSeller(int userId)
         {
+            if (userId <= 0) return false;
+
             using var conn = new SqlConnection(_connectionString);
             conn.Open();
 
@@ -562,17 +640,8 @@ namespace Shoppet_VetClinic.Services
                 SELECT COUNT(1)
                 FROM UserAccounts u
                 WHERE u.Id = @UserId
-                  AND LOWER(LTRIM(RTRIM(u.Role))) IN ('pet owner', 'petowner')
-                  AND EXISTS
-                  (
-                      SELECT 1
-                      FROM Subscriptions s
-                      WHERE s.UserId = u.Id
-                        AND s.SubscriptionType = 'SellerSubscription'
-                        AND s.Status = 'Active'
-                        AND s.StartsAt <= SYSDATETIME()
-                        AND s.ExpiresAt >= SYSDATETIME()
-                  );", conn);
+                  AND ISNULL(u.IsDisabled, 0) = 0
+                  AND LOWER(LTRIM(RTRIM(u.Role))) IN ('pet owner', 'petowner', 'admin', 'superadmin', 'super admin');", conn);
 
             cmd.Parameters.AddWithValue("@UserId", userId);
             return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
@@ -648,7 +717,17 @@ namespace Shoppet_VetClinic.Services
 
                 IsVerifiedSeller =
                     !reader.IsDBNull(13)
-                    && reader.GetBoolean(13)
+                    && reader.GetBoolean(13),
+
+                OrderCount =
+                    reader.FieldCount > 14 && !reader.IsDBNull(14)
+                        ? reader.GetInt32(14)
+                        : 0,
+
+                LastBuyerName =
+                    reader.FieldCount > 15 && !reader.IsDBNull(15)
+                        ? reader.GetString(15)
+                        : null
             };
         }
     }

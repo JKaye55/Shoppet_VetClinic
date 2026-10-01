@@ -183,7 +183,9 @@ namespace Shoppet_VetClinic.Services
                     o.PaymentMethod, o.Status, o.Subtotal, o.VoucherDiscount,
                     o.Total, o.CreatedAt, o.CompletedAt,
                     ISNULL(b.FullName, 'Pet Owner') AS BuyerName,
-                    ISNULL(s.FullName, 'Seller') AS SellerName
+                    ISNULL(s.FullName, 'Seller') AS SellerName,
+                    ISNULL(b.Email, '') AS BuyerEmail,
+                    ISNULL(b.Mobile, '') AS BuyerPhone
                 FROM MarketplaceOrders o
                 INNER JOIN UserAccounts b ON b.Id = o.BuyerUserId
                 INNER JOIN UserAccounts s ON s.Id = o.SellerUserId
@@ -209,7 +211,9 @@ namespace Shoppet_VetClinic.Services
                     CreatedAt = reader.GetDateTime(9),
                     CompletedAt = reader.IsDBNull(10) ? null : reader.GetDateTime(10),
                     BuyerName = reader.GetString(11),
-                    SellerName = reader.GetString(12)
+                    SellerName = reader.GetString(12),
+                    BuyerEmail = reader.IsDBNull(13) ? string.Empty : reader.GetString(13),
+                    BuyerPhone = reader.IsDBNull(14) ? string.Empty : reader.GetString(14)
                 });
             }
             reader.Close();
@@ -218,6 +222,52 @@ namespace Shoppet_VetClinic.Services
                 order.Items = GetOrderItems(conn, order.Id, order.BuyerUserId);
 
             return orders;
+        }
+
+        public (int TotalOrders, int UniqueBuyers, decimal TotalAmount) GetSellerOrderStats(int sellerUserId)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+            using var cmd = new SqlCommand(@"
+                SELECT
+                    COUNT(1) AS TotalOrders,
+                    COUNT(DISTINCT BuyerUserId) AS UniqueBuyers,
+                    ISNULL(SUM(Total), 0) AS TotalAmount
+                FROM MarketplaceOrders
+                WHERE SellerUserId = @SellerUserId;", conn);
+            cmd.Parameters.AddWithValue("@SellerUserId", sellerUserId);
+            using var r = cmd.ExecuteReader();
+            if (r.Read())
+            {
+                return (
+                    r.GetInt32(0),
+                    r.GetInt32(1),
+                    r.GetDecimal(2)
+                );
+            }
+            return (0, 0, 0m);
+        }
+
+        public (int TotalOrders, int UniqueBuyers, decimal TotalAmount) GetPlatformOrderStats()
+        {
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+            using var cmd = new SqlCommand(@"
+                SELECT
+                    COUNT(1) AS TotalOrders,
+                    COUNT(DISTINCT BuyerUserId) AS UniqueBuyers,
+                    ISNULL(SUM(Total), 0) AS TotalAmount
+                FROM MarketplaceOrders;", conn);
+            using var r = cmd.ExecuteReader();
+            if (r.Read())
+            {
+                return (
+                    r.GetInt32(0),
+                    r.GetInt32(1),
+                    r.GetDecimal(2)
+                );
+            }
+            return (0, 0, 0m);
         }
 
         private static List<MarketplaceOrderItem> GetOrderItems(SqlConnection conn, int orderId, int buyerUserId)

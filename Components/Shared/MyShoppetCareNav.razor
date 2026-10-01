@@ -32,9 +32,14 @@
                     My Pets
                 </a>
 
-                <a href="/premium" class="@GetLinkClass("premium")" title="Premium subscription">
-                    <svg aria-hidden="true"><use href="/icons/bootstrap-icons.svg#star-fill"></use></svg>
-                    Premium
+                <a href="/account/care" class="@GetLinkClass("care")" title="Contacts, reminders &amp; privacy">
+                    <svg aria-hidden="true"><use href="/icons/bootstrap-icons.svg#heart-pulse"></use></svg>
+                    Contacts &amp; Care
+                </a>
+
+                <a href="/messages" class="@GetLinkClass("messages")" title="Messages">
+                    <svg aria-hidden="true"><use href="/icons/bootstrap-icons.svg#chat-dots"></use></svg>
+                    Messages
                 </a>
 
                 <a href="/marketplace" class="@GetLinkClass("marketplace")" title="Marketplace">
@@ -47,12 +52,15 @@
                     Orders &amp; Rewards
                 </a>
 
+                <a href="/premium" class="@GetLinkClass("premium")" title="Premium subscription">
+                    <svg aria-hidden="true"><use href="/icons/bootstrap-icons.svg#star-fill"></use></svg>
+                    Premium
+                </a>
+
                 <a href="/account" class="@GetLinkClass("account")" title="Account and profile">
                     <svg aria-hidden="true"><use href="/icons/bootstrap-icons.svg#person-circle"></use></svg>
                     Account
                 </a>
-                <a href="/messages">Messages</a>
-                <a href="/account/care">Contacts &amp; care</a>
             </nav>
         </div>
     </section>
@@ -222,8 +230,7 @@
                 || path.StartsWith("/account", StringComparison.OrdinalIgnoreCase)
                 || path.StartsWith("/premium", StringComparison.OrdinalIgnoreCase)
                 || path.StartsWith("/marketplace", StringComparison.OrdinalIgnoreCase)
-                || path.StartsWith("/checkout/PremiumSubscription", StringComparison.OrdinalIgnoreCase)
-                || path.StartsWith("/checkout/SellerSubscription", StringComparison.OrdinalIgnoreCase);
+                || path.StartsWith("/checkout", StringComparison.OrdinalIgnoreCase);
         }
     }
 
@@ -240,24 +247,28 @@
                 path.StartsWith("/my-pets", StringComparison.OrdinalIgnoreCase)
                 || path.StartsWith("/pet/", StringComparison.OrdinalIgnoreCase),
 
+            "care" =>
+                path.StartsWith("/account/care", StringComparison.OrdinalIgnoreCase),
+
+            "messages" =>
+                path.StartsWith("/messages", StringComparison.OrdinalIgnoreCase),
+
             "premium" =>
                 path.StartsWith("/premium", StringComparison.OrdinalIgnoreCase)
-                || path.StartsWith("/checkout/PremiumSubscription", StringComparison.OrdinalIgnoreCase),
+                || path.StartsWith("/checkout", StringComparison.OrdinalIgnoreCase),
 
             "marketplace" =>
-                (
-                    path.StartsWith("/marketplace", StringComparison.OrdinalIgnoreCase)
-                    && !path.StartsWith("/marketplace/orders", StringComparison.OrdinalIgnoreCase)
-                    && !path.StartsWith("/marketplace/order-confirmation", StringComparison.OrdinalIgnoreCase)
-                )
-                || path.StartsWith("/checkout/SellerSubscription", StringComparison.OrdinalIgnoreCase),
+                path.StartsWith("/marketplace", StringComparison.OrdinalIgnoreCase)
+                && !path.StartsWith("/marketplace/orders", StringComparison.OrdinalIgnoreCase)
+                && !path.StartsWith("/marketplace/order-confirmation", StringComparison.OrdinalIgnoreCase),
 
             "orders" =>
                 path.StartsWith("/marketplace/orders", StringComparison.OrdinalIgnoreCase)
                 || path.StartsWith("/marketplace/order-confirmation", StringComparison.OrdinalIgnoreCase),
 
             "account" =>
-                path.StartsWith("/account", StringComparison.OrdinalIgnoreCase),
+                path.StartsWith("/account", StringComparison.OrdinalIgnoreCase)
+                && !path.StartsWith("/account/care", StringComparison.OrdinalIgnoreCase),
 
             _ => false
         };
