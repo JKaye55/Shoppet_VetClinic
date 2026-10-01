@@ -31,7 +31,7 @@ try { if(app.Configuration.GetValue("InitializeDatabase",true)) {
  await SharedSchemaInitializer.EnsureAsync(app.Configuration);
  await CommunitySchemaInitializer.EnsureAsync(app.Configuration);
  await CredentialMigration.EnsureAsync(app.Configuration);
-} } catch(Exception ex) { app.Logger.LogError(ex,"Shared SQL initialization failed. Check connection and migration permissions."); }
+} } catch(Exception ex) { app.Logger.LogError(ex,"Shared SQL initialization failed. Check connection and migration permissions."); throw; }
 
 
 if (!app.Environment.IsDevelopment())
@@ -51,5 +51,18 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapGet("/health/ready", async (IConfiguration config) =>
+{
+    try
+    {
+        await using var connection = new Microsoft.Data.SqlClient.SqlConnection(config.GetConnectionString("ShoppetDb"));
+        await connection.OpenAsync();
+        await using var command = new Microsoft.Data.SqlClient.SqlCommand("SELECT TOP(0) Id,ApiToken,ApiTokenExpiresAt,IsDisabled FROM dbo.UserAccounts; SELECT TOP(0) Reference,Subtotal,Total FROM dbo.MarketplaceOrders; SELECT TOP(0) Quantity,MarketplaceListingId,CartId FROM dbo.MarketplaceCartItems;", connection);
+        await command.ExecuteNonQueryAsync();
+        return Results.Ok(new { status = "ready" });
+    }
+    catch { return Results.StatusCode(503); }
+});
 
 app.Run();
