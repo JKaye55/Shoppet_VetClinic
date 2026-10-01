@@ -1,29 +1,16 @@
-﻿@using static Microsoft.AspNetCore.Components.Web.RenderMode
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <base href="/" />
-    <ResourcePreloader />
-    <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
-    <link rel="stylesheet" href="@Assets["app.css"]" />
-    <link rel="stylesheet" href="@Assets["Shoppet_VetClinic.styles.css"]" />
-    <ImportMap />
-    <link rel="icon" type="image/png" href="favicon.png" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="/css/landing-dynamic.css" />
-    <link rel="stylesheet" href="@Assets["css/reconnect.css"]" />
-    <HeadOutlet />
-</head>
-
-<body>
-    <Routes @rendermode="InteractiveServer" />
-    <ReconnectModal />
-    <script src="/js/guest-dashboard.js"></script>
-    <script src="/js/help-search.js"></script>
-    <script src="@Assets["_framework/blazor.web.js"]"></script>
-</body>
-
-</html>
+@using Shoppet_VetClinic.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+<HeadOutlet />
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(Program).Assembly">
+        <Found Context="routeData">
+            <LayoutView Layout="@typeof(MainLayout)" RouteData="@routeData" />
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p>Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
