@@ -23,6 +23,7 @@ builder.Services.AddScoped<MarketplaceCartService>();
 builder.Services.AddScoped<MarketplaceOrderService>();
 builder.Services.AddScoped<CommunityService>();
 builder.Services.AddScoped<OwnerCareService>();
+builder.Services.AddScoped<AdminAccountService>();
 builder.Services.AddScoped<PetCareService>();
 builder.Services.AddScoped<CommerceService>();
 var app = builder.Build();

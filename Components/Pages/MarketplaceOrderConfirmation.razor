@@ -1,39 +1,7 @@
 @page "/marketplace/order-confirmation/{Reference}"
 @rendermode InteractiveServer
-
-<PageTitle>Order Submitted | ShoppetCare</PageTitle>
-
-<div class="confirm-page">
-    <section class="confirm-card">
-        <div class="check"><i class="bi bi-check-lg"></i></div>
-        <span>DEMO MARKETPLACE TRANSACTION</span>
-        <h1>Purchase request submitted.</h1>
-        <p>Your pre-loved marketplace request has been recorded. No real funds were transferred by ShoppetCare.</p>
-        <div class="reference">
-            <small>ORDER REFERENCE</small>
-            <strong>@Reference</strong>
-        </div>
-        <div class="steps">
-            <div><b>1</b><span>The seller receives your purchase request.</span></div>
-            <div><b>2</b><span>Buyer and seller arrange the item exchange responsibly.</span></div>
-            <div><b>3</b><span>After the seller marks it completed, you can leave one verified review and earn a ₱20 demo voucher.</span></div>
-        </div>
-        <div class="actions">
-            <a href="/marketplace/orders">View My Orders</a>
-            <a class="secondary" href="/marketplace">Back to Marketplace</a>
-        </div>
-    </section>
-</div>
-
-<style>
-    .confirm-page{min-height:calc(100vh - 80px);padding:70px 16px;background:#FAF9F6;display:grid;place-items:start center;color:#173D3D}
-    .confirm-card{width:min(650px,100%);padding:36px;border:1px solid #DDE7E4;border-radius:22px;background:#fff;box-shadow:0 18px 45px rgba(23,61,61,.08);text-align:center}
-    .check{width:62px;height:62px;margin:auto;display:grid;place-items:center;border-radius:50%;background:#EAF7F1;color:#267C83;font-size:1.6rem}.confirm-card>span{display:block;margin-top:18px;color:#2F9098;font-size:.66rem;font-weight:900;letter-spacing:.12em}
-    h1{margin:8px 0;font-size:2rem;letter-spacing:-.04em}.confirm-card>p{margin:0 auto;max-width:520px;color:#71827D;line-height:1.6}.reference{margin:22px 0;padding:16px;border-radius:12px;background:#F2F8F6}.reference small,.reference strong{display:block}.reference small{color:#82918D;font-size:.62rem;font-weight:850}.reference strong{margin-top:5px;font-size:1rem}
-    .steps{text-align:left}.steps div{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;padding:10px 0}.steps b{width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:#173D3D;color:#fff;font-size:.7rem}.steps span{color:#60716C;font-size:.8rem;line-height:1.5}
-    .actions{margin-top:22px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.actions a{padding:12px 16px;border-radius:9px;background:#2F9098;color:#fff;text-decoration:none;font-weight:850;font-size:.78rem}.actions a.secondary{background:#fff;border:1px solid #CBD9D5;color:#173D3D}
-</style>
-
-@code {
-    [Parameter] public string Reference { get; set; } = string.Empty;
-}
+@inject AuthService Auth
+@inject MarketplaceOrderService Orders
+<PageTitle>Order confirmation | ShoppetCare</PageTitle>
+<main class="owner-shell"><section class="owner-card">@if(!ready){<p>Loading your order…</p>}else if(order is null){<h1>Order unavailable.</h1><p>Sign in with the purchasing account to see its order confirmation.</p><a class="owner-button" href="/marketplace/orders">My orders</a>}else{<span class="owner-eyebrow">SIMULATED MARKETPLACE TRANSACTION</span><h1>Your order is completed.</h1><p>Your pre-loved finds have been marked sold. The order and mock payment are saved across Web and Mobile.</p><p><strong>@order.Reference</strong> · ₱@order.Total.ToString("N2")</p><p>Message the seller to arrange the exchange. You can leave a verified review from your order history.</p><p><small>No real funds were transferred by ShoppetCare.</small></p><div class="owner-actions"><a class="owner-button" href="/marketplace/orders">View orders</a><a class="owner-button" href="@($"/messages?contactId={order.SellerUserId}")">Message seller</a></div>}</section></main>
+@code{[Parameter]public string Reference{get;set;}="";bool ready;Shoppet_VetClinic.Models.MarketplaceOrder? order;protected override async Task OnAfterRenderAsync(bool first){if(!first)return;await Auth.InitializeAsync();if(Auth.IsPetOwner&&Auth.CurrentUser is not null)try{order=Orders.GetBuyerOrders(Auth.CurrentUser.Id).FirstOrDefault(o=>o.Reference==Reference);}catch(Exception){}ready=true;StateHasChanged();}}

@@ -22,20 +22,20 @@ else
 {
     <AdminNav />
     <main class="admin-shell">
-        <div class="page-head"><div><span>TRANSACTION AUDIT</span><h1>Mock payment transactions</h1><p>Premium, Verified Seller, and Verified Clinic project payments.</p></div></div>
+        <div class="page-head"><div><span>TRANSACTION AUDIT</span><h1>Mock payment transactions</h1><p>Lifetime Premium upgrades and marketplace mock payments.</p></div></div>
 
         <section class="summary">
-            <div><span>Paid Transactions</span><strong>@transactions.Count(x => x.Status == "Paid")</strong></div>
+            <div><span>Paid Transactions</span><strong>@transactions.Count(x => x.Status is "Paid" or "SimulatedPaid")</strong></div>
             <div><span>Mock Revenue</span><strong>₱@total.ToString("N2")</strong></div>
         </section>
 
         <div class="filters">
-            <select @bind="typeFilter"><option value="">All types</option><option value="PremiumSubscription">Premium</option><option value="SellerSubscription">Verified Seller</option><option value="ClinicSubscription">Verified Clinic</option></select>
+            <select @bind="typeFilter"><option value="">All types</option><option value="PremiumUpgrade">Premium</option><option value="MarketplacePurchase">Marketplace purchase</option></select>
             <input type="search" @bind="search" @bind:event="oninput" placeholder="Search reference or account..." />
         </div>
 
         <div class="table-card">
-            <table><thead><tr><th>Reference</th><th>Type</th><th>Account / Clinic</th><th>Method</th><th>Status</th><th>Amount</th><th>Paid At</th></tr></thead>
+            <table><thead><tr><th>Reference</th><th>Type</th><th>Account</th><th>Method</th><th>Status</th><th>Amount</th><th>Paid At</th></tr></thead>
             <tbody>
             @foreach(var t in Filtered)
             {
@@ -75,7 +75,7 @@ else
         if (Auth.IsAdmin)
         {
             transactions = Db.GetAllTransactions();
-            total = Db.GetTotalRevenue();
+            total = transactions.Where(t=>t.Status is "Paid" or "SimulatedPaid").Sum(t=>t.Amount);
         }
         ready = true;
         await InvokeAsync(StateHasChanged);
@@ -86,7 +86,8 @@ else
         CommerceService.PremiumType => "Premium",
         CommerceService.SellerType => "Verified Seller",
         CommerceService.ClinicType => "Verified Clinic",
-        "PremiumUpgrade" => "Premium (Legacy)",
+        "PremiumUpgrade" => "Lifetime Premium",
+        "MarketplacePurchase" => "Marketplace purchase",
         "BusinessVerification" => "Clinic Verification (Legacy)",
         _ => value
     };

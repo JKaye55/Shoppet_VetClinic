@@ -414,19 +414,10 @@
                             @(sellerActive ? "Selling is available" : "Browsing as a Pet Owner")
                         </strong>
                         <span style="display:block;margin-top:3px;color:#77857F;font-size:.72rem;">
-                            @(sellerActive
-                                ? $"Selling access active until {sellerExpiresAt?.ToString("MMM d, yyyy")}."
-                                : "A ₱50/month Verified Seller subscription is required to create or manage listings.")
+                            Every Pet Owner can sell pre-loved items. No seller subscription is needed.
                         </span>
                     </div>
 
-                    @if (!sellerActive)
-                    {
-                        <a href="/checkout/SellerSubscription"
-                           style="padding:10px 14px;border-radius:10px;background:#2F9098;color:#fff;text-decoration:none;font-size:.74rem;font-weight:850;">
-                            Activate for ₱50/month
-                        </a>
-                    }
                 </div>
             }
 
@@ -2016,7 +2007,6 @@
 
     private bool showMyListings;
     private bool sellerActive;
-    private DateTime? sellerExpiresAt;
 
 
     // =========================================================
@@ -2886,12 +2876,10 @@
         if (Auth.CurrentUser is null || !Auth.IsPetOwner)
         {
             sellerActive = false;
-            sellerExpiresAt = null;
             return;
         }
 
         sellerActive = true;
-        sellerExpiresAt = null;
     }
 
 
@@ -2903,7 +2891,7 @@
             return;
         }
 
-        Nav.NavigateTo("/checkout/SellerSubscription");
+        Nav.NavigateTo("/marketplace");
     }
 
 

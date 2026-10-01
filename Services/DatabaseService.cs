@@ -868,7 +868,7 @@ FROM UserAccounts",
             ApiTokenExpiresAt,
             MobileNumber
         FROM UserAccounts
-        WHERE LOWER(Email) = @Email;",
+        WHERE LOWER(Email) = @Email AND ISNULL(IsDisabled,0)=0;",
          conn);
 
             cmd.Parameters.AddWithValue(
@@ -938,7 +938,7 @@ FROM UserAccounts",
                 ApiTokenExpiresAt,
                 MobileNumber
             FROM UserAccounts
-            WHERE Id = @Id;",
+            WHERE Id = @Id AND ISNULL(IsDisabled,0)=0;",
                     conn);
 
 
@@ -1547,6 +1547,7 @@ FROM UserAccounts",
                 new SqlConnection(_connectionString);
 
             conn.Open();
+            using var transaction=conn.BeginTransaction(System.Data.IsolationLevel.Serializable);
 
 
             // =====================================================
@@ -1579,9 +1580,9 @@ FROM UserAccounts",
                             FROM PetProfiles
                             WHERE UserId = @UserId
                         )
-                    FROM UserAccounts
+                    FROM UserAccounts WITH(UPDLOCK,HOLDLOCK)
                     WHERE Id = @UserId;",
-                    conn))
+                    conn,transaction))
             {
                 check.Parameters.AddWithValue(
                     "@UserId",
@@ -1680,7 +1681,7 @@ FROM UserAccounts",
                         SYSDATETIME(),
                         @CardTheme
                     );",
-                    conn);
+                    conn,transaction);
 
 
             cmd.Parameters.AddWithValue(
@@ -1773,6 +1774,7 @@ FROM UserAccounts",
             }
 
 
+            transaction.Commit();
             pet.CardId =
                 cardId;
 

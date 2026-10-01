@@ -64,20 +64,7 @@ namespace Shoppet_VetClinic.Services
                             ''
                         ) AS SellerEmail,
 
-                        CAST(
-                            CASE WHEN EXISTS
-                            (
-                                SELECT 1
-                                FROM Subscriptions s
-                                WHERE s.UserId = u.Id
-                                  AND s.SubscriptionType = 'SellerSubscription'
-                                  AND s.Status = 'Active'
-                                  AND s.StartsAt <= SYSDATETIME()
-                                  AND s.ExpiresAt >= SYSDATETIME()
-                            )
-                            THEN 1 ELSE 0 END
-                            AS bit
-                        ) AS IsVerifiedSeller
+                        CAST(0 AS bit) AS IsVerifiedSeller
 
                     FROM MarketplaceListings m
 
@@ -145,20 +132,7 @@ namespace Shoppet_VetClinic.Services
                             ''
                         ) AS SellerEmail,
 
-                        CAST(
-                            CASE WHEN EXISTS
-                            (
-                                SELECT 1
-                                FROM Subscriptions s
-                                WHERE s.UserId = u.Id
-                                  AND s.SubscriptionType = 'SellerSubscription'
-                                  AND s.Status = 'Active'
-                                  AND s.StartsAt <= SYSDATETIME()
-                                  AND s.ExpiresAt >= SYSDATETIME()
-                            )
-                            THEN 1 ELSE 0 END
-                            AS bit
-                        ) AS IsVerifiedSeller
+                        CAST(0 AS bit) AS IsVerifiedSeller
 
                     FROM MarketplaceListings m
 

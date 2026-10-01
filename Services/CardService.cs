@@ -8,6 +8,8 @@
     /// </summary>
     public class CardService
     {
+        private readonly IConfiguration config;
+        public CardService(IConfiguration config){this.config=config;}
         public static readonly string[] FreeThemes =
         {
             "Classic"
@@ -42,7 +44,7 @@
         /// </summary>
         public string BuildQrUrl(string baseUrl, string cardId)
         {
-            var target = $"{baseUrl.TrimEnd('/')}/pet/card/{cardId}";
+            var target = $"{(config["PublicWebBaseUrl"]??baseUrl).TrimEnd('/')}/pet/card/{cardId}";
             var encoded = Uri.EscapeDataString(target);
 
             return $"https://api.qrserver.com/v1/create-qr-code/" +
@@ -55,7 +57,7 @@
         /// </summary>
         public string GenerateQrDataUri(string cardId, string baseUrl = "https://shoppetcare.app")
         {
-            var target = $"{baseUrl.TrimEnd('/')}/pet/card/{cardId}";
+            var target = $"{(config["PublicWebBaseUrl"]??baseUrl).TrimEnd('/')}/pet/card/{cardId}";
 
             using var qrGenerator = new QRCoder.QRCodeGenerator();
             using var qrData = qrGenerator.CreateQrCode(

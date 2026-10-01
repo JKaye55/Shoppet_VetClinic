@@ -191,7 +191,7 @@
                         </span>
 
                         <small>
-                            Active until @PremiumEndDisplay
+                            Lifetime access · @PremiumEndDisplay
                         </small>
                     }
                     else if (IsPremiumExpired)
@@ -718,15 +718,14 @@
                                     </strong>
 
                                     <p>
-                                        Renew for another three months
-                                        to restore Premium access.
+                                        Lifetime Premium has no expiry.
                                     </p>
 
                                 </div>
 
 
                                 <a href="/premium">
-                                    Renew Premium
+                                    View Premium
                                 </a>
 
                             </div>
@@ -1036,7 +1035,7 @@
                             @(HasActivePremium
                                 ? "Manage Premium"
                                 : IsPremiumExpired
-                                    ? "Renew Premium"
+                                    ? "View Premium"
                                     : "Explore Premium")
 
                             <span>
@@ -2798,9 +2797,6 @@
         49m;
 
 
-    private const int PremiumDurationMonths =
-        3;
-
 
     private bool isReady;
 
@@ -2899,26 +2895,6 @@
 
        No extra C# model properties required.
        ========================================================= */
-
-    private DateTime? PremiumExpiresAt
-    {
-        get
-        {
-            if (Auth.CurrentUser?
-                    .PremiumActivatedAt is null)
-            {
-                return null;
-            }
-
-
-            return Auth.CurrentUser
-                .PremiumActivatedAt
-                .Value
-                .AddMonths(
-                    PremiumDurationMonths);
-        }
-    }
-
 
     private bool HasActivePremium => Auth.IsPremium;
     private bool IsPremiumExpired => false;
