@@ -980,28 +980,7 @@
                 </a>
 
 
-                <a href="/services"
-                   title="Explore ShoppetCare services"
-                   class="sp-menu-link
-                   @(IsActive("/services")
-                       ? "active"
-                       : "")">
-
-                    Services
-
-                </a>
-
-
-                <a href="/clinics"
-                   title="Find veterinary clinics"
-                   class="sp-menu-link
-                   @(IsActive("/clinics")
-                       ? "active"
-                       : "")">
-
-                    Verified Clinics
-
-                </a>
+                @if(Auth.IsPetOwner) { <a href="/my-pets" class="sp-menu-link">My Pets</a><a href="/messages" class="sp-menu-link">Messages</a> }
                 <a href="/marketplace"
                    title="Browse the pre-loved pet Marketplace"
                    class="sp-menu-link @(IsActive("/marketplace") ? "active" : "")">
@@ -1059,7 +1038,7 @@
                         My ShoppetCare
 
                     </a>
-                
+
                 }
 
             </nav>
@@ -1070,30 +1049,6 @@
                  ================================================= -->
 
             <div class="sp-actions">
-
-                @if (!Auth.IsLoggedIn)
-                {
-                    <span class="sp-contact sp-contact-locked"
-                          title="Locked: sign in or create an account to request a clinic listing">
-
-                        <i class="bi bi-lock-fill"
-                           aria-hidden="true"></i>
-
-                        List Your Clinic
-
-                    </span>
-                }
-                else
-                {
-                    <a href="/list-your-clinic"
-                       class="sp-contact"
-                       title="Request a clinic listing">
-
-                        List Your Clinic
-
-                    </a>
-                }
-
 
                 @if (Auth.IsLoggedIn)
                 {
@@ -1154,18 +1109,6 @@
 
                             </a>
                         }
-                        else if (Auth.IsClinicStaff)
-                        {
-                            <a href="/clinic-portal"
-                               class="sp-btn-portal"
-                               title="Open Clinic dashboard">
-
-                                Clinic Portal
-
-                            </a>
-                        }
-
-
                         <button type="button"
                                 class="sp-btn-signout"
                                 title="Sign out of ShoppetCare"

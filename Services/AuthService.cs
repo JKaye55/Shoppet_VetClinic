@@ -257,7 +257,7 @@ namespace Shoppet_VetClinic.Services
                             storedUser.Value);
 
 
-                    if (user is not null)
+                    if (user is not null && new[]{"Pet Owner","PetOwner","Admin","SuperAdmin","Super Admin"}.Contains(user.Role,StringComparer.OrdinalIgnoreCase))
                     {
                         CurrentUser =
                             user;

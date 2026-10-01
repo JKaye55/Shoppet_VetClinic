@@ -84,6 +84,7 @@ namespace Shoppet_VetClinic.Services
                     INNER JOIN UserAccounts u
                         ON u.Id = m.SellerUserId
 
+                    WHERE m.Status<>'Deleted'
                     ORDER BY
                         m.CreatedAt DESC;",
                     conn);
@@ -449,6 +450,7 @@ namespace Shoppet_VetClinic.Services
                 {
                     "Available",
                     "Reserved",
+                    "Unavailable",
                     "Sold"
                 };
 
@@ -472,12 +474,12 @@ namespace Shoppet_VetClinic.Services
                 new SqlCommand(@"
                     UPDATE MarketplaceListings
 
-                    SET Status = @Status
+                    SET Status = @Status,UpdatedAt=SYSDATETIME()
 
                     WHERE
                         Id = @Id
                         AND
-                        SellerUserId = @SellerUserId;",
+                        SellerUserId = @SellerUserId AND Status<>'Deleted' AND (@Status<>'Available' OR NOT EXISTS(SELECT 1 FROM MarketplaceOrderItems WHERE ListingId=@Id));",
                     conn);
 
 
@@ -516,7 +518,7 @@ namespace Shoppet_VetClinic.Services
 
             using var cmd =
                 new SqlCommand(@"
-                    DELETE FROM MarketplaceListings
+                    UPDATE MarketplaceListings SET Status='Deleted',UpdatedAt=SYSDATETIME()
 
                     WHERE
                         Id = @Id
@@ -549,7 +551,7 @@ namespace Shoppet_VetClinic.Services
             conn.Open();
 
             using var cmd = new SqlCommand(
-                "DELETE FROM MarketplaceListings WHERE Id = @Id;",
+                "UPDATE MarketplaceListings SET Status='Deleted',UpdatedAt=SYSDATETIME() WHERE Id = @Id;",
                 conn);
 
             cmd.Parameters.AddWithValue("@Id", listingId);

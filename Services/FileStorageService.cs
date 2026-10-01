@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Data.SqlClient;
 
 namespace Shoppet_VetClinic.Services
 {
     public class FileStorageService
     {
         private readonly IWebHostEnvironment _environment;
+        private readonly IConfiguration _config;
+        public string PublicBaseUrl => _config["PublicWebBaseUrl"] ?? "http://localhost:5253";
 
         private const long MaxFileSize =
             5 * 1024 * 1024;
@@ -26,9 +29,10 @@ namespace Shoppet_VetClinic.Services
 
 
         public FileStorageService(
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment, IConfiguration configuration)
         {
             _environment = environment;
+            _config=configuration;
         }
 
 
@@ -121,8 +125,13 @@ namespace Shoppet_VetClinic.Services
                 outputStream);
 
 
-            return
-                $"/uploads/{category}/{id}{extension}";
+            var url=$"{PublicBaseUrl.TrimEnd('/')}/uploads/{category}/{id}{extension}";
+            if(category=="pets" || category=="users") {
+                using var c=new SqlConnection(_config.GetConnectionString("ShoppetDb"));c.Open();
+                using var q=new SqlCommand(category=="pets"?"UPDATE PetProfiles SET PhotoUrl=@Url WHERE Id=@Id":"UPDATE UserAccounts SET ProfilePicture=@Url WHERE Id=@Id",c);
+                q.Parameters.AddWithValue("@Id",id);q.Parameters.AddWithValue("@Url",url);q.ExecuteNonQuery();
+            }
+            return url;
         }
 
 
@@ -130,6 +139,12 @@ namespace Shoppet_VetClinic.Services
             string category,
             int id)
         {
+            if(category=="pets" || category=="users") {
+                using var c=new SqlConnection(_config.GetConnectionString("ShoppetDb"));c.Open();
+                using var q=new SqlCommand(category=="pets"?"SELECT PhotoUrl FROM PetProfiles WHERE Id=@Id":"SELECT ProfilePicture FROM UserAccounts WHERE Id=@Id",c);
+                q.Parameters.AddWithValue("@Id",id);var url=q.ExecuteScalar() as string;
+                if(!string.IsNullOrWhiteSpace(url)) return url.StartsWith("data:") || url.StartsWith("http") || url.StartsWith("/")?url:"data:image/jpeg;base64,"+url;
+            }
             var folder =
                 Path.Combine(
                     _environment.WebRootPath,

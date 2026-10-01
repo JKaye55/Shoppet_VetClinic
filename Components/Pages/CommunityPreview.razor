@@ -88,7 +88,7 @@
                         </strong>
 
                         <span>
-                            You can read posts and comment as Guest.
+                            You can read posts as a guest. Sign in to join the conversation.
                             Guest identity is fixed for clarity. Create an account
                             to publish stories, like posts, and build your profile.
                         </span>
@@ -517,7 +517,7 @@
                                     {
                                         <div class="sc-community-post-image">
 
-                                            <img src="@post.ImageUrl"
+                                            <img src="@post.ImageUrl.Split(',',StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()"
                                                  alt="Photo shared by @post.AuthorName" />
 
                                         </div>
@@ -602,7 +602,11 @@
                                                     }
                                                     <small>@Relative(comment.CreatedAt)</small>
                                                 </div>
+                                                @if(comment.ParentCommentId.HasValue){<small>Reply to comment #@comment.ParentCommentId</small>}
                                                 <p>@comment.Body</p>
+                                                <small>@comment.LikeCount likes</small>
+                                                @if(Auth.IsPetOwner&&Auth.CurrentUser is not null){<button type="button" class="secondary-link" @onclick="()=>LikeComment(post.Id,comment.Id)">Like / unlike</button><button type="button" class="secondary-link" @onclick="()=>Reply(post.Id,comment.Id)">Reply</button>}
+                                                @if(Auth.CurrentUser is not null&&(comment.UserId==Auth.CurrentUser.Id||Auth.IsAdmin)){<button type="button" class="secondary-link" @onclick="()=>DeleteComment(post.Id,comment.Id)">Delete</button>}
                                             </div>
                                         }
 
@@ -1778,6 +1782,7 @@
     // =========================================================
 
     private readonly Dictionary<int, List<CommunityComment>> commentsByPost = new();
+    private readonly Dictionary<int,int> replyParents=new();
     private readonly Dictionary<int, string> commentDrafts = new();
 
     private List<CommunityPost> posts = new();
@@ -1995,8 +2000,12 @@
     private void SetCommentDraft(int postId, string value) =>
         commentDrafts[postId] = value;
 
+    private void Reply(int post,int comment){replyParents[post]=comment;statusMessage=$"Replying to comment #{comment}. Write your reply below.";}
+    private void LikeComment(int post,int id){if(!Auth.IsPetOwner||Auth.CurrentUser is null)return;try{Community.ToggleCommentLike(id,Auth.CurrentUser.Id);commentsByPost[post]=Community.GetComments(post);}catch{ShowError("Could not update this like.");}}
+    private void DeleteComment(int post,int id){if(Auth.CurrentUser is null)return;try{Community.DeleteComment(id,Auth.CurrentUser.Id,Auth.IsAdmin);commentsByPost[post]=Community.GetComments(post);}catch{ShowError("Could not delete this comment.");}}
     private void SubmitComment(int postId)
     {
+        if(!Auth.IsPetOwner){ShowError("Sign in with a Pet Owner account to comment.");return;}
         var body = GetCommentDraft(postId).Trim();
 
         if (string.IsNullOrWhiteSpace(body))
@@ -2013,9 +2022,9 @@
 
         try
         {
-            if (Community.AddComment(postId, userId, authorName, body, isGuest))
+            if (Community.AddComment(postId, userId, authorName, body, isGuest,replyParents.TryGetValue(postId,out var parent)?parent:null))
             {
-                commentDrafts[postId] = string.Empty;
+                commentDrafts[postId] = string.Empty;replyParents.Remove(postId);
                 commentsByPost[postId] = Community.GetComments(postId);
                 statusMessage = "Comment posted.";
                 isError = false;

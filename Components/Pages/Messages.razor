@@ -1,0 +1,23 @@
+@page "/messages"
+@rendermode InteractiveServer
+@implements IDisposable
+@inject AuthService Auth
+@inject OwnerCareService Care
+@inject NavigationManager Nav
+<PageTitle>Messages | ShoppetCare</PageTitle>
+<main class="owner-shell"><header class="owner-header"><span class="owner-eyebrow">PET OWNER CONNECTIONS</span><h1>A conversation starts here.</h1><p>Ask about a listing, arrange a meet-up, and keep your messages in sync with Mobile.</p></header>
+@if(!ready){<p>Loading messages…</p>}else if(!Auth.IsPetOwner){<p>A Pet Owner account is required.</p><a href="/login">Sign in</a>}else {
+@if(error.Length>0){<p role="status" class="owner-notice">@error</p>}
+<div class="owner-chat"><aside class="owner-card"><h2>Inbox</h2>@if(inbox.Count==0){<p>Your conversations will appear here.</p>}@foreach(var x in inbox){<a class="conversation" href="@($"/messages?contactId={x.ContactId}")"><strong>@x.Name</strong><small>@x.Updated.ToString("MMM d h:mm tt") @(x.Unread>0?$" · {x.Unread} unread":"")</small></a>}</aside><section class="owner-card"><h2>@(ContactId>0?name:"Choose a conversation")</h2>@if(ContactId>0){@if(ListingId.HasValue){<p class="owner-notice">About listing #@ListingId · <a href="/marketplace">View marketplace</a></p>}<div class="chat-history">@foreach(var x in messages){<article class="chat-bubble @(x.SenderId==Care.Actor?"mine":"")"><p>@x.Text</p><small>@x.SentAt.ToString("MMM d h:mm tt") @(x.ListingId.HasValue?$" · Listing #{x.ListingId}":"")</small></article>}</div><label>Message<textarea @bind="text" maxlength="1000" placeholder="Write a message…"></textarea></label><button @onclick="Send" disabled="@busy">@(busy?"Sending…":"Send message")</button>}</section></div>
+}</main>
+@code {
+ [SupplyParameterFromQuery(Name="contactId")] public int ContactId{get;set;}
+ [SupplyParameterFromQuery(Name="listingId")] public int? ListingId{get;set;}
+ bool ready,busy;string name="",error="",text="";List<CareConversation> inbox=new();List<CareMessage> messages=new();readonly CancellationTokenSource stop=new();
+ protected override async Task OnAfterRenderAsync(bool first){if(!first)return;await Auth.InitializeAsync();ready=true;Load();StateHasChanged();_=Poll();}
+ protected override void OnParametersSet(){if(ready)Load();}
+ void Load(){if(!Auth.IsPetOwner)return;try{inbox=Care.Inbox();if(ContactId>0){name=Care.ContactName(ContactId);messages=Care.Messages(ContactId);}else messages.Clear();}catch(Exception){error="Could not load messages. Check the shared database connection.";}}
+ async Task Send(){if(busy)return;busy=true;try{Care.Send(ContactId,text,ListingId);text="";error="";Load();}catch(Exception ex){error=ex is ArgumentException?ex.Message:"Message could not be sent. Try again.";}finally{busy=false;}await Task.CompletedTask;}
+ async Task Poll(){try{using var timer=new PeriodicTimer(TimeSpan.FromSeconds(3));while(await timer.WaitForNextTickAsync(stop.Token))await InvokeAsync(()=>{Load();StateHasChanged();});}catch(OperationCanceledException){}}
+ public void Dispose(){stop.Cancel();stop.Dispose();}
+}

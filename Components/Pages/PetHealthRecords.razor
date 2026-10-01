@@ -1,214 +1,30 @@
 @page "/pet/{PetId:int}/records"
 @rendermode InteractiveServer
-
-@using Shoppet_VetClinic.Models
-@using Shoppet_VetClinic.Services
-
-@inject DatabaseService Db
 @inject AuthService Auth
-
-<PageTitle>@(pet?.PetName ?? "Pet") Care Summary | ShoppetCare</PageTitle>
-
-<div class="care-page">
-    @if (!ready)
-    {
-        <div class="care-state">Loading connected care records...</div>
-    }
-    else if (!Auth.IsLoggedIn || Auth.CurrentUser is null)
-    {
-        <main class="care-shell"><section class="care-panel centered"><h1>Sign in required.</h1><a class="primary-link" href="/login">Sign In</a></section></main>
-    }
-    else if (pet is null || pet.UserId != Auth.CurrentUser.Id)
-    {
-        <main class="care-shell"><section class="care-panel centered"><h1>Pet record not found.</h1><a class="primary-link" href="/my-pets">Back to My Pets</a></section></main>
-    }
-    else
-    {
-        <section class="care-hero">
-            <div class="care-shell hero-inner">
-                <div>
-                    <span class="eyebrow light">CONNECTED PET CARE</span>
-                    <h1>@pet.PetName's care summary</h1>
-                    <p>
-                        Read-only Web view of vaccination and health information associated with this pet.
-                        Day-to-day care records are primarily managed in the ShoppetCare Mobile application.
-                    </p>
-                </div>
-
-                <div class="hero-actions">
-                    <a class="secondary-link" href="@($"/pet/{PetId}")">Pet Overview</a>
-                    <a class="secondary-link" href="@($"/pet/{PetId}/card")">Digital Pet ID</a>
-                </div>
-            </div>
-        </section>
-
-        <main class="care-shell care-content">
-            <section class="summary-grid">
-                <article><span>Total Records</span><strong>@records.Count</strong><small>Connected care entries</small></article>
-                <article><span>Vaccinations</span><strong>@VaccinationCount</strong><small>Vaccination records</small></article>
-                <article><span>Upcoming Due</span><strong>@UpcomingCount</strong><small>Future due dates</small></article>
-                <article><span>Latest Record</span><strong>@LatestDate</strong><small>Most recent care entry</small></article>
-            </section>
-
-            <section class="care-panel source-note">
-                <i class="bi bi-phone-fill"></i>
-                <div>
-                    <strong>Mobile-primary pet care management</strong>
-                    <span>
-                        Add, edit, and maintain vaccination, health, medical, food, weight, and day-to-day care information
-                        from Mobile. This Web page is intentionally a synchronized summary instead of a second competing CRUD interface.
-                    </span>
-                </div>
-            </section>
-
-            <section class="care-panel">
-                <div class="panel-head">
-                    <div>
-                        <span class="eyebrow">CARE HISTORY</span>
-                        <h2>Vaccination &amp; health records</h2>
-                    </div>
-
-                    @if (Auth.IsPremium && records.Count > 0)
-                    {
-                        <a class="primary-link"
-                           href="@ExportDataUri"
-                           download="@($"{SafeFileName(pet.PetName)}-health-records.csv")">
-                            <i class="bi bi-file-earmark-arrow-down"></i>
-                            Export CSV
-                        </a>
-                    }
-                    else if (!Auth.IsPremium)
-                    {
-                        <a class="secondary-link" href="/premium">Premium Export</a>
-                    }
-                </div>
-
-                @if (records.Count == 0)
-                {
-                    <div class="empty-state">
-                        <i class="bi bi-clipboard2-pulse"></i>
-                        <h3>No connected care records yet.</h3>
-                        <p>When vaccination or health data is available for this pet, it will appear here.</p>
-                    </div>
-                }
-                else
-                {
-                    <div class="record-list">
-                        @foreach (var record in records)
-                        {
-                            <article class="record-row">
-                                <div class="record-icon"><i class="@Icon(record.RecordType)"></i></div>
-                                <div class="record-main">
-                                    <div class="record-title">
-                                        <div>
-                                            <span>@record.RecordType</span>
-                                            <h3>@record.Title</h3>
-                                        </div>
-                                        <strong>@record.RecordDate.ToString("MMM d, yyyy")</strong>
-                                    </div>
-
-                                    <div class="record-meta">
-                                        @if (!string.IsNullOrWhiteSpace(record.VetName))
-                                        {
-                                            <span><i class="bi bi-person-badge"></i>@record.VetName</span>
-                                        }
-
-                                        @if (record.NextDueDate.HasValue)
-                                        {
-                                            <span class="@(record.IsOverdue ? "overdue" : "")">
-                                                <i class="bi bi-calendar-check"></i>
-                                                Due @record.NextDueDate.Value.ToString("MMM d, yyyy")
-                                            </span>
-                                        }
-                                    </div>
-
-                                    @if (!string.IsNullOrWhiteSpace(record.Notes))
-                                    {
-                                        <p>@record.Notes</p>
-                                    }
-                                </div>
-                            </article>
-                        }
-                    </div>
-                }
-            </section>
-
-            <section class="privacy-note">
-                <i class="bi bi-shield-lock-fill"></i>
-                <span>
-                    These care records are private account information and are not displayed on the public QR Pet ID.
-                    See the <a href="/privacy">Data Privacy Notice</a>.
-                </span>
-            </section>
-        </main>
-    }
-</div>
-
-<style>
-    .care-page{min-height:100vh;background:#FAF9F6;color:#1E2D27}.care-shell{width:min(1080px,calc(100% - 40px));margin:auto}.care-state{padding:90px;text-align:center;color:#6D7A74}.care-hero{padding:48px 0;background:linear-gradient(145deg,#173D3D,#102E2D);color:#fff}.hero-inner{display:flex;align-items:end;justify-content:space-between;gap:24px}.eyebrow{color:#2F9098;font-size:.66rem;font-weight:900;letter-spacing:.12em}.eyebrow.light{color:#8DD8D9}.care-hero h1{margin:7px 0 9px;font-size:clamp(2.4rem,5vw,4rem);font-weight:900;letter-spacing:-.05em}.care-hero p{max-width:720px;margin:0;color:rgba(255,255,255,.67);line-height:1.65}.hero-actions{display:flex;gap:8px;flex-wrap:wrap}.primary-link,.secondary-link{min-height:42px;padding:0 14px;border-radius:9px;text-decoration:none;font-size:.7rem;font-weight:850;display:inline-flex;align-items:center;gap:7px;justify-content:center}.primary-link{background:#2F9098;color:#fff}.secondary-link{border:1px solid #CAD9D5;background:#fff;color:#173D3D}
-    .care-content{padding:26px 0 60px}.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.summary-grid article,.care-panel{border:1px solid #DDE7E4;border-radius:16px;background:#fff;box-shadow:0 9px 26px rgba(30,45,39,.04)}.summary-grid article{padding:16px}.summary-grid span,.summary-grid strong,.summary-grid small{display:block}.summary-grid span{color:#7C8984;font-size:.61rem;font-weight:850;text-transform:uppercase}.summary-grid strong{margin-top:6px;font-size:1.25rem}.summary-grid small{margin-top:2px;color:#939D99;font-size:.59rem}.care-panel{margin-top:14px;padding:24px}.source-note{display:flex;gap:11px;background:#EEF6F4}.source-note i{font-size:1.3rem;color:#267C83}.source-note strong,.source-note span{display:block}.source-note span{margin-top:3px;color:#61716A;font-size:.7rem;line-height:1.5}.panel-head{display:flex;justify-content:space-between;align-items:start;gap:18px}.panel-head h2{margin:5px 0 0;font-weight:900}.record-list{display:grid;gap:9px;margin-top:18px}.record-row{display:flex;gap:12px;padding:14px;border:1px solid #E4EBE8;border-radius:12px}.record-icon{width:38px;height:38px;flex:0 0 38px;border-radius:10px;background:#EEF6F4;color:#267C83;display:grid;place-items:center}.record-main{min-width:0;flex:1}.record-title{display:flex;justify-content:space-between;gap:14px}.record-title span{color:#2F9098;font-size:.57rem;font-weight:900;text-transform:uppercase}.record-title h3{margin:3px 0 0;font-size:.88rem}.record-title>strong{font-size:.65rem;color:#71807A}.record-meta{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px;color:#78857F;font-size:.63rem}.record-meta span{display:flex;gap:5px;align-items:center}.record-meta .overdue{color:#A03A3A}.record-main p{margin:9px 0 0;color:#6D7A74;font-size:.68rem;line-height:1.5}.empty-state{text-align:center;padding:40px;color:#78857F}.empty-state>i{font-size:2rem;color:#2F9098}.empty-state h3{margin:8px 0 4px}.empty-state p{margin:0}.privacy-note{display:flex;gap:9px;margin-top:14px;padding:13px;border-radius:10px;background:#FFF7D9;color:#6F5B16;font-size:.67rem;line-height:1.5}.privacy-note a{color:#5E641D;font-weight:850}.centered{max-width:700px;margin:70px auto;text-align:center}
-    @@media(max-width:800px){.hero-inner{align-items:start;flex-direction:column}.summary-grid{grid-template-columns:1fr 1fr}}@@media(max-width:560px){.summary-grid{grid-template-columns:1fr}.panel-head,.record-title{flex-direction:column}.record-row{align-items:flex-start}}
-</style>
-
+@inject DatabaseService Db
+@inject PetCareService Care
+@inject FileStorageService Files
+<PageTitle>Pet care records | ShoppetCare</PageTitle>
+<main class="owner-shell"><header class="owner-header"><span class="owner-eyebrow">CONNECTED PET CARE</span><h1>@(pet?.PetName??"Your pet")'s care journal.</h1><p>Vaccinations, medication, feeding routines, and progress — shared with Mobile.</p>@if(pet is not null){<a class="owner-button" href="@($"/pet/{PetId}/card")">Digital Pet ID</a>}</header>
+@if(!ready){<p>Loading care records…</p>}else if(pet is null){<p>This pet is unavailable for your account.</p><a href="/my-pets">My pets</a>}else {
+@if(message.Length>0){<p class="owner-notice" role="status">@message</p>}
+<div class="owner-grid"><section class="owner-card"><h2>@(health.Id==0?"Add a health record":"Edit health record")</h2><label>Record type<select @bind="health.Type"><option value="vital">Checkup / vital</option><option value="vaccine">Vaccination</option><option value="medication">Medication</option><option value="Other">Other</option></select></label><label>Record title<input @bind="health.Title" maxlength="150" /></label><div class="owner-grid"><label>Record date<input type="datetime-local" @bind="health.RecordDate" @bind:format="yyyy-MM-ddTHH:mm" /></label><label>Next due date<input type="datetime-local" @bind="health.DueDate" @bind:format="yyyy-MM-ddTHH:mm" /></label></div><label>Veterinarian name<input @bind="health.VetName" maxlength="150" /></label><label>Notes<textarea @bind="health.Notes" maxlength="1000"></textarea></label>
+@if(IsVaccine(health.Type)){<label>Date administered<input type="date" @bind="health.DateAdministered" /></label><div class="owner-grid"><label>Validity interval<input type="number" min="0" @bind="health.ValidityInterval" /></label><label>Unit<select @bind="health.ValidityUnit"><option>Days</option><option>Weeks</option><option>Months</option><option>Years</option></select></label></div>}
+@if(IsMedication(health.Type)){<label>Time started<input type="datetime-local" @bind="health.TimeStarted" @bind:format="yyyy-MM-ddTHH:mm" /></label><div class="owner-grid"><label>Hours between doses<input type="number" min="0" step="0.5" @bind="health.MedicationIntervalHours" /></label><label>Total doses<input type="number" min="0" @bind="health.DosageTotal" /></label><label>Doses remaining<input type="number" min="0" @bind="health.DosageRemaining" /></label></div>}
+<label>Checkup date<input type="date" @bind="health.CheckupDate" /></label><label>Care documents<InputFile OnChange="UploadDocuments" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" /></label><small>PDF and images, up to five files of 10 MB each.</small><label>Attachment URLs, separated with |<textarea @bind="health.DocumentPaths"></textarea></label><label class="owner-check"><input type="checkbox" @bind="health.Completed" /> Completed</label><div class="owner-actions"><button @onclick="SaveHealth" disabled="@uploading">Save health record</button><button class="secondary" @onclick="()=>health=new()">Clear</button></div></section>
+<section class="owner-card"><h2>Health history <small>(@records.Count)</small></h2>@if(records.Count==0){<p>Add the first care record for your pet.</p>}@foreach(var x in records){<article class="owner-row"><div><strong>@x.Title</strong><p>@x.Type · @x.RecordDate.ToString("MMM d, yyyy")</p><small>@(x.Completed?"Completed":x.DueDate.HasValue?$"Due {x.DueDate:MMM d, yyyy h:mm tt}":"No due date")</small>@if(IsMedication(x.Type)){<p>@(x.DosageTotal-x.DosageRemaining) / @x.DosageTotal doses taken</p>}<p>@x.Notes</p>@foreach(var url in Links(x.DocumentPaths)){<a href="@url" target="_blank" rel="noopener noreferrer">Care document</a><br />}</div><div class="owner-actions"><button class="secondary" @onclick="()=>health=Clone(x)">Edit</button>@if(IsMedication(x.Type)&&x.DosageRemaining>0&&!x.Completed){<button class="secondary" @onclick="()=>Run(()=>Care.Dose(PetId,x.Id))">Dose taken</button>}<button class="secondary" @onclick="()=>Run(()=>{x.Completed=!x.Completed;Care.SaveHealth(PetId,x);})">@(x.Completed?"Reopen":"Complete")</button><button class="secondary" @onclick="()=>Run(()=>Care.DeleteHealth(PetId,x.Id))">Delete</button></div></article>}</section></div>
+<div class="owner-grid"><section class="owner-card"><h2>@(food.Id==0?"Add feeding routine":"Edit feeding routine")</h2><label>Food name<input @bind="food.Name" maxlength="150" /></label><div class="owner-grid"><label>Amount (grams)<input type="number" min="0" @bind="food.Grams" /></label><label>Started at<input type="datetime-local" @bind="food.StartedAt" @bind:format="yyyy-MM-ddTHH:mm" /></label><label>Interval hours<input type="number" min="0" @bind="food.Hours" /></label><label>Interval minutes<input type="number" min="0" max="59" @bind="food.Minutes" /></label></div><label>Notes<textarea @bind="food.Notes" maxlength="1000"></textarea></label><label class="owner-check"><input type="checkbox" @bind="food.Completed" /> Routine completed</label><div class="owner-actions"><button @onclick="SaveFood">Save feeding routine</button><button class="secondary" @onclick="()=>food=new()">Clear</button></div></section><section class="owner-card"><h2>Feeding routines</h2>@if(foods.Count==0){<p>Your pet's routines will appear here.</p>}@foreach(var x in foods){<article class="owner-row"><div><strong>@x.Name</strong><p>@x.Grams g · Every @x.Hours h @x.Minutes min</p><small>Last fed: @(x.LastFedAt?.ToString("MMM d h:mm tt")??"Not yet") · @(x.Completed?"Completed":"Active")</small><p>@x.Notes</p></div><div class="owner-actions"><button class="secondary" @onclick="()=>food=Clone(x)">Edit</button><button class="secondary" @onclick="()=>Run(()=>Care.Fed(PetId,x.Id))">Fed now</button><button class="secondary" @onclick="()=>Run(()=>Care.DeleteFood(PetId,x.Id))">Delete</button></div></article>}</section></div>
+<a class="owner-button" href="/account/care">Emergency contacts &amp; vet reminders</a>
+}</main>
 @code {
-    [Parameter] public int PetId { get; set; }
-
-    private bool ready;
-    private PetProfile? pet;
-    private List<PetHealthRecord> records = new();
-    private string ExportDataUri = string.Empty;
-
-    private int VaccinationCount =>
-        records.Count(x => string.Equals(x.RecordType, "Vaccination", StringComparison.OrdinalIgnoreCase));
-
-    private int UpcomingCount =>
-        records.Count(x => x.NextDueDate.HasValue && x.NextDueDate.Value >= DateTime.Today);
-
-    private string LatestDate =>
-        records.Count == 0 ? "—" : records.Max(x => x.RecordDate).ToString("MMM d");
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender) return;
-
-        await Auth.InitializeAsync();
-
-        pet = Db.GetPetById(PetId);
-
-        if (Auth.CurrentUser is not null &&
-            pet is not null &&
-            pet.UserId == Auth.CurrentUser.Id)
-        {
-            records = Db.GetHealthRecords(PetId);
-
-            if (Auth.IsPremium && records.Count > 0)
-            {
-                try
-                {
-                    var bytes = Db.ExportHealthRecordsCsv(PetId, Auth.CurrentUser.Id);
-                    ExportDataUri = $"data:text/csv;base64,{Convert.ToBase64String(bytes)}";
-                }
-                catch
-                {
-                    ExportDataUri = string.Empty;
-                }
-            }
-        }
-
-        ready = true;
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private static string Icon(string? type) =>
-        type?.ToLowerInvariant() switch
-        {
-            "vaccination" => "bi bi-shield-check",
-            "medication" => "bi bi-capsule",
-            "surgery" => "bi bi-bandaid",
-            "deworming" => "bi bi-bug",
-            _ => "bi bi-heart-pulse"
-        };
-
-    private static string SafeFileName(string value) =>
-        new(value.Where(ch => char.IsLetterOrDigit(ch) || ch is '-' or '_').ToArray());
+ [Parameter]public int PetId{get;set;}
+ bool ready,uploading;string message="";Shoppet_VetClinic.Models.PetProfile? pet;CareHealth health=new();CareFood food=new();List<CareHealth> records=new();List<CareFood> foods=new();
+ protected override async Task OnAfterRenderAsync(bool first){if(!first)return;await Auth.InitializeAsync();if(Auth.IsPetOwner)try{pet=Db.GetPetById(PetId);if(pet?.UserId!=Auth.CurrentUser?.Id)pet=null;if(pet is not null)Reload();}catch(Exception){message="Could not load shared care data. Check the database connection.";}ready=true;StateHasChanged();}
+ void Reload(){records=Care.Health(PetId);foods=Care.Food(PetId);}
+ void Run(Action a){try{a();Reload();message="Saved. Your care journal is shared with Mobile.";}catch(Exception ex){message=ex is ArgumentException?ex.Message:"Could not save. Check the database connection and try again.";}}
+ void SaveHealth()=>Run(()=>{if(health.Id==0&&IsMedication(health.Type)&&health.DosageRemaining==0)health.DosageRemaining=health.DosageTotal;Care.SaveHealth(PetId,health);health=new();});void SaveFood()=>Run(()=>{Care.SaveFood(PetId,food);food=new();});
+ static bool IsMedication(string t)=>t.Contains("med",StringComparison.OrdinalIgnoreCase);static bool IsVaccine(string t)=>t.Contains("vacc",StringComparison.OrdinalIgnoreCase);
+ static T Clone<T>(T x)=>System.Text.Json.JsonSerializer.Deserialize<T>(System.Text.Json.JsonSerializer.Serialize(x))!;
+ static IEnumerable<string> Links(string value)=>value.Split(new[]{'|',';'},StringSplitOptions.RemoveEmptyEntries).Where(u=>Uri.TryCreate(u,UriKind.Absolute,out var parsed)&&parsed.Scheme is "https" or "http");
+ async Task UploadDocuments(InputFileChangeEventArgs e){uploading=true;try{var saved=new List<string>();foreach(var f in e.GetMultipleFiles(5)){var ext=Path.GetExtension(f.Name).ToLowerInvariant();if(!new[]{".pdf",".jpg",".jpeg",".png",".webp"}.Contains(ext))throw new ArgumentException("Choose PDF or image files.");var name=Guid.NewGuid().ToString("N")+ext;var folder=Path.Combine(Directory.GetCurrentDirectory(),"wwwroot","uploads","documents");Directory.CreateDirectory(folder);await using var target=File.Create(Path.Combine(folder,name));await f.OpenReadStream(10*1024*1024).CopyToAsync(target);saved.Add("/uploads/documents/"+name);}var origin=new Uri(new Uri(Files.PublicBaseUrl),"/");health.DocumentPaths=string.Join("|",Links(health.DocumentPaths).Concat(saved.Select(p=>new Uri(origin,p).AbsoluteUri)));message="Documents attached. Save the health record to keep them.";}catch(Exception ex){message=ex is ArgumentException?ex.Message:"Could not attach documents. Check file sizes and try again.";}finally{uploading=false;}}
 }

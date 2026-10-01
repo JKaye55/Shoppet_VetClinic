@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @implements IDisposable
 
+@inject OwnerCareService Care
 @inject MarketplaceService ListingService
 @inject CommerceService Commerce
 @inject FileStorageService FileStorage
@@ -824,19 +825,9 @@
                                     @if (Auth.IsLoggedIn && contactListingId == listing.Id)
                                     {
                                         <div class="sc-marketplace-contact-box">
-                                            <span>Seller Contact</span>
-                                            @if (!string.IsNullOrWhiteSpace(listing.SellerEmail))
-                                            {
-                                                <a href="@($"/messages?contactId={listing.SellerUserId}&listingId={listing.Id}")">Message seller</a>
-                                            }
-                                            else
-                                            {
-                                                <strong>Contact information unavailable.</strong>
-                                            }
-                                            <small>
-                                                ShoppetCare provides a demo purchase-request workflow.
-                                                Arrange the actual item exchange responsibly with the seller.
-                                            </small>
+                                            <span>Seller contact</span>
+                                            <a href="@($"/messages?contactId={listing.SellerUserId}&listingId={listing.Id}")">Message seller</a>
+                                            @foreach(var social in Care.SellerSocial(listing.SellerUserId)) { <a href="@social.Url" target="_blank" rel="noopener noreferrer">@social.Name</a> }
                                         </div>
                                     }
 

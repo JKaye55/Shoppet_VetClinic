@@ -354,10 +354,9 @@ namespace Shoppet_VetClinic.Services
             EnsureCommentsSchema(conn);
 
             using var cmd = new SqlCommand(@"
-                SELECT Id, PostId, UserId, AuthorName, Body, IsGuest, CreatedAt
-                FROM CommunityComments
-                WHERE PostId = @PostId
-                ORDER BY CreatedAt ASC;", conn);
+                SELECT cc.Id,cc.PostId,cc.UserId,COALESCE(u.FullName,cc.AuthorName,'Pet Owner'),COALESCE(cc.Content,cc.Body,''),cc.IsGuest,cc.CreatedAt,cc.ParentCommentId,(SELECT COUNT(*) FROM CommunityCommentLikes WHERE CommentId=cc.Id)
+                FROM CommunityComments cc LEFT JOIN UserAccounts u ON u.Id=cc.UserId
+                WHERE cc.PostId=@PostId ORDER BY cc.CreatedAt,cc.Id;", conn);
 
             cmd.Parameters.AddWithValue("@PostId", postId);
 
@@ -372,15 +371,17 @@ namespace Shoppet_VetClinic.Services
                     AuthorName = reader.GetString(3),
                     Body = reader.GetString(4),
                     IsGuest = reader.GetBoolean(5),
-                    CreatedAt = reader.GetDateTime(6)
+                    CreatedAt = reader.GetDateTime(6),
+                    ParentCommentId=reader.IsDBNull(7)?null:reader.GetInt32(7),LikeCount=reader.GetInt32(8)
                 });
             }
 
             return comments;
         }
 
-        public bool AddComment(int postId, int? userId, string authorName, string body, bool isGuest)
+        public bool AddComment(int postId, int? userId, string authorName, string body, bool isGuest,int? parentId=null)
         {
+            if(isGuest||!userId.HasValue)return false;
             // Guest identity is intentionally fixed. A guest has no
             // authenticated profile and must never be able to impersonate
             // a named ShoppetCare member.
@@ -410,20 +411,38 @@ namespace Shoppet_VetClinic.Services
 
             using var cmd = new SqlCommand(@"
                 INSERT INTO CommunityComments
-                (PostId, UserId, AuthorName, Body, IsGuest, CreatedAt)
-                SELECT @PostId, @UserId, @AuthorName, @Body, @IsGuest, SYSDATETIME()
-                WHERE EXISTS (SELECT 1 FROM CommunityPosts WHERE Id = @PostId);", conn);
+                (PostId, UserId, AuthorName, Body, IsGuest, CreatedAt,Content,ParentCommentId)
+                SELECT @PostId,@UserId,@AuthorName,@Body,0,SYSDATETIME(),@Body,@Parent
+                WHERE EXISTS(SELECT 1 FROM CommunityPosts WHERE Id=@PostId)
+                  AND (@Parent IS NULL OR EXISTS(SELECT 1 FROM CommunityComments WHERE Id=@Parent AND PostId=@PostId));", conn);
 
             cmd.Parameters.AddWithValue("@PostId", postId);
             cmd.Parameters.AddWithValue("@UserId", userId.HasValue ? userId.Value : DBNull.Value);
             cmd.Parameters.AddWithValue("@AuthorName", authorName);
             cmd.Parameters.AddWithValue("@Body", body);
             cmd.Parameters.AddWithValue("@IsGuest", isGuest);
+            cmd.Parameters.AddWithValue("@Parent",(object?)parentId??DBNull.Value);
 
             return cmd.ExecuteNonQuery() > 0;
         }
 
         // =========================================================
+        public void ToggleCommentLike(int id,int user)
+        {
+            using var c=new SqlConnection(_connectionString);c.Open();using var tx=c.BeginTransaction(System.Data.IsolationLevel.Serializable);
+            using var q=new SqlCommand("IF EXISTS(SELECT 1 FROM CommunityCommentLikes WITH(UPDLOCK,HOLDLOCK) WHERE CommentId=@Id AND UserId=@U) DELETE FROM CommunityCommentLikes WHERE CommentId=@Id AND UserId=@U; ELSE INSERT INTO CommunityCommentLikes(CommentId,UserId) SELECT @Id,@U WHERE EXISTS(SELECT 1 FROM CommunityComments WHERE Id=@Id);",c,tx);
+            q.Parameters.AddWithValue("@Id",id);q.Parameters.AddWithValue("@U",user);q.ExecuteNonQuery();tx.Commit();
+        }
+        public void DeleteComment(int id,int user,bool admin)
+        {
+            using var c=new SqlConnection(_connectionString);c.Open();using var tx=c.BeginTransaction();
+            using var q=new SqlCommand(@"IF EXISTS(SELECT 1 FROM CommunityComments WHERE Id=@Id AND (UserId=@U OR @Admin=1)) BEGIN
+            ;WITH descendants AS(SELECT Id FROM CommunityComments WHERE Id=@Id UNION ALL SELECT cc.Id FROM CommunityComments cc JOIN descendants d ON cc.ParentCommentId=d.Id) SELECT Id INTO #Removal FROM descendants;
+            DELETE FROM CommunityCommentLikes WHERE CommentId IN(SELECT Id FROM #Removal);
+            DELETE FROM CommunityComments WHERE Id IN(SELECT Id FROM #Removal); END",c,tx);
+            q.Parameters.AddWithValue("@Id",id);q.Parameters.AddWithValue("@U",user);q.Parameters.AddWithValue("@Admin",admin);q.ExecuteNonQuery();tx.Commit();
+        }
+
         // CREATE POST
         // Returns the new Post ID so FileStorageService can save
         // the uploaded image using that ID.
@@ -665,6 +684,7 @@ namespace Shoppet_VetClinic.Services
             try
             {
                 using (var comments = new SqlCommand(@"
+                    DELETE cl FROM CommunityCommentLikes cl JOIN CommunityComments cc ON cc.Id=cl.CommentId WHERE cc.PostId=@PostId AND EXISTS(SELECT 1 FROM CommunityPosts WHERE Id=@PostId AND UserId=@UserId);
                     DELETE FROM CommunityComments
                     WHERE PostId = @PostId
                       AND EXISTS
@@ -726,7 +746,7 @@ namespace Shoppet_VetClinic.Services
             try
             {
                 using (var comments = new SqlCommand(
-                    "DELETE FROM CommunityComments WHERE PostId = @PostId;",
+                    "DELETE cl FROM CommunityCommentLikes cl JOIN CommunityComments cc ON cc.Id=cl.CommentId WHERE cc.PostId=@PostId; DELETE FROM CommunityComments WHERE PostId = @PostId;",
                     conn,
                     tx))
                 {

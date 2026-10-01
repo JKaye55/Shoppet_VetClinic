@@ -3,6 +3,8 @@ namespace Shoppet_VetClinic.Models
     public class CommunityComment
     {
         public int Id { get; set; }
+        public int? ParentCommentId {get;set;}
+        public int LikeCount{get;set;}
         public int PostId { get; set; }
         public int? UserId { get; set; }
         public string AuthorName { get; set; } = string.Empty;

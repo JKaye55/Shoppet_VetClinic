@@ -51,6 +51,8 @@
                     <svg aria-hidden="true"><use href="/icons/bootstrap-icons.svg#person-circle"></use></svg>
                     Account
                 </a>
+                <a href="/messages">Messages</a>
+                <a href="/account/care">Contacts &amp; care</a>
             </nav>
         </div>
     </section>
@@ -216,6 +218,7 @@
             return path.StartsWith("/dashboard", StringComparison.OrdinalIgnoreCase)
                 || path.StartsWith("/my-pets", StringComparison.OrdinalIgnoreCase)
                 || path.StartsWith("/pet/", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/messages", StringComparison.OrdinalIgnoreCase)
                 || path.StartsWith("/account", StringComparison.OrdinalIgnoreCase)
                 || path.StartsWith("/premium", StringComparison.OrdinalIgnoreCase)
                 || path.StartsWith("/marketplace", StringComparison.OrdinalIgnoreCase)

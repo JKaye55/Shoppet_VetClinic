@@ -1,5 +1,6 @@
 ﻿@page "/pet/card/{CardId}"
 
+@inject OwnerCareService Care
 @inject DatabaseService Db
 @inject CardService Cards
 @inject FileStorageService FileStorage
@@ -102,6 +103,9 @@
             </div>
         }
 
+    @if(pet is not null && !string.IsNullOrWhiteSpace(Care.PublicPhone(pet.UserId))) {
+        <div class="owner-notice"><strong>Owner contact · </strong><a href="@($"tel:{Care.PublicPhone(pet.UserId)}")">@Care.PublicPhone(pet.UserId)</a></div>
+    }
     </main>
 
 </div>

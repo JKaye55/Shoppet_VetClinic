@@ -187,7 +187,7 @@
                         </strong>
 
                         <span class="hero-plan">
-                            ₱150 · 3 months
+                            ₱49 · Lifetime
                         </span>
 
                         <small>
@@ -425,9 +425,9 @@
                                     </div>
 
 
-                         
 
-                         
+
+
 
                                     <div class="identity-row">
 
@@ -596,11 +596,11 @@
                                 </span>
 
                                 <strong>
-                                    ₱150
+                                    ₱49
                                 </strong>
 
                                 <p>
-                                    3 months of Premium access
+                                    Lifetime Premium access
                                 </p>
 
                             </div>
@@ -751,7 +751,7 @@
                                     </strong>
 
                                     <p>
-                                        Upgrade for ₱150 and receive
+                                        Upgrade for ₱49 and receive
                                         three months of ShoppetCare Premium.
                                     </p>
 
@@ -956,7 +956,7 @@
 
                             <p class="premium-description">
                                 Upgrade for three months of expanded
-                                ShoppetCare tools for ₱150.
+                                ShoppetCare tools for ₱49.
                             </p>
                         }
 
@@ -964,11 +964,11 @@
                         <div class="premium-price">
 
                             <strong>
-                                ₱150
+                                ₱49
                             </strong>
 
                             <span>
-                                / 3 months
+                                / Lifetime
                             </span>
 
                         </div>
@@ -2783,7 +2783,7 @@
 
     [Parameter]
     public string? Mode { get; set; }
-   
+
     private string editMobileNumber =
     string.Empty;
 
@@ -2795,7 +2795,7 @@
 
 
     private const decimal PremiumPrice =
-        150m;
+        49m;
 
 
     private const int PremiumDurationMonths =
@@ -2920,44 +2920,8 @@
     }
 
 
-    private bool HasActivePremium
-    {
-        get
-        {
-            if (Auth.CurrentUser?
-                    .IsPremium != true)
-            {
-                return false;
-            }
-
-
-            // Compatibility with older Premium test accounts
-            // that may not have PremiumActivatedAt yet.
-            if (!PremiumExpiresAt.HasValue)
-            {
-                return true;
-            }
-
-
-            return
-                PremiumExpiresAt
-                    .Value
-                    .Date
-                >=
-                DateTime.Today;
-        }
-    }
-
-
-    private bool IsPremiumExpired =>
-        Auth.CurrentUser?.IsPremium == true
-        &&
-        PremiumExpiresAt.HasValue
-        &&
-        PremiumExpiresAt.Value.Date
-            <
-        DateTime.Today;
-
+    private bool HasActivePremium => Auth.IsPremium;
+    private bool IsPremiumExpired => false;
 
     private string PremiumStatusDisplay
     {
@@ -2989,14 +2953,7 @@
         "—";
 
 
-    private string PremiumEndDisplay =>
-        PremiumExpiresAt?
-            .ToString(
-                "MMM dd, yyyy")
-        ??
-        (Auth.CurrentUser?.IsPremium == true
-            ? "Active"
-            : "—");
+    private string PremiumEndDisplay => Auth.IsPremium ? "Lifetime" : "—";
 
 
     private string PremiumReferenceDisplay =>

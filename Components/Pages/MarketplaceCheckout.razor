@@ -11,7 +11,7 @@
     <section class="checkout-hero">
         <div class="checkout-shell">
             <span>DEMO MARKETPLACE CHECKOUT</span>
-            <h1>Review your purchase request.</h1>
+            <h1>Review your pre-loved finds.</h1>
             <p>No real funds are transferred. This checkout demonstrates the e-commerce workflow for the ShoppetCare academic project.</p>
         </div>
     </section>
@@ -59,6 +59,7 @@
                     <option>Maya - Demo</option>
                 </select>
 
+                <label>Simulated outcome</label><select @bind="outcome"><option value="success">Success</option><option value="failure">Failure</option></select>
                 <label>Voucher</label>
                 <select @bind="selectedVoucherId">
                     <option value="0">No voucher</option>
@@ -106,6 +107,7 @@
 @code {
     [Parameter] public int SellerUserId { get; set; }
 
+    private string outcome="success";
     private string paymentMethod = "Cash on Meet-up";
     private int selectedVoucherId;
     private List<MarketplaceVoucher> vouchers = new();
@@ -146,6 +148,7 @@
     {
         if (Auth.CurrentUser is null || SellerItems.Count == 0) return;
 
+        if(outcome=="failure"){message="Simulated payment failed. Your cart and listings are unchanged.";return;}
         isSubmitting = true;
         message = string.Empty;
 

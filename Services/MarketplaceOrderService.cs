@@ -23,6 +23,8 @@ namespace Shoppet_VetClinic.Services
             string paymentMethod,
             int? voucherId = null)
         {
+            if(buyerUserId==sellerUserId)throw new InvalidOperationException("You cannot buy your own listing.");
+            if (cartItems.Select(x=>x.ListingId).Distinct().Count()!=cartItems.Count)throw new InvalidOperationException("A listing can only be purchased once.");
             if (cartItems.Count == 0)
                 throw new InvalidOperationException("There are no items to checkout.");
 
@@ -35,7 +37,7 @@ namespace Shoppet_VetClinic.Services
 
             using var conn = new SqlConnection(_connectionString);
             conn.Open();
-            using var tx = conn.BeginTransaction();
+            using var tx = conn.BeginTransaction(IsolationLevel.Serializable);
 
             try
             {
@@ -96,13 +98,13 @@ namespace Shoppet_VetClinic.Services
                     INSERT INTO MarketplaceOrders
                     (
                         BuyerUserId, SellerUserId, Reference, PaymentMethod,
-                        Status, Subtotal, VoucherDiscount, Total, CreatedAt
+                        Status, Subtotal, VoucherDiscount, Total, CreatedAt, CompletedAt
                     )
                     OUTPUT INSERTED.Id
                     VALUES
                     (
                         @BuyerUserId, @SellerUserId, @Reference, @PaymentMethod,
-                        'Purchase Requested', @Subtotal, @Discount, @Total, SYSDATETIME()
+                        'Completed', @Subtotal, @Discount, @Total, SYSDATETIME(), SYSDATETIME()
                     );", conn, tx);
 
                 order.Parameters.AddWithValue("@BuyerUserId", buyerUserId);
@@ -130,10 +132,12 @@ namespace Shoppet_VetClinic.Services
 
                     using var reserve = new SqlCommand(@"
                         UPDATE MarketplaceListings
-                        SET Status = 'Reserved'
+                        SET Status = 'Sold', UpdatedAt=SYSDATETIME()
                         WHERE Id = @Id AND Status = 'Available';", conn, tx);
                     reserve.Parameters.AddWithValue("@Id", item.Id);
                     reserve.ExecuteNonQuery();
+                    using var clear=new SqlCommand("DELETE i FROM MarketplaceCartItems i JOIN MarketplaceCart c ON c.Id=i.CartId WHERE c.UserId=@User AND i.MarketplaceListingId=@Id",conn,tx);
+                    clear.Parameters.AddWithValue("@User",buyerUserId);clear.Parameters.AddWithValue("@Id",item.Id);clear.ExecuteNonQuery();
                 }
 
                 if (voucherId.HasValue)
@@ -148,15 +152,9 @@ namespace Shoppet_VetClinic.Services
                     useVoucher.ExecuteNonQuery();
                 }
 
+                using(var audit=new SqlCommand("INSERT INTO Transactions(UserId,Type,Amount,Reference,PaymentMethod,Status,PaidAt) VALUES(@User,'MarketplacePurchase',@Amount,@Ref,@Method,'SimulatedPaid',SYSDATETIME())",conn,tx))
+                {audit.Parameters.AddWithValue("@User",buyerUserId);AddMoney(audit,"@Amount",total);audit.Parameters.AddWithValue("@Ref",reference);audit.Parameters.AddWithValue("@Method",paymentMethod);audit.ExecuteNonQuery();}
                 tx.Commit();
-
-                _notifications.Custom(
-                    sellerUserId,
-                    "New marketplace purchase request",
-                    $"A buyer submitted demo order {reference}. Open Marketplace Orders to review it.",
-                    "/marketplace/orders",
-                    "bi-bag-check-fill");
-
                 return reference;
             }
             catch

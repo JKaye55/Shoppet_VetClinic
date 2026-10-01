@@ -1222,8 +1222,7 @@ FROM UserAccounts",
                     ? (DateTime?)null
                     : reader.GetDateTime(1);
 
-            if (!premiumFlag ||
-                !activatedAt.HasValue)
+            if (!premiumFlag)
             {
                 return false;
             }
@@ -1287,7 +1286,7 @@ FROM UserAccounts",
                     UserId,
                     Type,
                     Amount,
-                    Reference
+                    Reference, PaidAt, PaymentMethod, Status
                 )
 
                 VALUES
@@ -1295,7 +1294,7 @@ FROM UserAccounts",
                     @UserId,
                     'PremiumUpgrade',
                     @Amount,
-                    @Ref
+                    @Ref, SYSDATETIME(), 'Mock Payment', 'SimulatedPaid'
                 );",
                         conn,
                         tx))
@@ -1945,39 +1944,14 @@ FROM UserAccounts",
         }
 
 
-        public bool DeletePet(
-            int petId,
-            int userId)
+        public bool DeletePet(int petId,int userId)
         {
-            using var conn =
-                new SqlConnection(_connectionString);
-
-            conn.Open();
-
-
-            using var cmd =
-                new SqlCommand(@"
-                    DELETE FROM PetProfiles
-
-                    WHERE
-                        Id = @Id
-                        AND
-                        UserId = @UserId;",
-                    conn);
-
-
-            cmd.Parameters.AddWithValue(
-                "@Id",
-                petId);
-
-
-            cmd.Parameters.AddWithValue(
-                "@UserId",
-                userId);
-
-
-            return
-                cmd.ExecuteNonQuery() > 0;
+            using var c=new SqlConnection(_connectionString);c.Open();using var tx=c.BeginTransaction();
+            using var q=new SqlCommand(@"IF NOT EXISTS(SELECT 1 FROM PetProfiles WHERE Id=@Id AND UserId=@U) RETURN;
+            DELETE FROM VetVisitReminders WHERE PetId=@Id;DELETE FROM PetHealthRecords WHERE PetId=@Id;DELETE FROM FoodLogs WHERE PetId=@Id;
+            UPDATE CommunityPosts SET PetId=NULL WHERE PetId=@Id;
+            DELETE FROM PetProfiles WHERE Id=@Id AND UserId=@U;",c,tx);
+            q.Parameters.AddWithValue("@Id",petId);q.Parameters.AddWithValue("@U",userId);var deleted=q.ExecuteNonQuery()>0;tx.Commit();return deleted;
         }
 
         // =========================================================
