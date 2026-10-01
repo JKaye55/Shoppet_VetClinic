@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Data.SqlClient;
 
 namespace Shoppet_VetClinic.Services
@@ -36,6 +36,14 @@ namespace Shoppet_VetClinic.Services
         }
 
 
+        private string GetUploadFolder(string category)
+        {
+            var webRoot = _environment.WebRootPath ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
+            var folder = Path.Combine(webRoot, "uploads", category);
+            Directory.CreateDirectory(folder);
+            return folder;
+        }
+
         public async Task<string> SaveImageAsync(
             string category,
             int id,
@@ -55,81 +63,83 @@ namespace Shoppet_VetClinic.Services
                 Path.GetExtension(file.Name)
                     .ToLowerInvariant();
 
-            if (!AllowedExtensions.Contains(
-                extension))
+            if (!AllowedExtensions.Contains(extension))
             {
                 throw new InvalidOperationException(
                     "Only JPG, JPEG, PNG, and WEBP images are allowed.");
             }
 
-            if (!AllowedContentTypes.Contains(
-                file.ContentType,
-                StringComparer.OrdinalIgnoreCase))
-            {
-                throw new InvalidOperationException(
-                    "The selected file is not a supported image.");
-            }
-
-
-            var folder =
-                Path.Combine(
-                    _environment.WebRootPath,
-                    "uploads",
-                    category);
-
-            Directory.CreateDirectory(
-                folder);
-
+            var folder = GetUploadFolder(category);
 
             // Remove old versions.
-            foreach (var oldExtension
-                in AllowedExtensions)
+            foreach (var oldExtension in AllowedExtensions)
             {
-                var oldFile =
-                    Path.Combine(
-                        folder,
-                        $"{id}{oldExtension}");
-
+                var oldFile = Path.Combine(folder, $"{id}{oldExtension}");
                 if (File.Exists(oldFile))
                 {
-                    try
-                    {
-                        File.Delete(oldFile);
-                    }
-                    catch
-                    {
-                        // Ignore old-file cleanup failure.
-                    }
+                    try { File.Delete(oldFile); } catch { }
                 }
             }
 
+            var filePath = Path.Combine(folder, $"{id}{extension}");
 
-            var filePath =
-                Path.Combine(
-                    folder,
-                    $"{id}{extension}");
+            await using var inputStream = file.OpenReadStream(MaxFileSize);
+            await using var outputStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
+            await inputStream.CopyToAsync(outputStream);
 
+            var url = $"/uploads/{category}/{id}{extension}";
+            if (category == "pets" || category == "users")
+            {
+                using var c = new SqlConnection(_config.GetConnectionString("ShoppetDb") ?? _config.GetConnectionString("DefaultConnection"));
+                c.Open();
+                using var q = new SqlCommand(category == "pets" ? "UPDATE PetProfiles SET PhotoUrl=@Url WHERE Id=@Id" : "UPDATE UserAccounts SET ProfilePicture=@Url WHERE Id=@Id", c);
+                q.Parameters.AddWithValue("@Id", id);
+                q.Parameters.AddWithValue("@Url", url);
+                q.ExecuteNonQuery();
+            }
+            return url;
+        }
 
-            await using var inputStream =
-                file.OpenReadStream(
-                    MaxFileSize);
+        public async Task<string> SaveImageBytesAsync(
+            string category,
+            int id,
+            byte[] bytes,
+            string extension)
+        {
+            if (bytes is null || bytes.Length == 0)
+                throw new ArgumentNullException(nameof(bytes));
 
-            await using var outputStream =
-                new FileStream(
-                    filePath,
-                    FileMode.Create,
-                    FileAccess.Write,
-                    FileShare.None);
+            if (bytes.Length > MaxFileSize)
+                throw new InvalidOperationException("The image must not exceed 5 MB.");
 
-            await inputStream.CopyToAsync(
-                outputStream);
+            extension = (extension ?? ".jpg").ToLowerInvariant();
+            if (!extension.StartsWith(".")) extension = "." + extension;
+            if (!AllowedExtensions.Contains(extension))
+                throw new InvalidOperationException("Only JPG, JPEG, PNG, and WEBP images are allowed.");
 
+            var folder = GetUploadFolder(category);
 
-            var url=$"{PublicBaseUrl.TrimEnd('/')}/uploads/{category}/{id}{extension}";
-            if(category=="pets" || category=="users") {
-                using var c=new SqlConnection(_config.GetConnectionString("ShoppetDb"));c.Open();
-                using var q=new SqlCommand(category=="pets"?"UPDATE PetProfiles SET PhotoUrl=@Url WHERE Id=@Id":"UPDATE UserAccounts SET ProfilePicture=@Url WHERE Id=@Id",c);
-                q.Parameters.AddWithValue("@Id",id);q.Parameters.AddWithValue("@Url",url);q.ExecuteNonQuery();
+            foreach (var oldExt in AllowedExtensions)
+            {
+                var oldFile = Path.Combine(folder, $"{id}{oldExt}");
+                if (File.Exists(oldFile))
+                {
+                    try { File.Delete(oldFile); } catch { }
+                }
+            }
+
+            var filePath = Path.Combine(folder, $"{id}{extension}");
+            await File.WriteAllBytesAsync(filePath, bytes);
+
+            var url = $"/uploads/{category}/{id}{extension}";
+            if (category == "pets" || category == "users")
+            {
+                using var c = new SqlConnection(_config.GetConnectionString("ShoppetDb") ?? _config.GetConnectionString("DefaultConnection"));
+                c.Open();
+                using var q = new SqlCommand(category == "pets" ? "UPDATE PetProfiles SET PhotoUrl=@Url WHERE Id=@Id" : "UPDATE UserAccounts SET ProfilePicture=@Url WHERE Id=@Id", c);
+                q.Parameters.AddWithValue("@Id", id);
+                q.Parameters.AddWithValue("@Url", url);
+                q.ExecuteNonQuery();
             }
             return url;
         }
@@ -140,59 +150,35 @@ namespace Shoppet_VetClinic.Services
             int id)
         {
             if(category=="pets" || category=="users") {
-                using var c=new SqlConnection(_config.GetConnectionString("ShoppetDb"));c.Open();
+                using var c=new SqlConnection(_config.GetConnectionString("ShoppetDb") ?? _config.GetConnectionString("DefaultConnection"));c.Open();
                 using var q=new SqlCommand(category=="pets"?"SELECT PhotoUrl FROM PetProfiles WHERE Id=@Id":"SELECT ProfilePicture FROM UserAccounts WHERE Id=@Id",c);
                 q.Parameters.AddWithValue("@Id",id);var url=q.ExecuteScalar() as string;
                 if(!string.IsNullOrWhiteSpace(url)) return url.StartsWith("data:") || url.StartsWith("http") || url.StartsWith("/")?url:"data:image/jpeg;base64,"+url;
             }
-            var folder =
-                Path.Combine(
-                    _environment.WebRootPath,
-                    "uploads",
-                    category);
+            var folder = GetUploadFolder(category);
 
-            foreach (var extension
-                in AllowedExtensions)
+            foreach (var extension in AllowedExtensions)
             {
-                var filePath =
-                    Path.Combine(
-                        folder,
-                        $"{id}{extension}");
-
+                var filePath = Path.Combine(folder, $"{id}{extension}");
                 if (File.Exists(filePath))
                 {
-                    var timestamp =
-                        File.GetLastWriteTimeUtc(
-                            filePath)
-                        .Ticks;
-
-                    return
-                        $"/uploads/{category}/{id}{extension}?v={timestamp}";
+                    var timestamp = File.GetLastWriteTimeUtc(filePath).Ticks;
+                    return $"/uploads/{category}/{id}{extension}?v={timestamp}";
                 }
             }
 
             return null;
         }
 
-
         public void DeleteImage(
             string category,
             int id)
         {
-            var folder =
-                Path.Combine(
-                    _environment.WebRootPath,
-                    "uploads",
-                    category);
+            var folder = GetUploadFolder(category);
 
-            foreach (var extension
-                in AllowedExtensions)
+            foreach (var extension in AllowedExtensions)
             {
-                var filePath =
-                    Path.Combine(
-                        folder,
-                        $"{id}{extension}");
-
+                var filePath = Path.Combine(folder, $"{id}{extension}");
                 if (File.Exists(filePath))
                 {
                     try

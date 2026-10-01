@@ -345,7 +345,7 @@
         await InvokeAsync(StateHasChanged);
         try
         {
-            await JSRuntime.InvokeVoidAsync("window.shoppetGuestDashboard.init");
+            await JSRuntime.InvokeVoidAsync("shoppetGuestDashboard.init");
         }
         catch { }
     }

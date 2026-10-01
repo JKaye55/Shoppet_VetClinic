@@ -189,7 +189,11 @@ window.shoppetGuestDashboard = (() => {
         if (!file) return;
 
         const allowed = ["image/jpeg", "image/png", "image/webp"];
-        if (!allowed.includes((file.type || "").toLowerCase())) {
+        const ext = (file.name || "").split('.').pop().toLowerCase();
+        const typeMatch = file.type && allowed.includes(file.type.toLowerCase());
+        const extMatch = ['jpg', 'jpeg', 'png', 'webp'].includes(ext);
+
+        if (!typeMatch && !extMatch) {
             input.value = "";
             setMessage("Use a JPG, PNG or WEBP pet photo.", true);
             return;
@@ -269,12 +273,12 @@ window.shoppetGuestDashboard = (() => {
     }
 
     // Initialize when DOM is ready or page is shown without constantly resetting on mutation
-    window.addEventListener("pageshow", () => { isEditing = false; init(); });
-    document.addEventListener("DOMContentLoaded", init);
+    window.addEventListener("pageshow", () => { if (!isEditing) init(); });
+    document.addEventListener("DOMContentLoaded", () => { if (!isEditing) init(); });
 
     // Light check only if root appears dynamically after Blazor renders
     const checkInterval = setInterval(() => {
-        if (el("guestDashboardRoot") && !initialized) {
+        if (el("guestDashboardRoot") && !initialized && !isEditing) {
             init();
             clearInterval(checkInterval);
         }

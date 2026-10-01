@@ -47,6 +47,14 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+var webWwwroot = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+var webUploads = Path.Combine(webWwwroot, "uploads");
+Directory.CreateDirectory(Path.Combine(webUploads, "community"));
+Directory.CreateDirectory(Path.Combine(webUploads, "documents"));
+Directory.CreateDirectory(Path.Combine(webUploads, "pets"));
+Directory.CreateDirectory(Path.Combine(webUploads, "users"));
+Directory.CreateDirectory(Path.Combine(webUploads, "marketplace"));
+
 app.UseStaticFiles();
 
 app.UseAntiforgery();

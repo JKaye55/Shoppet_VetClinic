@@ -215,73 +215,48 @@
                                 </div>
 
 
-                                <div class="sc-community-field">
-
-                                    <label>
-                                        Add Photo
-                                    </label>
-
-                                    <div class="sc-community-upload">
-
-                                        <InputFile OnChange="HandleImageSelected"
-                                                   accept=".jpg,.jpeg,.png,.webp" />
-
-                                        <small>
-                                            JPG, PNG or WEBP · Max 5 MB
-                                        </small>
-
+                                <div class="sc-community-field photo-field">
+                                    <label>Add Photo</label>
+                                    <div class="sc-community-upload-btn-wrap">
+                                        <label for="communityPhotoUpload" class="sc-upload-btn-custom">
+                                            <i class="bi bi-camera-fill"></i>
+                                            <span>@(selectedImageBytes is not null ? "Change Photo" : "Choose Photo")</span>
+                                        </label>
+                                        <InputFile id="communityPhotoUpload" OnChange="HandleImageSelected" accept=".jpg,.jpeg,.png,.webp" style="display:none;" />
+                                        <small class="sc-upload-note">JPG, PNG or WEBP · Max 5 MB</small>
                                     </div>
-
                                 </div>
 
                             </div>
 
-
-                            @if (selectedImage is not null)
+                            @if (!string.IsNullOrEmpty(selectedImagePreviewDataUrl))
                             {
-                                <div class="sc-community-selected-image">
-
-                                    <i class="bi bi-image"
-                                       aria-hidden="true"></i>
-
-                                    <span>
-                                        @selectedImage.Name
-                                    </span>
-
-                                    <button type="button"
-                                            @onclick="ClearSelectedImage">
-                                        Remove
+                                <div class="sc-community-preview-card">
+                                    <div class="sc-preview-img-box">
+                                        <img src="@selectedImagePreviewDataUrl" alt="Selected photo preview" />
+                                    </div>
+                                    <div class="sc-preview-details">
+                                        <strong><i class="bi bi-image"></i> @selectedImageName</strong>
+                                        <span>@(selectedImageBytes != null ? $"{selectedImageBytes.Length / 1024} KB" : "") · Ready to post</span>
+                                    </div>
+                                    <button type="button" class="sc-preview-remove-btn" @onclick="ClearSelectedImage" title="Remove photo">
+                                        <i class="bi bi-x-circle-fill"></i> Remove
                                     </button>
-
                                 </div>
                             }
-
-
-                            @if (isEditing &&
-                                 !string.IsNullOrWhiteSpace(existingImageUrl))
+                            else if (isEditing && !string.IsNullOrWhiteSpace(existingImageUrl) && !removeExistingImage)
                             {
-                                <div class="sc-community-existing-image">
-
-                                    <img src="@existingImageUrl"
-                                         alt="Current post image" />
-
-                                    <div>
-
-                                        <strong>
-                                            Current photo
-                                        </strong>
-
-                                        <span>
-                                            Upload another photo to replace it.
-                                        </span>
-
-                                        <button type="button"
-                                                @onclick="RemoveExistingImage">
-                                            Remove Current Photo
-                                        </button>
-
+                                <div class="sc-community-preview-card existing">
+                                    <div class="sc-preview-img-box">
+                                        <img src="@NormalizeImageUrl(existingImageUrl)" alt="Current post photo" />
                                     </div>
-
+                                    <div class="sc-preview-details">
+                                        <strong>Current Photo Attached</strong>
+                                        <span>Upload a new photo to replace, or remove</span>
+                                    </div>
+                                    <button type="button" class="sc-preview-remove-btn" @onclick="RemoveExistingImage" title="Remove current photo">
+                                        <i class="bi bi-trash3-fill"></i> Remove
+                                    </button>
                                 </div>
                             }
 
@@ -541,17 +516,23 @@
 
 
                                     <!-- IMAGE -->
-                                    @if (!string.IsNullOrWhiteSpace(
-                                                                            post.ImageUrl))
+                                    @if (!string.IsNullOrWhiteSpace(post.ImageUrl))
                                     {
-                                        <div class="sc-community-post-image">
-
-                                            @foreach (var url in post.ImageUrl.Split(new[] { ',', '|', ';' }, StringSplitOptions.RemoveEmptyEntries))
-                                            {
-                                                <img src="@url" alt="Photo shared by @post.AuthorName" loading="lazy" />
-                                            }
-
-                                        </div>
+                                        var imageUrls = post.ImageUrl.Split(new[] { ',', '|', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                                                                     .Select(NormalizeImageUrl)
+                                                                     .Where(u => !string.IsNullOrEmpty(u))
+                                                                     .ToList();
+                                        if (imageUrls.Count > 0)
+                                        {
+                                            <div class="sc-community-post-image @(imageUrls.Count > 1 ? "grid-" + Math.Min(imageUrls.Count, 3) : "single")">
+                                                @foreach (var url in imageUrls)
+                                                {
+                                                    <div class="sc-img-wrapper">
+                                                        <img src="@url" alt="Photo shared by @post.AuthorName" loading="lazy" onerror="this.parentElement.style.display='none';" />
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
                                     }
 
 
@@ -1264,105 +1245,100 @@
     }
 
 
-    .sc-community-upload {
-        min-height: 42px;
-        padding: 8px 10px;
-        border: 1px dashed #C8D8D4;
-        border-radius: 9px;
-        background: #F8FBFA;
+    .sc-community-upload-btn-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
     }
 
-
-        .sc-community-upload small {
-            display: block;
-            margin-top: 5px;
-            color: #909C98;
-            font-size: .57rem;
-        }
-
-
-    .sc-community-selected-image {
-        margin-top: 10px;
-        padding: 9px 11px;
-        display: flex;
+    .sc-upload-btn-custom {
+        display: inline-flex;
         align-items: center;
         gap: 8px;
+        min-height: 42px;
+        padding: 0 16px;
+        border: 1px dashed #2F9098;
         border-radius: 9px;
-        background: #EEF7F5;
-        color: #667772;
-        font-size: .66rem;
+        background: #F0F8F7;
+        color: #175C59;
+        font-size: .72rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all .2s ease;
     }
 
+    .sc-upload-btn-custom:hover {
+        background: #E2F2EF;
+        border-color: #267C83;
+    }
 
-        .sc-community-selected-image span {
-            min-width: 0;
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
+    .sc-upload-note {
+        color: #8C9995;
+        font-size: .58rem;
+    }
 
-
-        .sc-community-selected-image button {
-            border: 0;
-            background: transparent;
-            color: #A04343;
-            font-size: .62rem;
-            font-weight: 800;
-            cursor: pointer;
-        }
-
-
-    .sc-community-existing-image {
-        margin-top: 11px;
-        padding: 10px;
+    .sc-community-preview-card {
+        margin-top: 14px;
+        padding: 12px;
         display: grid;
-        grid-template-columns: 80px minmax(0,1fr);
+        grid-template-columns: 84px minmax(0, 1fr) auto;
         align-items: center;
-        gap: 12px;
-        border: 1px solid #E0E8E5;
-        border-radius: 11px;
-        background: #FAFBFA;
+        gap: 14px;
+        border: 1px solid #CDE2DC;
+        border-radius: 14px;
+        background: #FAFCFB;
+        box-shadow: 0 4px 12px rgba(47, 144, 152, 0.06);
     }
 
+    .sc-preview-img-box {
+        width: 84px;
+        height: 84px;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #E8ECEB;
+        border: 1px solid #D5E1DE;
+    }
 
-        .sc-community-existing-image img {
-            width: 80px;
-            height: 62px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
+    .sc-preview-img-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 
+    .sc-preview-details strong {
+        display: block;
+        font-size: .75rem;
+        color: #173D3D;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 
-        .sc-community-existing-image strong,
-        .sc-community-existing-image span {
-            display: block;
-        }
+    .sc-preview-details span {
+        display: block;
+        margin-top: 3px;
+        font-size: .62rem;
+        color: #6C7D77;
+    }
 
+    .sc-preview-remove-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        border: 1px solid #F5C6CB;
+        border-radius: 8px;
+        background: #FFF5F5;
+        color: #A92424;
+        font-size: .65rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background .2s ease;
+    }
 
-        .sc-community-existing-image strong {
-            color: #173D3D;
-            font-size: .68rem;
-        }
-
-
-        .sc-community-existing-image span {
-            margin-top: 2px;
-            color: #85928E;
-            font-size: .6rem;
-        }
-
-
-        .sc-community-existing-image button {
-            margin-top: 6px;
-            padding: 0;
-            border: 0;
-            background: transparent;
-            color: #A04343;
-            font-size: .61rem;
-            font-weight: 800;
-            cursor: pointer;
-        }
+    .sc-preview-remove-btn:hover {
+        background: #FFEAEA;
+    }
 
 
     .sc-community-composer-footer {
@@ -1832,16 +1808,46 @@
 
     .sc-community-post-image {
         width: 100%;
-        background: #EFF3F1;
+        background: #F4F7F6;
+        border-top: 1px solid #EEF3F0;
+        border-bottom: 1px solid #EEF3F0;
+        overflow: hidden;
     }
 
+    .sc-community-post-image.single .sc-img-wrapper img {
+        width: 100%;
+        max-height: 520px;
+        display: block;
+        object-fit: cover;
+    }
 
-        .sc-community-post-image img {
-            width: 100%;
-            max-height: 580px;
-            display: block;
-            object-fit: cover;
-        }
+    .sc-community-post-image.grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        background: #E5EDE9;
+    }
+
+    .sc-community-post-image.grid-2 .sc-img-wrapper img {
+        width: 100%;
+        height: 280px;
+        display: block;
+        object-fit: cover;
+    }
+
+    .sc-community-post-image.grid-3 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 4px;
+        background: #E5EDE9;
+    }
+
+    .sc-community-post-image.grid-3 .sc-img-wrapper img {
+        width: 100%;
+        height: 220px;
+        display: block;
+        object-fit: cover;
+    }
 
 
     .sc-community-post-footer {
@@ -2181,14 +2187,16 @@
     private int selectedPetId;
 
     private IBrowserFile? selectedImage;
-
+    private byte[]? selectedImageBytes;
+    private string? selectedImageName;
+    private string? selectedImageExt;
+    private string? selectedImagePreviewDataUrl;
 
     private bool isSaving;
 
     private bool isEditing;
 
     private int? editingPostId;
-
 
     private string existingImageUrl = string.Empty;
 
@@ -2546,58 +2554,84 @@
     // IMAGE
     // =========================================================
 
-    private void HandleImageSelected(
+    private string NormalizeImageUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return string.Empty;
+        var trimmed = url.Trim();
+        if (trimmed.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+            return trimmed;
+
+        if (trimmed.Contains("/uploads/"))
+        {
+            var idx = trimmed.IndexOf("/uploads/", StringComparison.OrdinalIgnoreCase);
+            return trimmed.Substring(idx);
+        }
+        return trimmed;
+    }
+
+    private async Task HandleImageSelected(
         InputFileChangeEventArgs args)
     {
-        var file =
-            args.File;
+        var file = args.File;
+        if (file is null) return;
 
-
-        if (file.Size >
-            5 * 1024 * 1024)
+        var ext = Path.GetExtension(file.Name).ToLowerInvariant();
+        if (!new[] { ".jpg", ".jpeg", ".png", ".webp" }.Contains(ext))
         {
-            selectedImage =
-                null;
-
-
-            ShowError(
-                "Please choose an image smaller than 5 MB.");
-
-
+            selectedImage = null;
+            selectedImageBytes = null;
+            selectedImagePreviewDataUrl = null;
+            ShowError("Please choose a JPG, PNG, or WEBP image.");
             return;
         }
 
+        if (file.Size > 5 * 1024 * 1024)
+        {
+            selectedImage = null;
+            selectedImageBytes = null;
+            selectedImagePreviewDataUrl = null;
+            ShowError("Please choose an image smaller than 5 MB.");
+            return;
+        }
 
-        selectedImage =
-            file;
+        try
+        {
+            using var stream = file.OpenReadStream(5 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            selectedImageBytes = ms.ToArray();
+            selectedImageName = file.Name;
+            selectedImageExt = ext;
+            var contentType = string.IsNullOrWhiteSpace(file.ContentType)
+                ? (ext == ".png" ? "image/png" : ext == ".webp" ? "image/webp" : "image/jpeg")
+                : file.ContentType;
+            selectedImagePreviewDataUrl = $"data:{contentType};base64,{Convert.ToBase64String(selectedImageBytes)}";
 
-
-        removeExistingImage =
-            false;
-
-
-        statusMessage =
-            string.Empty;
+            selectedImage = file;
+            removeExistingImage = false;
+            statusMessage = string.Empty;
+            isError = false;
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Could not process image: {ex.Message}");
+        }
     }
-
 
     private void ClearSelectedImage()
     {
-        selectedImage =
-            null;
+        selectedImage = null;
+        selectedImageBytes = null;
+        selectedImageName = null;
+        selectedImageExt = null;
+        selectedImagePreviewDataUrl = null;
     }
-
 
     private void RemoveExistingImage()
     {
-        removeExistingImage =
-            true;
-
-
-        existingImageUrl =
-            string.Empty;
+        removeExistingImage = true;
+        existingImageUrl = string.Empty;
     }
-
 
     // =========================================================
     // CREATE / UPDATE POST
@@ -2605,112 +2639,77 @@
 
     private async Task SavePostAsync()
     {
-        statusMessage =
-            string.Empty;
+        statusMessage = string.Empty;
+        isError = false;
 
-
-        isError =
-            false;
-
-
-        if (Auth.CurrentUser is null ||
-            !Auth.IsPetOwner)
+        if (Auth.CurrentUser is null || !Auth.IsPetOwner)
         {
-            ShowError(
-                "Please sign in with a pet owner account to post.");
-
-
+            ShowError("Please sign in with a pet owner account to post.");
             return;
         }
 
-
-        caption =
-            caption.Trim();
-
-
+        caption = caption.Trim();
         if (string.IsNullOrWhiteSpace(caption))
         {
-            ShowError(
-                "Write something before posting.");
-
-
+            ShowError("Write something before posting.");
             return;
         }
-
 
         if (caption.Length > 500)
         {
-            ShowError(
-                "Community posts are limited to 500 characters.");
-
-
+            ShowError("Community posts are limited to 500 characters.");
             return;
         }
 
-
-        isSaving =
-            true;
-
+        isSaving = true;
 
         try
         {
-            var petId =
-                selectedPetId > 0
-                    ? selectedPetId
-                    : (int?)null;
-
+            var petId = selectedPetId > 0 ? selectedPetId : (int?)null;
 
             // =================================================
             // EDIT
             // =================================================
-
-            if (isEditing &&
-                editingPostId.HasValue)
+            if (isEditing && editingPostId.HasValue)
             {
-                var postId =
-                    editingPostId.Value;
-
-
-                var updated =
-                    Community.UpdatePost(
-                        postId,
-                        Auth.CurrentUser.Id,
-                        petId,
-                        caption);
-
+                var postId = editingPostId.Value;
+                var updated = Community.UpdatePost(
+                    postId,
+                    Auth.CurrentUser.Id,
+                    petId,
+                    caption);
 
                 if (!updated)
                 {
-                    ShowError(
-                        "The post could not be updated.");
-
-
+                    ShowError("The post could not be updated.");
                     return;
                 }
 
-
                 if (removeExistingImage)
                 {
-                    Community.ClearPostImage(
-                        postId,
-                        Auth.CurrentUser.Id);
-
-
-                    FileStorage.DeleteImage(
-                        "community",
-                        postId);
+                    Community.ClearPostImage(postId, Auth.CurrentUser.Id);
+                    FileStorage.DeleteImage("community", postId);
                 }
 
-
-                if (selectedImage is not null)
+                if (selectedImageBytes is not null && selectedImageBytes.Length > 0)
                 {
-                    var imageUrl =
-                        await FileStorage
-                            .SaveImageAsync(
-                                "community",
-                                postId,
-                                selectedImage);
+                    var imageUrl = await FileStorage.SaveImageBytesAsync(
+                        "community",
+                        postId,
+                        selectedImageBytes,
+                        selectedImageExt ?? ".jpg");
 
+                    Community.UpdatePostImage(
+                        postId,
+                        Auth.CurrentUser.Id,
+                        imageUrl);
+                }
+                else if (selectedImage is not null)
+                {
+                    var imageUrl = await FileStorage.SaveImageAsync(
+                        "community",
+                        postId,
+                        selectedImage);
 
                     Community.UpdatePostImage(
                         postId,
@@ -2718,33 +2717,37 @@
                         imageUrl);
                 }
 
-
-                statusMessage =
-                    "Your post was updated.";
+                statusMessage = "Your post was updated.";
             }
-
             // =================================================
             // CREATE
             // =================================================
-
             else
             {
-                var postId =
-                    Community.CreatePost(
-                        Auth.CurrentUser.Id,
-                        petId,
-                        caption);
+                var postId = Community.CreatePost(
+                    Auth.CurrentUser.Id,
+                    petId,
+                    caption);
 
-
-                if (selectedImage is not null)
+                if (selectedImageBytes is not null && selectedImageBytes.Length > 0)
                 {
-                    var imageUrl =
-                        await FileStorage
-                            .SaveImageAsync(
-                                "community",
-                                postId,
-                                selectedImage);
+                    var imageUrl = await FileStorage.SaveImageBytesAsync(
+                        "community",
+                        postId,
+                        selectedImageBytes,
+                        selectedImageExt ?? ".jpg");
 
+                    Community.UpdatePostImage(
+                        postId,
+                        Auth.CurrentUser.Id,
+                        imageUrl);
+                }
+                else if (selectedImage is not null)
+                {
+                    var imageUrl = await FileStorage.SaveImageAsync(
+                        "community",
+                        postId,
+                        selectedImage);
 
                     Community.UpdatePostImage(
                         postId,
@@ -2752,19 +2755,11 @@
                         imageUrl);
                 }
 
-
-                statusMessage =
-                    "Your story is now part of the community.";
+                statusMessage = "Your story is now part of the community.";
             }
 
-
-            isError =
-                false;
-
-
+            isError = false;
             ResetComposer();
-
-
             LoadPosts();
         }
         catch (Exception ex)
@@ -2819,9 +2814,7 @@
             false;
 
 
-        selectedImage =
-            null;
-
+        ClearSelectedImage();
 
         statusMessage =
             string.Empty;
@@ -3109,24 +3102,16 @@
             0;
 
 
-        selectedImage =
-            null;
+        selectedImage = null;
+        selectedImageBytes = null;
+        selectedImageName = null;
+        selectedImageExt = null;
+        selectedImagePreviewDataUrl = null;
 
-
-        isEditing =
-            false;
-
-
-        editingPostId =
-            null;
-
-
-        existingImageUrl =
-            string.Empty;
-
-
-        removeExistingImage =
-            false;
+        isEditing = false;
+        editingPostId = null;
+        existingImageUrl = string.Empty;
+        removeExistingImage = false;
     }
 
 
