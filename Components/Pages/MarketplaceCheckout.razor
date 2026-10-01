@@ -64,23 +64,17 @@
                 @if (paymentMethod == "Credit Card")
                 {
                     <div style="background:#FAF9F6;border:1px solid #DDE7E4;border-radius:14px;padding:14px;margin:12px 0;">
-                        <span style="font-size:.7rem;font-weight:800;color:#2F9098;text-transform:uppercase;letter-spacing:.05em;">🔒 Secure Mock Payment Gateway</span>
-                        
-                        <label style="display:block;margin-top:8px;font-size:.78rem;font-weight:700;">Cardholder Name *</label>
-                        <input type="text" placeholder="e.g. Maria Santos" @bind="cardholderName" disabled="@isSubmitting" style="width:100%;padding:9px 12px;border:1px solid #DDE7E4;border-radius:8px;font-size:.85rem;background:#fff;" />
-
-                        <label style="display:block;margin-top:8px;font-size:.78rem;font-weight:700;">Card Number *</label>
-                        <input type="text" placeholder="4532 8901 2345 6789" maxlength="19" @bind="cardNumber" disabled="@isSubmitting" style="width:100%;padding:9px 12px;border:1px solid #DDE7E4;border-radius:8px;font-size:.85rem;background:#fff;" />
-
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
-                            <div>
-                                <label style="display:block;font-size:.78rem;font-weight:700;">Expiry (MM/YY) *</label>
-                                <input type="text" placeholder="12/28" maxlength="5" @bind="cardExpiry" disabled="@isSubmitting" style="width:100%;padding:9px 12px;border:1px solid #DDE7E4;border-radius:8px;font-size:.85rem;background:#fff;" />
-                            </div>
-                            <div>
-                                <label style="display:block;font-size:.78rem;font-weight:700;">CVV *</label>
-                                <input type="password" placeholder="123" maxlength="4" @bind="cardCvv" disabled="@isSubmitting" style="width:100%;padding:9px 12px;border:1px solid #DDE7E4;border-radius:8px;font-size:.85rem;background:#fff;" />
-                            </div>
+                        <span style="font-size:.7rem;font-weight:800;color:#2F9098;text-transform:uppercase;letter-spacing:.05em;">🔒 PREDEFINED DEMO CARD SANDBOX</span>
+                        <label style="display:block;margin-top:8px;font-size:.78rem;font-weight:700;">Select Predefined Demo Card *</label>
+                        <select @bind="selectedDemoCard" disabled="@isSubmitting" style="width:100%;min-height:38px;padding:6px 10px;border:1px solid #CBD9D5;border-radius:8px;background:#fff;font-size:.85rem;">
+                            <option value="Demo Visa (•••• 4242)">💳 Demo Visa (•••• 4242) — Pre-approved Sandbox</option>
+                            <option value="Demo Mastercard (•••• 5555)">💳 Demo Mastercard (•••• 5555) — Pre-approved Sandbox</option>
+                        </select>
+                        <div style="margin-top:10px;padding:10px;background:#fff;border:1px solid #E2E8F0;border-radius:8px;font-size:.75rem;color:#4A5568;">
+                            <div><strong>Cardholder:</strong> ShoppetCare Demo Tester</div>
+                            <div><strong>Card Number:</strong> @(selectedDemoCard.Contains("5555") ? "5555 •••• •••• 5555" : "4242 •••• •••• 4242")</div>
+                            <div><strong>Expires:</strong> 12/28 | <strong>CVV:</strong> •••</div>
+                            <small style="display:block;margin-top:6px;color:#0D9488;">Academic simulation only. Predefined demo choices replace unrestricted card credentials. No real funds or payment data are handled.</small>
                         </div>
                     </div>
                 }
@@ -140,10 +134,7 @@
     private string message = string.Empty;
     private bool isError;
     private bool isSubmitting;
-    private string cardholderName = "";
-    private string cardNumber = "";
-    private string cardExpiry = "";
-    private string cardCvv = "";
+    private string selectedDemoCard = "Demo Visa (•••• 4242)";
 
     private List<MarketplaceCartItem> SellerItems =>
         Cart.Items.Where(x => x.SellerUserId == SellerUserId).ToList();
@@ -198,35 +189,6 @@
             isError = true;
             message = "Simulated payment failed. Your cart and listings are unchanged.";
             return;
-        }
-
-        if (paymentMethod == "Credit Card")
-        {
-            if (string.IsNullOrWhiteSpace(cardholderName))
-            {
-                isError = true;
-                message = "Please enter the cardholder name.";
-                return;
-            }
-            var cleanNum = cardNumber.Replace(" ", "").Replace("-", "");
-            if (string.IsNullOrWhiteSpace(cleanNum) || cleanNum.Length < 12 || !cleanNum.All(char.IsDigit))
-            {
-                isError = true;
-                message = "Please enter a valid card number (12-19 digits).";
-                return;
-            }
-            if (string.IsNullOrWhiteSpace(cardExpiry) || !cardExpiry.Contains('/') || cardExpiry.Length < 4)
-            {
-                isError = true;
-                message = "Please enter a valid card expiry date (MM/YY).";
-                return;
-            }
-            if (string.IsNullOrWhiteSpace(cardCvv) || cardCvv.Length < 3 || cardCvv.Length > 4 || !cardCvv.All(char.IsDigit))
-            {
-                isError = true;
-                message = "Please enter a valid 3 or 4 digit CVV code.";
-                return;
-            }
         }
 
         isSubmitting = true;

@@ -59,7 +59,7 @@ public class MarketplaceCartService(IConfiguration configuration,AuthService aut
             DECLARE @Cart INT=(SELECT Id FROM MarketplaceCart WHERE UserId=@User);
             IF EXISTS(SELECT 1 FROM MarketplaceListings WHERE Id=@Listing AND SellerUserId<>@User AND Status IN('Available','Active'))
                AND NOT EXISTS(SELECT 1 FROM MarketplaceCartItems WHERE CartId=@Cart AND MarketplaceListingId=@Listing)
-                INSERT INTO MarketplaceCartItems(CartId,MarketplaceListingId,Quantity) VALUES(@Cart,@Listing,1);",c,tx);
+                INSERT INTO MarketplaceCartItems(CartId,MarketplaceListingId,Quantity,UserId,ListingId,AddedAt) VALUES(@Cart,@Listing,1,@User,@Listing,SYSDATETIME());",c,tx);
         q.Parameters.AddWithValue("@User",Actor);q.Parameters.AddWithValue("@Listing",listing.Id);var changed=q.ExecuteNonQuery()>0;tx.Commit();Changed?.Invoke();return changed;
     }
     public void Remove(int id)
