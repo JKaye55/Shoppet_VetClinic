@@ -12,11 +12,12 @@
 }</main>
 @code {
  [SupplyParameterFromQuery(Name="contactId")] public int ContactId{get;set;}
+ [SupplyParameterFromQuery(Name="userId")] public int UserId{get;set;}
  [SupplyParameterFromQuery(Name="listingId")] public int? ListingId{get;set;}
  bool ready,busy;string name="",error="",text="";List<CareConversation> inbox=new();List<CareMessage> messages=new();readonly CancellationTokenSource stop=new();
  protected override async Task OnAfterRenderAsync(bool first){if(!first)return;await Auth.InitializeAsync();ready=true;Load();StateHasChanged();_=Poll();}
  protected override void OnParametersSet(){if(ready)Load();}
- void Load(){if(!Auth.IsPetOwner)return;try{inbox=Care.Inbox();if(ContactId>0){name=Care.ContactName(ContactId);messages=Care.Messages(ContactId);}else messages.Clear();}catch(Exception){error="Could not load messages. Check the shared database connection.";}}
+ void Load(){if(!Auth.IsPetOwner)return;try{if(ContactId<=0&&UserId>0)ContactId=UserId;if(ContactId>0){Care.EnsureConversation(ContactId);name=Care.ContactName(ContactId);messages=Care.Messages(ContactId);}else messages.Clear();inbox=Care.Inbox();}catch(Exception){error="Could not load messages. Check the shared database connection.";}}
  async Task Send(){if(busy)return;busy=true;try{Care.Send(ContactId,text,ListingId);text="";error="";Load();}catch(Exception ex){error=ex is ArgumentException?ex.Message:"Message could not be sent. Try again.";}finally{busy=false;}await Task.CompletedTask;}
  async Task Poll(){try{using var timer=new PeriodicTimer(TimeSpan.FromSeconds(3));while(await timer.WaitForNextTickAsync(stop.Token))await InvokeAsync(()=>{Load();StateHasChanged();});}catch(OperationCanceledException){}}
  public void Dispose(){stop.Cancel();stop.Dispose();}

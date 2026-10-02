@@ -9,7 +9,7 @@ namespace Shoppet_VetClinic.Services
         private const string UserIdKey = "userId";
         private const string GuestModeKey = "guestMode";
 
-        public const int MinimumPasswordLength = 15;
+        public const int MinimumPasswordLength = 8;
         public const int MaximumPasswordLength = 64;
 
         private readonly ProtectedSessionStorage _sessionStorage;
@@ -162,29 +162,35 @@ namespace Shoppet_VetClinic.Services
         public static string? ValidateNewPassword(
             string? value)
         {
-            if (string.IsNullOrEmpty(
-                value))
+            if (string.IsNullOrEmpty(value))
             {
-                return
-                    "Please enter a password.";
+                return "Please enter a password.";
             }
 
-
-            if (value.Length <
-                MinimumPasswordLength)
+            if (value.Length < 8)
             {
-                return
-                    $"Use at least {MinimumPasswordLength} characters. A short passphrase works well.";
+                return "Must be at least 8 characters and include a special character.";
             }
 
-
-            if (value.Length >
-                MaximumPasswordLength)
+            if (value.Length > MaximumPasswordLength)
             {
-                return
-                    $"Password cannot exceed {MaximumPasswordLength} characters.";
+                return $"Password cannot exceed {MaximumPasswordLength} characters.";
             }
 
+            if (!value.Any(char.IsLetter))
+            {
+                return "Password must contain at least one letter.";
+            }
+
+            if (!value.Any(char.IsDigit))
+            {
+                return "Password must contain at least one number.";
+            }
+
+            if (!value.Any(c => "!@#$%^&*(),.?\":{}|<>".Contains(c) || (!char.IsLetterOrDigit(c) && !char.IsWhiteSpace(c))))
+            {
+                return "Must be at least 8 characters and include a special character (!@#$%^&*(),.?\":{}|<>).";
+            }
 
             return null;
         }

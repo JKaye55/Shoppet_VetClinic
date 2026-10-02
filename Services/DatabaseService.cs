@@ -748,12 +748,7 @@ FROM UserAccounts",
                 };
 
 
-            var passwordHash =
-                _passwordHasher
-                    .HashPassword(
-                        user,
-                        password);
-
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
 
             // =========================================================
             // INSERT
@@ -767,7 +762,11 @@ FROM UserAccounts",
                 MobileNumber,
                 Email,
                 PasswordHash,
-                Role
+                Role,
+                IsPremium,
+                IsDisabled,
+                CreatedAt,
+                ShowSocialLinksOnMarketplace
             )
 
             OUTPUT
@@ -780,7 +779,11 @@ FROM UserAccounts",
                 @MobileNumber,
                 @Email,
                 @PasswordHash,
-                @Role
+                @Role,
+                0,
+                0,
+                SYSDATETIME(),
+                1
             );",
                     conn);
 

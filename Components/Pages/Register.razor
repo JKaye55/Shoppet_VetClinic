@@ -169,6 +169,7 @@
                                @bind="fullName"
                                autocomplete="name"
                                disabled="@isRegistering" />
+                        <small>Max 150 characters</small>
 
                     </div>
 
@@ -189,6 +190,7 @@
                                @bind="email"
                                autocomplete="email"
                                disabled="@isRegistering" />
+                        <small>Valid email address (max 254 characters)</small>
 
                     </div>
 
@@ -201,15 +203,15 @@
     <input id="register-mobile"
            type="tel"
            required
-                               aria-required="true"
-                               placeholder="0917 123 4567"
+                                aria-required="true"
+                                placeholder="0917 123 4567"
            @bind="mobileNumber"
            autocomplete="tel"
            inputmode="tel"
            disabled="@isRegistering" />
 
     <small>
-        Used for your private account and eligible Premium Pet ID views. It is not shown on the public QR Pet ID.
+        Valid 11-digit mobile number (e.g. 09171234567).
     </small>
 
 </div>
@@ -228,7 +230,7 @@
                                    maxlength="64"
                                    required
                                    aria-required="true"
-                                   placeholder="Use at least 15 characters"
+                                   placeholder="At least 8 characters with letter, number & special char"
                                    @bind="password"
                                    autocomplete="new-password"
                                    disabled="@isRegistering"
@@ -243,8 +245,7 @@
                         </div>
 
                         <small class="sc-register-password-help">
-                            Use at least 15 characters. Spaces are allowed,
-                            so a memorable passphrase works well.
+                            Must be at least 8 characters and include at least one letter, one number, and one special character.
                         </small>
                     </div>
 

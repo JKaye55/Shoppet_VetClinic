@@ -235,6 +235,7 @@
                                    maxlength="150"
                                    @bind="formTitle"
                                    placeholder="Example: Large Pet Carrier" />
+                            <small style="color:#7B8882;font-size:.72rem;">Max 150 characters</small>
 
                         </div>
 
@@ -261,6 +262,7 @@
                                 }
 
                             </select>
+                            <small style="color:#7B8882;font-size:.72rem;">Select item category</small>
 
                         </div>
 
@@ -292,6 +294,7 @@
                                 </option>
 
                             </select>
+                            <small style="color:#7B8882;font-size:.72rem;">Select item condition</small>
 
                         </div>
 
@@ -315,6 +318,7 @@
                                        placeholder="0.00" />
 
                             </div>
+                            <small style="color:#7B8882;font-size:.72rem;">Price must be a positive amount</small>
 
                         </div>
 
@@ -331,6 +335,7 @@
                                    maxlength="150"
                                    @bind="formLocation"
                                    placeholder="Example: Lipa City" />
+                            <small style="color:#7B8882;font-size:.72rem;">Max 150 characters</small>
 
                         </div>
 
@@ -348,6 +353,7 @@
                                       @bind="formDescription"
                                       placeholder="Describe the item, size, usage, or anything the next owner should know.">
                             </textarea>
+                            <small style="color:#7B8882;font-size:.72rem;">Max 1000 characters</small>
 
                         </div>
 
@@ -890,7 +896,7 @@
                                             <button type="button"
                                                     class="sc-marketplace-contact"
                                                     disabled="@IsSold(listing)"
-                                                    @onclick="() => ToggleContact(listing.Id)">
+                                                    @onclick="() => MessageSeller(listing)">
                                                 <i class="bi bi-envelope" aria-hidden="true"></i>
                                                 @(IsSold(listing) ? "Item Sold" : "Contact Seller")
                                             </button>
@@ -910,7 +916,7 @@
                                     {
                                         <div class="sc-marketplace-contact-box">
                                             <span>Seller contact</span>
-                                            <a href="@($"/messages?contactId={listing.SellerUserId}&listingId={listing.Id}")">Message seller</a>
+                                            <a href="@($"/messages?userId={listing.SellerUserId}&listingId={listing.Id}")">Message seller</a>
                                             @foreach(var social in Care.SellerSocial(listing.SellerUserId)) { <a href="@social.Url" target="_blank" rel="noopener noreferrer">@social.Name</a> }
                                         </div>
                                     }
@@ -3043,6 +3049,31 @@
             contactListingId == listingId
                 ? null
                 : listingId;
+    }
+
+    private void MessageSeller(MarketplaceListing listing)
+    {
+        if (!Auth.IsLoggedIn)
+        {
+            GoToLogin();
+            return;
+        }
+
+        if (IsOwnListing(listing))
+        {
+            ShowError("You cannot message your own listing.");
+            return;
+        }
+
+        try
+        {
+            Care.EnsureConversation(listing.SellerUserId);
+            Nav.NavigateTo($"/messages?userId={listing.SellerUserId}&listingId={listing.Id}");
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex.Message);
+        }
     }
 
 

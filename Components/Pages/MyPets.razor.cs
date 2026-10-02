@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Shoppet_VetClinic.Models;
 using Shoppet_VetClinic.Services;
@@ -445,6 +445,52 @@ public partial class MyPets
 
 
         ResetForm();
+    }
+
+    public void OnBirthDateChanged()
+    {
+        if (PetForm.BirthDate.HasValue)
+        {
+            if (PetForm.BirthDate.Value > DateTime.Today)
+            {
+                PetForm.BirthDate = DateTime.Today;
+                ShowError("Birthdate cannot be a future date.");
+            }
+
+            var today = DateTime.Today;
+            var birthDate = PetForm.BirthDate.Value;
+
+            if (birthDate > today) return;
+
+            int years = today.Year - birthDate.Year;
+            int months = today.Month - birthDate.Month;
+            if (today.Day < birthDate.Day)
+            {
+                months--;
+            }
+            if (months < 0)
+            {
+                years--;
+                months += 12;
+            }
+
+            if (years <= 0 && months <= 0)
+            {
+                PetForm.Age = "Under 1 year";
+            }
+            else if (years <= 0)
+            {
+                PetForm.Age = $"{months} month{(months == 1 ? "" : "s")}";
+            }
+            else if (months <= 0)
+            {
+                PetForm.Age = $"{years} year{(years == 1 ? "" : "s")}";
+            }
+            else
+            {
+                PetForm.Age = $"{years} year{(years == 1 ? "" : "s")}, {months} month{(months == 1 ? "" : "s")}";
+            }
+        }
     }
 
 

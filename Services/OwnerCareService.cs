@@ -18,6 +18,19 @@ public sealed class OwnerCareService(IConfiguration configuration,AuthService au
     public List<CareConversation> Inbox(){using var c=Open();using var q=new SqlCommand(@"SELECT CASE WHEN v.User1Id=@U THEN v.User2Id ELSE v.User1Id END,u.FullName,CASE WHEN v.User1Id=@U THEN v.User1UnreadCount ELSE v.User2UnreadCount END,v.LastUpdated FROM Conversations v JOIN UserAccounts u ON u.Id=CASE WHEN v.User1Id=@U THEN v.User2Id ELSE v.User1Id END WHERE v.User1Id=@U OR v.User2Id=@U ORDER BY v.LastUpdated DESC",c);q.Parameters.AddWithValue("@U",Actor);using var r=q.ExecuteReader();var rows=new List<CareConversation>();while(r.Read())rows.Add(new(){ContactId=r.GetInt32(0),Name=r.GetString(1),Unread=r.GetInt32(2),Updated=r.GetDateTime(3)});return rows;}
     public string ContactName(int id){using var c=Open();using var q=new SqlCommand("SELECT FullName FROM UserAccounts WHERE Id=@Id AND Role IN('Pet Owner','PetOwner')",c);q.Parameters.AddWithValue("@Id",id);return q.ExecuteScalar() as string ?? "Pet owner";}
     public List<CareMessage> Messages(int contact){var rows=new List<CareMessage>();using var c=Open();using var q=new SqlCommand("SELECT Id,SenderId,[Text],[Timestamp],ListingId FROM Messages WHERE (SenderId=@U AND ReceiverId=@Contact) OR (ReceiverId=@U AND SenderId=@Contact) ORDER BY [Timestamp],Id",c);q.Parameters.AddWithValue("@U",Actor);q.Parameters.AddWithValue("@Contact",contact);using(var r=q.ExecuteReader())while(r.Read())rows.Add(new(){Id=r.GetInt32(0),SenderId=r.GetInt32(1),Text=r.GetString(2),SentAt=r.GetDateTime(3),ListingId=r.IsDBNull(4)?null:r.GetInt32(4)});Execute("UPDATE Messages SET IsRead=1 WHERE ReceiverId=@U AND SenderId=@Contact; UPDATE Conversations SET User1UnreadCount=CASE WHEN User1Id=@U THEN 0 ELSE User1UnreadCount END,User2UnreadCount=CASE WHEN User2Id=@U THEN 0 ELSE User2UnreadCount END WHERE (User1Id=@U AND User2Id=@Contact) OR (User2Id=@U AND User1Id=@Contact)",("@Contact",contact));return rows;}
+    public void EnsureConversation(int contact)
+    {
+        if (contact == Actor || contact <= 0) return;
+        using var c = Open();
+        using var q = new SqlCommand(@"
+            IF NOT EXISTS(SELECT 1 FROM UserAccounts WHERE Id=@Contact) THROW 51000,'Pet owner not found.',1;
+            DECLARE @Low INT=CASE WHEN @U<@Contact THEN @U ELSE @Contact END,@High INT=CASE WHEN @U<@Contact THEN @Contact ELSE @U END;
+            IF NOT EXISTS(SELECT 1 FROM Conversations WHERE User1Id=@Low AND User2Id=@High)
+                INSERT INTO Conversations(User1Id,User2Id) VALUES(@Low,@High);", c);
+        q.Parameters.AddWithValue("@U", Actor);
+        q.Parameters.AddWithValue("@Contact", contact);
+        q.ExecuteNonQuery();
+    }
     public void Send(int contact,string text,int? listing){if(contact==Actor||contact<=0||string.IsNullOrWhiteSpace(text)||text.Length>1000)throw new ArgumentException("Enter a message of 1–1,000 characters for another pet owner.");using var c=Open();using var tx=c.BeginTransaction(System.Data.IsolationLevel.Serializable);using var q=new SqlCommand(@"IF NOT EXISTS(SELECT 1 FROM UserAccounts WHERE Id=@Contact AND Role IN('Pet Owner','PetOwner')) THROW 51000,'Pet owner not found.',1;
     DECLARE @Low INT=CASE WHEN @U<@Contact THEN @U ELSE @Contact END,@High INT=CASE WHEN @U<@Contact THEN @Contact ELSE @U END;
     IF NOT EXISTS(SELECT 1 FROM Conversations WITH(UPDLOCK,HOLDLOCK) WHERE User1Id=@Low AND User2Id=@High) INSERT INTO Conversations(User1Id,User2Id) VALUES(@Low,@High);

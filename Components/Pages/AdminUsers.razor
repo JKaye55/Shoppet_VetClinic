@@ -33,12 +33,15 @@
         <div class="owner-grid">
             <section class="owner-card">
                 <h2>Create account</h2>
-                <label>Full name<input @bind="name" maxlength="150" /></label>
-                <label>Email<input type="email" @bind="email" maxlength="150" /></label>
-                <label>Mobile<input type="tel" @bind="phone" maxlength="30" /></label>
+                <label>Full name<input @bind="name" maxlength="150" placeholder="Juan Dela Cruz" /></label>
+                <small>Max 150 characters</small>
+                <label>Email<input type="email" @bind="email" maxlength="254" placeholder="you@example.com" /></label>
+                <small>Max 254 characters</small>
+                <label>Mobile<input type="tel" @bind="phone" maxlength="30" placeholder="09171234567" /></label>
+                <small>Valid 11-digit mobile number</small>
                 <label>Role<select @bind="role"><option>Pet Owner</option><option>Admin</option></select></label>
-                <label>Initial passphrase<input type="password" @bind="password" maxlength="64" autocomplete="new-password" /></label>
-                <small>15–64 characters. The password is stored as a secure hash.</small>
+                <label>Initial passphrase<input type="password" @bind="password" maxlength="64" autocomplete="new-password" placeholder="At least 8 chars with letter, number & special char" /></label>
+                <small>Must be at least 8 characters and include at least one letter, one number, and one special character. Stored securely with BCrypt.</small>
                 <button @onclick="Create">Create account</button>
             </section>
 
@@ -111,16 +114,17 @@
     {
         try
         {
+            message = "";
             Accounts.Create(name, email, phone, password, role);
             password = "";
             name = email = phone = "";
             role = "Pet Owner";
             users = Accounts.Users();
-            message = "Account created.";
+            message = "Account created successfully.";
         }
         catch (Exception ex)
         {
-            message = ex is ArgumentException ? ex.Message : "Could not create this account.";
+            message = string.IsNullOrWhiteSpace(ex.Message) ? "Could not create this account." : ex.Message;
         }
     }
 

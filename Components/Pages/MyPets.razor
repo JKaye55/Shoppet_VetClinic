@@ -293,6 +293,7 @@
                                        maxlength="150"
                                        @bind="PetForm.PetName"
                                        placeholder="Example: Buddy" />
+                                <small>Max 150 characters</small>
 
                             </div>
 
@@ -332,6 +333,7 @@
                                            maxlength="150"
                                            @bind="PetForm.Breed"
                                            placeholder="Enter breed or pet type" />
+                                    <small>Max 150 characters</small>
                                 }
                                 else
                                 {
@@ -374,6 +376,7 @@
                                     }
 
                                 </select>
+                                <small>Automatically calculated from birthdate when selected</small>
 
                             </div>
                             <div class="field">
@@ -385,10 +388,11 @@
     <input type="date"
            max="@DateTime.Today.ToString("yyyy-MM-dd")"
            @bind="PetForm.BirthDate"
+           @bind:after="OnBirthDateChanged"
            @bind:format="yyyy-MM-dd" />
 
     <small>
-        Optional. Used to calculate age on the Digital Pet ID.
+        Must not be a future date. Automatically calculates pet age.
     </small>
 
 </div>
@@ -412,6 +416,7 @@
                                     </span>
 
                                 </div>
+                                <small>Must be a positive number (in kg)</small>
 
                             </div>
 
